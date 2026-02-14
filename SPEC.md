@@ -28,6 +28,8 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - published time
   - image thumbnail when an image is available in the feed item
   - short snippet
+- Item images in the listing must render at intrinsic aspect ratio/size (`h-auto`, `w-auto`, bounded by container width) and must not be stretched/cropped to fill the card.
+- Item detail page image rendering must follow the same intrinsic-size behavior as the listing for consistency.
 - Snippet behavior: if normalized content length is less than 1000 characters, do not truncate; otherwise truncate to a short preview.
 - Clicking an item should open the original article URL.
 
@@ -118,6 +120,7 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Default list loads latest 200 items.
   - Each item shows title, source, time, and snippet.
   - Each item shows an image thumbnail when image data exists for the feed item.
+  - Listing image rendering preserves original aspect ratio and does not use forced full-width stretch/crop behavior.
   - Snippet is not truncated when content is under 1000 characters.
 
 **Story D2: Open original article**
@@ -125,6 +128,13 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - Acceptance criteria:
   - Clicking item opens original URL.
   - Broken/missing URL is surfaced with a visible error state.
+
+**Story D3: Consistent item image display**
+- As a user, I see item images in both listing and detail views without distortion.
+- Acceptance criteria:
+  - Listing and detail views both render item images at intrinsic size/aspect ratio.
+  - Images are bounded by container width (`max-width: 100%`) to avoid layout overflow.
+  - Rendering must not force `object-fit: cover` style cropping for normal display.
 
 ### Epic E: Filtering
 **Story E1: Source filter**

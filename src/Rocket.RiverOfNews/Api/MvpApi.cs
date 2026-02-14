@@ -118,7 +118,7 @@ public static class MvpApi
 							const detailsLink = `/river/items/${encodeURIComponent(item.id)}`;
 							const link = item.canonicalUrl || "#";
 							const imageBlock = item.imageUrl
-								? `<img class="mb-3 max-h-56 w-full rounded object-cover" src="${item.imageUrl}" alt="">`
+								? `<img class="mb-3 h-auto w-auto max-w-full rounded" src="${item.imageUrl}" alt="">`
 								: "";
 							article.innerHTML = `
 								<div class="mb-1 text-xs text-slate-400">${sourceText}</div>
@@ -353,6 +353,7 @@ public static class MvpApi
 						<div id="itemSources" class="mb-2 text-xs text-slate-400"></div>
 						<h1 id="itemTitle" class="mb-3 text-2xl font-semibold"></h1>
 						<div id="itemDates" class="mb-3 text-xs text-slate-400"></div>
+						<img id="itemImage" class="mb-4 hidden h-auto w-auto max-w-full rounded" alt="">
 						<p id="itemSnippet" class="mb-4 text-sm text-slate-300 whitespace-pre-wrap"></p>
 						<div class="flex flex-wrap gap-3 text-sm">
 							<a id="itemCanonicalLink" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open canonical article</a>
@@ -366,6 +367,7 @@ public static class MvpApi
 					const itemTitle = document.getElementById("itemTitle");
 					const itemSources = document.getElementById("itemSources");
 					const itemDates = document.getElementById("itemDates");
+					const itemImage = document.getElementById("itemImage");
 					const itemSnippet = document.getElementById("itemSnippet");
 					const itemCanonicalLink = document.getElementById("itemCanonicalLink");
 					const itemOriginalLink = document.getElementById("itemOriginalLink");
@@ -388,6 +390,13 @@ public static class MvpApi
 						itemTitle.textContent = payload.title;
 						itemSources.textContent = payload.sourceNames || "Unknown source";
 						itemDates.textContent = `Published: ${new Date(payload.publishedAt).toUTCString()} | Ingested: ${new Date(payload.ingestedAt).toUTCString()}`;
+						if (payload.imageUrl) {
+							itemImage.src = payload.imageUrl;
+							itemImage.classList.remove("hidden");
+						} else {
+							itemImage.removeAttribute("src");
+							itemImage.classList.add("hidden");
+						}
 						itemSnippet.textContent = payload.snippet || "";
 
 						const canonicalLink = payload.canonicalUrl || payload.url || "#";
