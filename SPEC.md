@@ -26,7 +26,9 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - title
   - source/feed name
   - published time
+  - image thumbnail when an image is available in the feed item
   - short snippet
+- Snippet behavior: if normalized content length is less than 1000 characters, do not truncate; otherwise truncate to a short preview.
 - Clicking an item should open the original article URL.
 
 ### 3.4 Read State
@@ -115,6 +117,8 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - River sorts by published timestamp descending.
   - Default list loads latest 200 items.
   - Each item shows title, source, time, and snippet.
+  - Each item shows an image thumbnail when image data exists for the feed item.
+  - Snippet is not truncated when content is under 1000 characters.
 
 **Story D2: Open original article**
 - As a user, I can open the source article.
@@ -196,11 +200,11 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - `POST /api/feeds` -> add a feed URL; rejects duplicates by normalized URL.
 - `DELETE /api/feeds/{feed_id}` -> remove feed from polling.
 - `POST /api/refresh` -> trigger immediate refresh of all active feeds.
-- `GET /api/items` -> river query with optional `feed_ids`, `start_date`, `end_date`, `limit`, `cursor`.
+- `GET /api/items` -> river query with optional `feed_ids`, `start_date`, `end_date`, `limit`, `cursor`; each item includes optional `image_url` when available.
 
 ### 7.5 Data Model Contract (MVP)
 - `feeds`: `id`, `url`, `normalized_url` (unique), `title`, `status`, `consecutive_failures`, `last_error`, `last_polled_at`, `last_success_at`, timestamps.
-- `items`: `id`, `canonical_key`, `guid`, `url`, `canonical_url`, `title`, `snippet`, `published_at`, `ingested_at`, timestamps.
+- `items`: `id`, `canonical_key`, `guid`, `url`, `canonical_url`, `image_url`, `title`, `snippet`, `published_at`, `ingested_at`, timestamps.
 - `item_sources`: `item_id`, `feed_id`, `source_item_guid`, `source_item_url`, `first_seen_at`; unique on (`item_id`, `feed_id`, `source_item_guid`).
 - Retention cleanup removes rows from `items` older than 30 days by `published_at` and cascades related `item_sources`.
 

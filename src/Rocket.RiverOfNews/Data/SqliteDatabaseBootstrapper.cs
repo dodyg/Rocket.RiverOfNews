@@ -5,56 +5,105 @@ namespace Rocket.RiverOfNews.Data;
 public static class SqliteDatabaseBootstrapper
 {
 	public static async Task InitializeAsync(
-		string DatabasePath,
-		string MigrationsPath,
-		CancellationToken CancellationToken)
+		string databasePath,
+		string migrationsPath,
+		CancellationToken cancellationToken)
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(DatabasePath);
-		ArgumentException.ThrowIfNullOrWhiteSpace(MigrationsPath);
+		ArgumentException.ThrowIfNullOrWhiteSpace(databasePath);
+		ArgumentException.ThrowIfNullOrWhiteSpace(migrationsPath);
 
-		string? DatabaseDirectoryPath = Path.GetDirectoryName(DatabasePath);
-		if (string.IsNullOrWhiteSpace(DatabaseDirectoryPath))
+		string? databaseDirectoryPath = Path.GetDirectoryName(databasePath);
+		if (string.IsNullOrWhiteSpace(databaseDirectoryPath))
 		{
 			throw new InvalidOperationException("Database path must include a directory.");
 		}
 
-		Directory.CreateDirectory(DatabaseDirectoryPath);
-		if (!Directory.Exists(MigrationsPath))
+		Directory.CreateDirectory(databaseDirectoryPath);
+		if (!Directory.Exists(migrationsPath))
 		{
-			throw new DirectoryNotFoundException($"Migrations path not found: {MigrationsPath}");
+			throw new DirectoryNotFoundException($"Migrations path not found: {migrationsPath}");
 		}
 
-		SqliteConnectionStringBuilder ConnectionStringBuilder = new()
+		SqliteConnectionStringBuilder connectionStringBuilder = new()
 		{
-			DataSource = DatabasePath,
+			DataSource = databasePath,
 			Mode = SqliteOpenMode.ReadWriteCreate,
 			Cache = SqliteCacheMode.Shared
 		};
 
-		await using SqliteConnection Connection = new(ConnectionStringBuilder.ConnectionString);
-		await Connection.OpenAsync(CancellationToken);
+		await using SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
+		await connection.OpenAsync(cancellationToken);
 
-		await ExecuteNonQueryAsync(Connection, "PRAGMA foreign_keys=ON;", CancellationToken);
-		await ExecuteNonQueryAsync(Connection, "PRAGMA journal_mode=WAL;", CancellationToken);
-		await ExecuteNonQueryAsync(Connection, "PRAGMA synchronous=NORMAL;", CancellationToken);
+		await ExecuteNonQueryAsync(connection, "PRAGMA foreign_keys=ON;", cancellationToken);
+		await ExecuteNonQueryAsync(connection, "PRAGMA journal_mode=WAL;", cancellationToken);
+		await ExecuteNonQueryAsync(connection, "PRAGMA synchronous=NORMAL;", cancellationToken);
+		await ExecuteNonQueryAsync(
+			connection,
+			"""
+			CREATE TABLE IF NOT EXISTS __migrations
+			(
+				file_name TEXT PRIMARY KEY,
+				applied_at TEXT NOT NULL
+			);
+			""",
+			cancellationToken);
 
-		string[] MigrationFilePaths = Directory.GetFiles(MigrationsPath, "*.sql", SearchOption.TopDirectoryOnly);
-		Array.Sort(MigrationFilePaths, StringComparer.Ordinal);
+		string[] migrationFilePaths = Directory.GetFiles(migrationsPath, "*.sql", SearchOption.TopDirectoryOnly);
+		Array.Sort(migrationFilePaths, StringComparer.Ordinal);
 
-		foreach (string MigrationFilePath in MigrationFilePaths)
+		foreach (string migrationFilePath in migrationFilePaths)
 		{
-			string MigrationSql = await File.ReadAllTextAsync(MigrationFilePath, CancellationToken);
-			await ExecuteNonQueryAsync(Connection, MigrationSql, CancellationToken);
+			string migrationFileName = Path.GetFileName(migrationFilePath);
+			if (await IsMigrationAppliedAsync(connection, migrationFileName, cancellationToken))
+			{
+				continue;
+			}
+
+			await using System.Data.Common.DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+			string migrationSql = await File.ReadAllTextAsync(migrationFilePath, cancellationToken);
+			await ExecuteNonQueryAsync(connection, migrationSql, cancellationToken, transaction);
+			await RecordMigrationAsync(connection, migrationFileName, cancellationToken, transaction);
+			await transaction.CommitAsync(cancellationToken);
 		}
 	}
 
-	private static async Task ExecuteNonQueryAsync(
-		SqliteConnection Connection,
-		string Sql,
-		CancellationToken CancellationToken)
+	private static async Task<bool> IsMigrationAppliedAsync(
+		SqliteConnection connection,
+		string migrationFileName,
+		CancellationToken cancellationToken)
 	{
-		await using SqliteCommand Command = Connection.CreateCommand();
-		Command.CommandText = Sql;
-		await Command.ExecuteNonQueryAsync(CancellationToken);
+		await using SqliteCommand command = connection.CreateCommand();
+		command.CommandText = "SELECT EXISTS(SELECT 1 FROM __migrations WHERE file_name = $fileName);";
+		command.Parameters.AddWithValue("$fileName", migrationFileName);
+		object? scalar = await command.ExecuteScalarAsync(cancellationToken);
+		return Convert.ToInt32(scalar, System.Globalization.CultureInfo.InvariantCulture) == 1;
+	}
+
+	private static async Task RecordMigrationAsync(
+		SqliteConnection connection,
+		string migrationFileName,
+		CancellationToken cancellationToken,
+		System.Data.Common.DbTransaction transaction)
+	{
+		await using SqliteCommand command = connection.CreateCommand();
+		command.Transaction = (SqliteTransaction?)transaction;
+		command.CommandText = """
+			INSERT INTO __migrations (file_name, applied_at)
+			VALUES ($fileName, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
+			""";
+		command.Parameters.AddWithValue("$fileName", migrationFileName);
+		await command.ExecuteNonQueryAsync(cancellationToken);
+	}
+
+	private static async Task ExecuteNonQueryAsync(
+		SqliteConnection connection,
+		string sql,
+		CancellationToken cancellationToken,
+		System.Data.Common.DbTransaction? transaction = null)
+	{
+		await using SqliteCommand command = connection.CreateCommand();
+		command.Transaction = (SqliteTransaction?)transaction;
+		command.CommandText = sql;
+		await command.ExecuteNonQueryAsync(cancellationToken);
 	}
 }

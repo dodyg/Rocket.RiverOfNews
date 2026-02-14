@@ -4,26 +4,26 @@ public sealed class FeedPollingBackgroundService : BackgroundService
 {
 	private readonly IServiceScopeFactory ServiceScopeFactory;
 
-	public FeedPollingBackgroundService(IServiceScopeFactory ServiceScopeFactory)
+	public FeedPollingBackgroundService(IServiceScopeFactory serviceScopeFactory)
 	{
-		ArgumentNullException.ThrowIfNull(ServiceScopeFactory);
-		this.ServiceScopeFactory = ServiceScopeFactory;
+		ArgumentNullException.ThrowIfNull(serviceScopeFactory);
+		ServiceScopeFactory = serviceScopeFactory;
 	}
 
-	protected override async Task ExecuteAsync(CancellationToken StoppingToken)
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		await RunScheduledRefreshAsync(StoppingToken);
-		using PeriodicTimer Timer = new(TimeSpan.FromMinutes(1));
-		while (await Timer.WaitForNextTickAsync(StoppingToken))
+		await RunScheduledRefreshAsync(stoppingToken);
+		using PeriodicTimer timer = new(TimeSpan.FromMinutes(1));
+		while (await timer.WaitForNextTickAsync(stoppingToken))
 		{
-			await RunScheduledRefreshAsync(StoppingToken);
+			await RunScheduledRefreshAsync(stoppingToken);
 		}
 	}
 
-	private async Task RunScheduledRefreshAsync(CancellationToken CancellationToken)
+	private async Task RunScheduledRefreshAsync(CancellationToken cancellationToken)
 	{
-		using IServiceScope ServiceScope = ServiceScopeFactory.CreateScope();
-		FeedIngestionService FeedIngestionService = ServiceScope.ServiceProvider.GetRequiredService<FeedIngestionService>();
-		await FeedIngestionService.RefreshDueFeedsAsync(CancellationToken);
+		using IServiceScope serviceScope = ServiceScopeFactory.CreateScope();
+		FeedIngestionService feedIngestionService = serviceScope.ServiceProvider.GetRequiredService<FeedIngestionService>();
+		await feedIngestionService.RefreshDueFeedsAsync(cancellationToken);
 	}
 }

@@ -8,43 +8,43 @@ public sealed class RetentionCleanupBackgroundService : BackgroundService
 {
 	private readonly IServiceScopeFactory ServiceScopeFactory;
 
-	public RetentionCleanupBackgroundService(IServiceScopeFactory ServiceScopeFactory)
+	public RetentionCleanupBackgroundService(IServiceScopeFactory serviceScopeFactory)
 	{
-		ArgumentNullException.ThrowIfNull(ServiceScopeFactory);
-		this.ServiceScopeFactory = ServiceScopeFactory;
+		ArgumentNullException.ThrowIfNull(serviceScopeFactory);
+		ServiceScopeFactory = serviceScopeFactory;
 	}
 
-	protected override async Task ExecuteAsync(CancellationToken StoppingToken)
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		await RunCleanupAsync(StoppingToken);
-		using PeriodicTimer Timer = new(TimeSpan.FromHours(1));
-		while (await Timer.WaitForNextTickAsync(StoppingToken))
+		await RunCleanupAsync(stoppingToken);
+		using PeriodicTimer timer = new(TimeSpan.FromHours(1));
+		while (await timer.WaitForNextTickAsync(stoppingToken))
 		{
-			await RunCleanupAsync(StoppingToken);
+			await RunCleanupAsync(stoppingToken);
 		}
 	}
 
-	private async Task RunCleanupAsync(CancellationToken CancellationToken)
+	private async Task RunCleanupAsync(CancellationToken cancellationToken)
 	{
-		using IServiceScope Scope = ServiceScopeFactory.CreateScope();
-		SqliteConnectionFactory ConnectionFactory = Scope.ServiceProvider.GetRequiredService<SqliteConnectionFactory>();
-		await using Microsoft.Data.Sqlite.SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken);
+		using IServiceScope scope = ServiceScopeFactory.CreateScope();
+		SqliteConnectionFactory connectionFactory = scope.ServiceProvider.GetRequiredService<SqliteConnectionFactory>();
+		await using Microsoft.Data.Sqlite.SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
 
-		string CutoffTimestamp = DateTimeOffset.UtcNow
+		string cutoffTimestamp = DateTimeOffset.UtcNow
 			.AddDays(-30)
 			.ToString("O", CultureInfo.InvariantCulture);
 
-		const string Sql = """
+		const string sql = """
 			DELETE FROM items
 			WHERE published_at < @CutoffTimestamp;
 			""";
 
-		await Connection.ExecuteAsync(new CommandDefinition(
-			Sql,
+		await connection.ExecuteAsync(new CommandDefinition(
+			sql,
 			new
 			{
-				CutoffTimestamp
+				CutoffTimestamp = cutoffTimestamp
 			},
-			cancellationToken: CancellationToken));
+			cancellationToken: cancellationToken));
 	}
 }

@@ -14,7 +14,8 @@ C# / ASP.NET Core developer (Razor Pages + Minimal API) targeting .NET 8–10.
 ## Coding standards & conventions
 
 * Strong explicit typing; avoid `var` unless the type is truly obvious or required.
-* **PascalCase every identifier** (types, members, variables, parameters, generics, Razor artifacts, generated names like `App`/`Builder`).
+* **PascalCase every identifier** (types, members, generics, Razor artifacts, generated names like `App`/`Builder`).
+* **camelCase** for local variables, parameters.
 * Exception: simple loop counters (`i`, `j`, `k`, `w`, `h`, `x`, `y`, `z`).
 * Tabs for indentation; opening brace on its own line.
 * Nullability **enabled**; treat warnings as errors.

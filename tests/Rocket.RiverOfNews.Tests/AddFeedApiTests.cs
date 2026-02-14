@@ -13,87 +13,87 @@ public class AddFeedApiTests
 	[Test]
 	public async Task AddFeedAsync_WithValidUrl_ReturnsCreatedAndPersistsFeed()
 	{
-		await using TestDatabaseContext Database = await TestDatabaseContext.CreateAsync();
-		MvpApi.AddFeedRequest Request = new()
+		await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
+		MvpApi.AddFeedRequest request = new()
 		{
 			Url = "https://example.com/feed.xml",
 			Title = "Example Feed"
 		};
 
-		IResult Result = await MvpApi.AddFeedAsync(Request, Database.ConnectionFactory, CancellationToken.None);
-		(int StatusCode, JsonElement Body) = await ExecuteResultAsync(Result);
+		IResult result = await MvpApi.AddFeedAsync(request, database.ConnectionFactory, CancellationToken.None);
+		(int statusCode, JsonElement body) = await ExecuteResultAsync(result);
 
-		await Assert.That(StatusCode).IsEqualTo(StatusCodes.Status201Created);
-		await Assert.That(Body.GetProperty("url").GetString()).IsEqualTo("https://example.com/feed.xml");
-		await Assert.That(Body.GetProperty("title").GetString()).IsEqualTo("Example Feed");
-		await Assert.That(await CountFeedsAsync(Database.ConnectionFactory)).IsEqualTo(1);
+		await Assert.That(statusCode).IsEqualTo(StatusCodes.Status201Created);
+		await Assert.That(body.GetProperty("url").GetString()).IsEqualTo("https://example.com/feed.xml");
+		await Assert.That(body.GetProperty("title").GetString()).IsEqualTo("Example Feed");
+		await Assert.That(await CountFeedsAsync(database.ConnectionFactory)).IsEqualTo(1);
 	}
 
 	[Test]
 	public async Task AddFeedAsync_WithDuplicateUrl_ReturnsConflict()
 	{
-		await using TestDatabaseContext Database = await TestDatabaseContext.CreateAsync();
+		await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
 		await MvpApi.AddFeedAsync(
 			new MvpApi.AddFeedRequest
 			{
 				Url = "https://example.com/feed.xml"
 			},
-			Database.ConnectionFactory,
+			database.ConnectionFactory,
 			CancellationToken.None);
 
-		IResult DuplicateResult = await MvpApi.AddFeedAsync(
+		IResult duplicateResult = await MvpApi.AddFeedAsync(
 			new MvpApi.AddFeedRequest
 			{
 				Url = "https://example.com/feed.xml#fragment"
 			},
-			Database.ConnectionFactory,
+			database.ConnectionFactory,
 			CancellationToken.None);
 
-		(int StatusCode, JsonElement Body) = await ExecuteResultAsync(DuplicateResult);
-		await Assert.That(StatusCode).IsEqualTo(StatusCodes.Status409Conflict);
-		await Assert.That(Body.GetProperty("message").GetString()).IsEqualTo("Feed URL already exists.");
+		(int statusCode, JsonElement body) = await ExecuteResultAsync(duplicateResult);
+		await Assert.That(statusCode).IsEqualTo(StatusCodes.Status409Conflict);
+		await Assert.That(body.GetProperty("message").GetString()).IsEqualTo("Feed URL already exists.");
 	}
 
 	[Test]
 	public async Task AddFeedAsync_WithInvalidUrl_ReturnsBadRequest()
 	{
-		await using TestDatabaseContext Database = await TestDatabaseContext.CreateAsync();
-		IResult Result = await MvpApi.AddFeedAsync(
+		await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
+		IResult result = await MvpApi.AddFeedAsync(
 			new MvpApi.AddFeedRequest
 			{
 				Url = "not-a-valid-url"
 			},
-			Database.ConnectionFactory,
+			database.ConnectionFactory,
 			CancellationToken.None);
 
-		(int StatusCode, JsonElement Body) = await ExecuteResultAsync(Result);
-		await Assert.That(StatusCode).IsEqualTo(StatusCodes.Status400BadRequest);
-		await Assert.That(Body.GetProperty("message").GetString()).IsEqualTo("Invalid feed URL.");
+		(int statusCode, JsonElement body) = await ExecuteResultAsync(result);
+		await Assert.That(statusCode).IsEqualTo(StatusCodes.Status400BadRequest);
+		await Assert.That(body.GetProperty("message").GetString()).IsEqualTo("Invalid feed URL.");
 	}
 
-	private static async Task<(int StatusCode, JsonElement Body)> ExecuteResultAsync(IResult Result)
+	private static async Task<(int statusCode, JsonElement body)> ExecuteResultAsync(IResult result)
 	{
-		DefaultHttpContext HttpContext = new();
-		ServiceCollection Services = new();
-		Services.AddLogging();
-		Services.AddOptions();
-		HttpContext.RequestServices = Services.BuildServiceProvider();
-		await using MemoryStream BodyStream = new();
-		HttpContext.Response.Body = BodyStream;
+		DefaultHttpContext httpContext = new();
+		ServiceCollection services = new();
+		services.AddLogging();
+		services.AddOptions();
+		httpContext.RequestServices = services.BuildServiceProvider();
+		await using MemoryStream bodyStream = new();
+		httpContext.Response.Body = bodyStream;
 
-		await Result.ExecuteAsync(HttpContext);
-		BodyStream.Position = 0;
-		using JsonDocument Document = await JsonDocument.ParseAsync(BodyStream);
-		return (HttpContext.Response.StatusCode, Document.RootElement.Clone());
+		await result.ExecuteAsync(httpContext);
+		bodyStream.Position = 0;
+		using JsonDocument document = await JsonDocument.ParseAsync(bodyStream);
+		return (httpContext.Response.StatusCode, document.RootElement.Clone());
 	}
 
-	private static async Task<int> CountFeedsAsync(SqliteConnectionFactory ConnectionFactory)
+	private static async Task<int> CountFeedsAsync(SqliteConnectionFactory connectionFactory)
 	{
-		await using SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken.None);
-		await using SqliteCommand Command = Connection.CreateCommand();
-		Command.CommandText = "SELECT COUNT(*) FROM feeds;";
-		object? Scalar = await Command.ExecuteScalarAsync(CancellationToken.None);
-		return Convert.ToInt32(Scalar, System.Globalization.CultureInfo.InvariantCulture);
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(CancellationToken.None);
+		await using SqliteCommand command = connection.CreateCommand();
+		command.CommandText = "SELECT COUNT(*) FROM feeds;";
+		object? scalar = await command.ExecuteScalarAsync(CancellationToken.None);
+		return Convert.ToInt32(scalar, System.Globalization.CultureInfo.InvariantCulture);
 	}
 
 	private sealed class TestDatabaseContext : IAsyncDisposable
@@ -103,15 +103,15 @@ public class AddFeedApiTests
 
 		public static async Task<TestDatabaseContext> CreateAsync()
 		{
-			string RootPath = Path.Combine(Path.GetTempPath(), "Rocket.RiverOfNews.Tests", Guid.NewGuid().ToString("N"));
-			string DatabasePath = Path.Combine(RootPath, "db", "river.test.db");
-			string MigrationsPath = Path.Combine(GetRepositoryRootPath(), "db", "migrations");
+			string rootPath = Path.Combine(Path.GetTempPath(), "Rocket.RiverOfNews.Tests", Guid.NewGuid().ToString("N"));
+			string databasePath = Path.Combine(rootPath, "db", "river.test.db");
+			string migrationsPath = Path.Combine(GetRepositoryRootPath(), "db", "migrations");
 
-			await SqliteDatabaseBootstrapper.InitializeAsync(DatabasePath, MigrationsPath, CancellationToken.None);
+			await SqliteDatabaseBootstrapper.InitializeAsync(databasePath, migrationsPath, CancellationToken.None);
 			return new TestDatabaseContext
 			{
-				RootPath = RootPath,
-				ConnectionFactory = new SqliteConnectionFactory(DatabasePath)
+				RootPath = rootPath,
+				ConnectionFactory = new SqliteConnectionFactory(databasePath)
 			};
 		}
 
@@ -128,16 +128,16 @@ public class AddFeedApiTests
 
 	private static string GetRepositoryRootPath()
 	{
-		DirectoryInfo? Current = new(AppContext.BaseDirectory);
-		while (Current is not null)
+		DirectoryInfo? current = new(AppContext.BaseDirectory);
+		while (current is not null)
 		{
-			string Candidate = Path.Combine(Current.FullName, "Rocket.RiverOfNews.slnx");
-			if (File.Exists(Candidate))
+			string candidate = Path.Combine(current.FullName, "Rocket.RiverOfNews.slnx");
+			if (File.Exists(candidate))
 			{
-				return Current.FullName;
+				return current.FullName;
 			}
 
-			Current = Current.Parent;
+			current = current.Parent;
 		}
 
 		throw new DirectoryNotFoundException("Could not find Rocket.RiverOfNews.slnx from test base directory.");

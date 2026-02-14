@@ -3,37 +3,39 @@ using Rocket.RiverOfNews.Data;
 using Rocket.RiverOfNews.Services;
 using Rocket.Syndication.DependencyInjection;
 
-WebApplicationBuilder Builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-string RepositoryRootPath = Path.GetFullPath(Path.Combine(Builder.Environment.ContentRootPath, "..", ".."));
-string DatabasePath = Path.Combine(RepositoryRootPath, "db", "river.db");
-string MigrationsPath = Path.Combine(RepositoryRootPath, "db", "migrations");
+string repositoryRootPath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", ".."));
+string databasePath = Path.Combine(repositoryRootPath, "db", "river.db");
+string migrationsPath = Path.Combine(repositoryRootPath, "db", "migrations");
 
-await SqliteDatabaseBootstrapper.InitializeAsync(DatabasePath, MigrationsPath, CancellationToken.None);
+await SqliteDatabaseBootstrapper.InitializeAsync(databasePath, migrationsPath, CancellationToken.None);
 
-Builder.Services.AddSingleton(new SqliteConnectionFactory(DatabasePath));
-Builder.Services.AddSyndicationClient(Options =>
+builder.Services.AddSingleton(new SqliteConnectionFactory(databasePath));
+builder.Services.AddSyndicationClient(options =>
 {
-	Options.Timeout = TimeSpan.FromSeconds(10);
-	Options.EnableCaching = false;
+	options.Timeout = TimeSpan.FromSeconds(10);
+	options.EnableCaching = false;
 });
-Builder.Services.AddScoped<FeedIngestionService>();
-Builder.Services.AddHostedService<FeedPollingBackgroundService>();
-Builder.Services.AddHostedService<RetentionCleanupBackgroundService>();
+builder.Services.AddScoped<FeedIngestionService>();
+builder.Services.AddHostedService<FeedPollingBackgroundService>();
+builder.Services.AddHostedService<RetentionCleanupBackgroundService>();
 
-WebApplication App = Builder.Build();
+WebApplication app = builder.Build();
 
-App.MapGet("/", () => Results.Redirect("/river"));
-App.MapGet("/river", MvpApi.GetRiverPage);
-App.MapGet("/health", () => Results.Ok(new
+app.MapGet("/", () => Results.Redirect("/river"));
+app.MapGet("/river", MvpApi.GetRiverPage);
+app.MapGet("/river/items/{itemId}", MvpApi.GetRiverItemPage);
+app.MapGet("/health", () => Results.Ok(new
 {
 	Status = "ok"
 }));
-App.MapGet("/api/feeds", MvpApi.GetFeedsAsync);
-App.MapPost("/api/feeds", MvpApi.AddFeedAsync);
-App.MapDelete("/api/feeds/{FeedId}", MvpApi.DeleteFeedAsync);
-App.MapPost("/api/refresh", MvpApi.RefreshAsync);
-App.MapGet("/api/items", MvpApi.GetItemsAsync);
-App.MapGet("/api/perf/latest-200", MvpApi.GetLatest200PerformanceAsync);
+app.MapGet("/api/feeds", MvpApi.GetFeedsAsync);
+app.MapPost("/api/feeds", MvpApi.AddFeedAsync);
+app.MapDelete("/api/feeds/{feedId}", MvpApi.DeleteFeedAsync);
+app.MapPost("/api/refresh", MvpApi.RefreshAsync);
+app.MapGet("/api/items", MvpApi.GetItemsAsync);
+app.MapGet("/api/items/{itemId}", MvpApi.GetItemByIdAsync);
+app.MapGet("/api/perf/latest-200", MvpApi.GetLatest200PerformanceAsync);
 
-App.Run();
+app.Run();

@@ -1,5 +1,6 @@
-using System.Globalization;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text.Json;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using Rocket.RiverOfNews.Data;
@@ -11,7 +12,7 @@ public static class MvpApi
 {
 	public static IResult GetRiverPage()
 	{
-		const string Html = """
+		const string html = """
 			<!doctype html>
 			<html lang="en">
 			<head>
@@ -65,6 +66,7 @@ public static class MvpApi
 							<div class="text-sm">
 								<span class="mb-1 block text-slate-300">Sources</span>
 								<div id="sourceFilters" class="max-h-36 overflow-auto rounded border border-slate-700 bg-slate-950 p-2"></div>
+								<p id="feedActionStatus" class="mt-2 text-xs text-slate-400"></p>
 							</div>
 						</div>
 						<div class="mt-3 flex gap-2">
@@ -100,6 +102,7 @@ public static class MvpApi
 					const AddFeedStatus = document.getElementById("addFeedStatus");
 					const AddFeedUrlInput = document.getElementById("addFeedUrl");
 					const AddFeedTitleInput = document.getElementById("addFeedTitle");
+					const FeedActionStatus = document.getElementById("feedActionStatus");
 
 					function toIsoUtc(datetimeLocalValue) {
 						if (!datetimeLocalValue) return "";
@@ -112,11 +115,16 @@ public static class MvpApi
 							const article = document.createElement("article");
 							article.className = "rounded border border-slate-800 bg-slate-900 p-4";
 							const sourceText = item.sourceNames || "Unknown source";
+							const detailsLink = `/river/items/${encodeURIComponent(item.id)}`;
 							const link = item.canonicalUrl || "#";
+							const imageBlock = item.imageUrl
+								? `<img class="mb-3 max-h-56 w-full rounded object-cover" src="${item.imageUrl}" alt="">`
+								: "";
 							article.innerHTML = `
 								<div class="mb-1 text-xs text-slate-400">${sourceText}</div>
-								<h2 class="mb-2 text-lg font-semibold">${item.title}</h2>
+								<h2 class="mb-2 text-lg font-semibold"><a class="text-slate-100 hover:text-sky-300" href="${detailsLink}">${item.title}</a></h2>
 								<div class="mb-2 text-xs text-slate-400">${new Date(item.publishedAt).toUTCString()}</div>
+								${imageBlock}
 								<p class="mb-3 text-sm text-slate-300">${item.snippet || ""}</p>
 								<a class="text-sm text-sky-400 hover:text-sky-300" href="${link}" target="_blank" rel="noreferrer">Open article</a>
 							`;
@@ -131,6 +139,13 @@ public static class MvpApi
 						AddFeedStatus.classList.toggle("text-slate-400", !message);
 					}
 
+					function setFeedActionStatus(message, isError) {
+						FeedActionStatus.textContent = message || "";
+						FeedActionStatus.classList.toggle("text-rose-400", !!isError);
+						FeedActionStatus.classList.toggle("text-emerald-400", !!message && !isError);
+						FeedActionStatus.classList.toggle("text-slate-400", !message);
+					}
+
 					async function loadFeeds() {
 						const response = await fetch("/api/feeds");
 						const feeds = await response.json();
@@ -141,18 +156,59 @@ public static class MvpApi
 						}
 						for (const feed of feeds) {
 							const id = `feed_${feed.id}`;
-							const wrapper = document.createElement("label");
-							wrapper.className = "mb-1 flex items-center gap-2 text-xs";
-							wrapper.innerHTML = `
+							const row = document.createElement("div");
+							row.className = "mb-1 flex items-center justify-between gap-2 text-xs";
+
+							const label = document.createElement("label");
+							label.className = "flex items-center gap-2";
+							label.innerHTML = `
 								<input id="${id}" type="checkbox" value="${feed.id}" class="accent-sky-500">
 								<span>${feed.title} <span class="text-slate-500">(${feed.status})</span></span>
 							`;
-							wrapper.querySelector("input").addEventListener("change", (event) => {
+							const checkbox = label.querySelector("input");
+							checkbox.checked = State.selectedFeedIds.has(feed.id);
+							checkbox.addEventListener("change", (event) => {
 								const checked = event.target.checked;
 								if (checked) State.selectedFeedIds.add(feed.id);
 								else State.selectedFeedIds.delete(feed.id);
 							});
-							SourceFiltersContainer.appendChild(wrapper);
+
+							const deleteButton = document.createElement("button");
+							deleteButton.type = "button";
+							deleteButton.className = "rounded border border-rose-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-950";
+							deleteButton.textContent = "Delete";
+							deleteButton.addEventListener("click", async () => {
+								if (!confirm(`Delete feed "${feed.title}"?`)) return;
+								deleteButton.disabled = true;
+								setFeedActionStatus("Deleting feed...", false);
+								try {
+									const deleteResponse = await fetch(`/api/feeds/${encodeURIComponent(feed.id)}`, { method: "DELETE" });
+									let payload = {};
+									try {
+										payload = await deleteResponse.json();
+									} catch {
+										payload = {};
+									}
+									if (!deleteResponse.ok) {
+										setFeedActionStatus(payload.message || "Failed to delete feed.", true);
+										deleteButton.disabled = false;
+										return;
+									}
+
+									State.selectedFeedIds.delete(feed.id);
+									setFeedActionStatus("Feed deleted.", false);
+									await loadFeeds();
+									State.cursor = null;
+									await loadItems(true);
+								} catch {
+									setFeedActionStatus("Network error while deleting feed.", true);
+									deleteButton.disabled = false;
+								}
+							});
+
+							row.appendChild(label);
+							row.appendChild(deleteButton);
+							SourceFiltersContainer.appendChild(row);
 						}
 					}
 
@@ -274,14 +330,86 @@ public static class MvpApi
 			</html>
 			""";
 
-		return Results.Content(Html, "text/html; charset=utf-8");
+		return Results.Content(html, "text/html; charset=utf-8");
+	}
+
+	public static IResult GetRiverItemPage(string itemId)
+	{
+		ArgumentException.ThrowIfNullOrWhiteSpace(itemId);
+		string serializedItemId = JsonSerializer.Serialize(itemId);
+		string html = $$"""
+			<!doctype html>
+			<html lang="en">
+			<head>
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
+				<title>River item details</title>
+				<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+			</head>
+			<body class="bg-slate-950 text-slate-100">
+				<main class="mx-auto max-w-4xl p-4 md:p-8">
+					<a href="/river" class="text-sm text-sky-400 hover:text-sky-300">← Back to river</a>
+					<article class="mt-4 rounded border border-slate-800 bg-slate-900 p-4">
+						<div id="itemSources" class="mb-2 text-xs text-slate-400"></div>
+						<h1 id="itemTitle" class="mb-3 text-2xl font-semibold"></h1>
+						<div id="itemDates" class="mb-3 text-xs text-slate-400"></div>
+						<p id="itemSnippet" class="mb-4 text-sm text-slate-300 whitespace-pre-wrap"></p>
+						<div class="flex flex-wrap gap-3 text-sm">
+							<a id="itemCanonicalLink" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open canonical article</a>
+							<a id="itemOriginalLink" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open original article URL</a>
+						</div>
+						<p id="itemError" class="mt-4 text-sm text-rose-400"></p>
+					</article>
+				</main>
+				<script>
+					const itemId = {{serializedItemId}};
+					const itemTitle = document.getElementById("itemTitle");
+					const itemSources = document.getElementById("itemSources");
+					const itemDates = document.getElementById("itemDates");
+					const itemSnippet = document.getElementById("itemSnippet");
+					const itemCanonicalLink = document.getElementById("itemCanonicalLink");
+					const itemOriginalLink = document.getElementById("itemOriginalLink");
+					const itemError = document.getElementById("itemError");
+
+					async function loadItem() {
+						const response = await fetch(`/api/items/${encodeURIComponent(itemId)}`);
+						let payload = {};
+						try {
+							payload = await response.json();
+						} catch {
+							payload = {};
+						}
+
+						if (!response.ok) {
+							itemError.textContent = payload.message || "Failed to load item details.";
+							return;
+						}
+
+						itemTitle.textContent = payload.title;
+						itemSources.textContent = payload.sourceNames || "Unknown source";
+						itemDates.textContent = `Published: ${new Date(payload.publishedAt).toUTCString()} | Ingested: ${new Date(payload.ingestedAt).toUTCString()}`;
+						itemSnippet.textContent = payload.snippet || "";
+
+						const canonicalLink = payload.canonicalUrl || payload.url || "#";
+						const originalLink = payload.url || payload.canonicalUrl || "#";
+						itemCanonicalLink.href = canonicalLink;
+						itemOriginalLink.href = originalLink;
+					}
+
+					loadItem();
+				</script>
+			</body>
+			</html>
+			""";
+
+		return Results.Content(html, "text/html; charset=utf-8");
 	}
 
 	public static async Task<IResult> GetFeedsAsync(
-		SqliteConnectionFactory ConnectionFactory,
-		CancellationToken CancellationToken)
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
 	{
-		const string Sql = """
+		const string sql = """
 			SELECT
 				id AS Id,
 				url AS Url,
@@ -296,33 +424,33 @@ public static class MvpApi
 			ORDER BY title COLLATE NOCASE, normalized_url COLLATE NOCASE;
 			""";
 
-		await using SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken);
-		IReadOnlyList<FeedResponse> Feeds = (await Connection.QueryAsync<FeedResponse>(new CommandDefinition(Sql, cancellationToken: CancellationToken))).AsList();
-		return Results.Ok(Feeds);
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		IReadOnlyList<FeedResponse> feeds = (await connection.QueryAsync<FeedResponse>(new CommandDefinition(sql, cancellationToken: cancellationToken))).AsList();
+		return Results.Ok(feeds);
 	}
 
 	public static async Task<IResult> AddFeedAsync(
-		AddFeedRequest Request,
-		SqliteConnectionFactory ConnectionFactory,
-		CancellationToken CancellationToken)
+		AddFeedRequest request,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
 	{
-		ArgumentNullException.ThrowIfNull(Request);
-		ArgumentException.ThrowIfNullOrWhiteSpace(Request.Url);
+		ArgumentNullException.ThrowIfNull(request);
+		ArgumentException.ThrowIfNullOrWhiteSpace(request.Url);
 
-		string NormalizedUrl;
+		string normalizedUrl;
 		try
 		{
-			NormalizedUrl = NormalizeUrl(Request.Url);
+			normalizedUrl = NormalizeUrl(request.Url);
 		}
 		catch (UriFormatException)
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid feed URL."));
 		}
 
-		string FeedId = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-		string Now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+		string feedId = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
 
-		const string Sql = """
+		const string sql = """
 			INSERT INTO feeds (
 				id, url, normalized_url, title, status, consecutive_failures, created_at, updated_at
 			)
@@ -331,12 +459,12 @@ public static class MvpApi
 			);
 			""";
 
-		FeedResponse Feed = new()
+		FeedResponse feed = new()
 		{
-			Id = FeedId,
-			Url = Request.Url,
-			NormalizedUrl = NormalizedUrl,
-			Title = Request.Title ?? NormalizedUrl,
+			Id = feedId,
+			Url = request.Url,
+			NormalizedUrl = normalizedUrl,
+			Title = request.Title ?? normalizedUrl,
 			Status = "healthy",
 			ConsecutiveFailures = 0,
 			LastError = null,
@@ -346,92 +474,93 @@ public static class MvpApi
 
 		try
 		{
-			await using SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken);
-			await Connection.ExecuteAsync(
+			await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+			await connection.ExecuteAsync(
 				new CommandDefinition(
-					Sql,
+					sql,
 					new
 					{
-						Id = Feed.Id,
-						Url = Feed.Url,
-						NormalizedUrl = Feed.NormalizedUrl,
-						Title = Feed.Title,
-						Now
+						Id = feed.Id,
+						Url = feed.Url,
+						NormalizedUrl = feed.NormalizedUrl,
+						Title = feed.Title,
+						Now = now
 					},
-					cancellationToken: CancellationToken));
+					cancellationToken: cancellationToken));
 		}
-		catch (SqliteException Exception) when (Exception.SqliteErrorCode == 19)
+		catch (SqliteException exception) when (exception.SqliteErrorCode == 19)
 		{
 			return Results.Conflict(new ErrorResponse("Feed URL already exists."));
 		}
 
-		return Results.Created($"/api/feeds/{Feed.Id}", Feed);
+		return Results.Created($"/api/feeds/{feed.Id}", feed);
 	}
 
 	public static async Task<IResult> DeleteFeedAsync(
-		string FeedId,
-		SqliteConnectionFactory ConnectionFactory,
-		CancellationToken CancellationToken)
+		string feedId,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(FeedId);
+		ArgumentException.ThrowIfNullOrWhiteSpace(feedId);
 
-		const string Sql = "DELETE FROM feeds WHERE id = @FeedId;";
-		await using SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken);
-		int RowsAffected = await Connection.ExecuteAsync(new CommandDefinition(Sql, new { FeedId }, cancellationToken: CancellationToken));
-		return RowsAffected > 0 ? Results.NoContent() : Results.NotFound(new ErrorResponse("Feed not found."));
+		const string sql = "DELETE FROM feeds WHERE id = @FeedId;";
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		int rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { FeedId = feedId }, cancellationToken: cancellationToken));
+		return rowsAffected > 0 ? Results.NoContent() : Results.NotFound(new ErrorResponse("Feed not found."));
 	}
 
 	public static async Task<IResult> RefreshAsync(
-		FeedIngestionService FeedIngestionService,
-		CancellationToken CancellationToken)
+		FeedIngestionService feedIngestionService,
+		CancellationToken cancellationToken)
 	{
-		RefreshResult RefreshResult = await FeedIngestionService.RefreshAllFeedsAsync(CancellationToken);
-		return Results.Ok(RefreshResult);
+		RefreshResult refreshResult = await feedIngestionService.RefreshAllFeedsAsync(cancellationToken);
+		return Results.Ok(refreshResult);
 	}
 
 	public static async Task<IResult> GetItemsAsync(
-		HttpRequest Request,
-		SqliteConnectionFactory ConnectionFactory,
-		CancellationToken CancellationToken)
+		HttpRequest request,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
 	{
-		string? FeedIdsRaw = Request.Query["feed_ids"];
-		string? StartDateRaw = Request.Query["start_date"];
-		string? EndDateRaw = Request.Query["end_date"];
-		string? CursorRaw = Request.Query["cursor"];
-		string? LimitRaw = Request.Query["limit"];
+		string? feedIdsRaw = request.Query["feed_ids"];
+		string? startDateRaw = request.Query["start_date"];
+		string? endDateRaw = request.Query["end_date"];
+		string? cursorRaw = request.Query["cursor"];
+		string? limitRaw = request.Query["limit"];
 
-		string[] FeedIds = ParseFeedIds(FeedIdsRaw);
-		if (!TryParseIsoDate(StartDateRaw, out DateTimeOffset? StartDateUtc))
+		string[] feedIds = ParseFeedIds(feedIdsRaw);
+		if (!TryParseIsoDate(startDateRaw, out DateTimeOffset? startDateUtc))
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid start_date; expected ISO-8601 UTC."));
 		}
 
-		if (!TryParseIsoDate(EndDateRaw, out DateTimeOffset? EndDateUtc))
+		if (!TryParseIsoDate(endDateRaw, out DateTimeOffset? endDateUtc))
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid end_date; expected ISO-8601 UTC."));
 		}
 
-		if (StartDateUtc.HasValue && EndDateUtc.HasValue && EndDateUtc.Value < StartDateUtc.Value)
+		if (startDateUtc.HasValue && endDateUtc.HasValue && endDateUtc.Value < startDateUtc.Value)
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid date range; end_date must be on or after start_date."));
 		}
 
-		int Limit = 200;
-		if (!string.IsNullOrWhiteSpace(LimitRaw) && (!int.TryParse(LimitRaw, NumberStyles.None, CultureInfo.InvariantCulture, out Limit) || Limit <= 0 || Limit > 200))
+		int limit = 200;
+		if (!string.IsNullOrWhiteSpace(limitRaw) && (!int.TryParse(limitRaw, NumberStyles.None, CultureInfo.InvariantCulture, out limit) || limit <= 0 || limit > 200))
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid limit; expected integer in range 1..200."));
 		}
 
-		if (!TryParseCursor(CursorRaw, out CursorParts? Cursor))
+		if (!TryParseCursor(cursorRaw, out CursorParts? cursor))
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid cursor."));
 		}
 
-		const string Sql = """
+		const string sql = """
 			SELECT
 				i.id AS Id,
 				i.title AS Title,
 				i.canonical_url AS CanonicalUrl,
+				i.image_url AS ImageUrl,
 				i.snippet AS Snippet,
 				i.published_at AS PublishedAt,
 				i.ingested_at AS IngestedAt,
@@ -464,54 +593,91 @@ public static class MvpApi
 			LIMIT @FetchLimit;
 			""";
 
-		int FetchLimit = Limit + 1;
-		string? StartDate = StartDateUtc?.ToString("O", CultureInfo.InvariantCulture);
-		string? EndDate = EndDateUtc?.ToString("O", CultureInfo.InvariantCulture);
-		await using SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken);
-		IReadOnlyList<RiverItemResponse> QueriedItems = (await Connection.QueryAsync<RiverItemResponse>(
+		int fetchLimit = limit + 1;
+		string? startDate = startDateUtc?.ToString("O", CultureInfo.InvariantCulture);
+		string? endDate = endDateUtc?.ToString("O", CultureInfo.InvariantCulture);
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		IReadOnlyList<RiverItemResponse> queriedItems = (await connection.QueryAsync<RiverItemResponse>(
 			new CommandDefinition(
-				Sql,
+				sql,
 				new
 				{
-					StartDate,
-					EndDate,
-					HasCursor = Cursor is not null ? 1 : 0,
-					CursorPublishedAt = Cursor?.PublishedAt,
-					CursorIngestedAt = Cursor?.IngestedAt,
-					CursorId = Cursor?.Id,
-					HasFeedFilter = FeedIds.Length > 0 ? 1 : 0,
-					FeedIds,
-					FetchLimit
+					StartDate = startDate,
+					EndDate = endDate,
+					HasCursor = cursor is not null ? 1 : 0,
+					CursorPublishedAt = cursor?.PublishedAt,
+					CursorIngestedAt = cursor?.IngestedAt,
+					CursorId = cursor?.Id,
+					HasFeedFilter = feedIds.Length > 0 ? 1 : 0,
+					FeedIds = feedIds,
+					FetchLimit = fetchLimit
 				},
-				cancellationToken: CancellationToken))).AsList();
+				cancellationToken: cancellationToken))).AsList();
 
-		IReadOnlyList<RiverItemResponse> Items = QueriedItems.Count > Limit
-			? QueriedItems.Take(Limit).ToList()
-			: QueriedItems;
+		IReadOnlyList<RiverItemResponse> items = queriedItems.Count > limit
+			? queriedItems.Take(limit).ToList()
+			: queriedItems;
 
-		string? NextCursor = null;
-		if (QueriedItems.Count > Limit)
+		string? nextCursor = null;
+		if (queriedItems.Count > limit)
 		{
-			RiverItemResponse LastItem = Items[^1];
-			NextCursor = EncodeCursor(LastItem.PublishedAt, LastItem.IngestedAt, LastItem.Id);
+			RiverItemResponse lastItem = items[^1];
+			nextCursor = EncodeCursor(lastItem.PublishedAt, lastItem.IngestedAt, lastItem.Id);
 		}
 
 		return Results.Ok(new RiverQueryResponse
 		{
-			Items = Items,
-			NextCursor = NextCursor
+			Items = items,
+			NextCursor = nextCursor
 		});
 	}
 
-	public static async Task<IResult> GetLatest200PerformanceAsync(
-		SqliteConnectionFactory ConnectionFactory,
-		CancellationToken CancellationToken)
+	public static async Task<IResult> GetItemByIdAsync(
+		string itemId,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
 	{
-		const string Sql = """
+		ArgumentException.ThrowIfNullOrWhiteSpace(itemId);
+
+		const string sql = """
+			SELECT
+				i.id AS Id,
+				i.title AS Title,
+				i.url AS Url,
+				i.canonical_url AS CanonicalUrl,
+				i.image_url AS ImageUrl,
+				i.snippet AS Snippet,
+				i.published_at AS PublishedAt,
+				i.ingested_at AS IngestedAt,
+				(
+					SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
+					FROM item_sources s
+					INNER JOIN feeds f ON f.id = s.feed_id
+					WHERE s.item_id = i.id
+				) AS SourceNames
+			FROM items i
+			WHERE i.id = @ItemId
+			LIMIT 1;
+			""";
+
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		RiverItemDetailResponse? item = await connection.QuerySingleOrDefaultAsync<RiverItemDetailResponse>(
+			new CommandDefinition(sql, new { ItemId = itemId }, cancellationToken: cancellationToken));
+		return item is null
+			? Results.NotFound(new ErrorResponse("Item not found."))
+			: Results.Ok(item);
+	}
+
+	public static async Task<IResult> GetLatest200PerformanceAsync(
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		const string sql = """
 			SELECT
 				i.id AS Id,
 				i.title AS Title,
 				i.canonical_url AS CanonicalUrl,
+				i.image_url AS ImageUrl,
 				i.snippet AS Snippet,
 				i.published_at AS PublishedAt,
 				i.ingested_at AS IngestedAt,
@@ -526,107 +692,107 @@ public static class MvpApi
 			LIMIT 200;
 			""";
 
-		await using SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken);
-		Stopwatch Stopwatch = Stopwatch.StartNew();
-		IReadOnlyList<RiverItemResponse> Items = (await Connection.QueryAsync<RiverItemResponse>(
-			new CommandDefinition(Sql, cancellationToken: CancellationToken))).AsList();
-		Stopwatch.Stop();
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		Stopwatch stopwatch = Stopwatch.StartNew();
+		IReadOnlyList<RiverItemResponse> items = (await connection.QueryAsync<RiverItemResponse>(
+			new CommandDefinition(sql, cancellationToken: cancellationToken))).AsList();
+		stopwatch.Stop();
 
 		return Results.Ok(new Latest200PerformanceResponse
 		{
-			ItemCount = Items.Count,
-			DurationMilliseconds = Stopwatch.ElapsedMilliseconds,
+			ItemCount = items.Count,
+			DurationMilliseconds = stopwatch.ElapsedMilliseconds,
 			ThresholdMilliseconds = 2000,
-			MeetsTarget = Stopwatch.ElapsedMilliseconds < 2000
+			MeetsTarget = stopwatch.ElapsedMilliseconds < 2000
 		});
 	}
 
-	private static string NormalizeUrl(string Url)
+	private static string NormalizeUrl(string url)
 	{
-		Uri ParsedUri = new(Url, UriKind.Absolute);
-		if (!string.Equals(ParsedUri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
-			&& !string.Equals(ParsedUri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+		Uri parsedUri = new(url, UriKind.Absolute);
+		if (!string.Equals(parsedUri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
+			&& !string.Equals(parsedUri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
 		{
 			throw new UriFormatException("Only HTTP and HTTPS URLs are supported.");
 		}
 
-		UriBuilder Builder = new(ParsedUri)
+		UriBuilder builder = new(parsedUri)
 		{
 			Fragment = string.Empty
 		};
 
-		string Scheme = Builder.Scheme.ToLowerInvariant();
-		string Host = Builder.Host.ToLowerInvariant();
-		string Port = Builder.Port > 0 && !Builder.Uri.IsDefaultPort
-			? $":{Builder.Port.ToString(CultureInfo.InvariantCulture)}"
+		string scheme = builder.Scheme.ToLowerInvariant();
+		string host = builder.Host.ToLowerInvariant();
+		string port = builder.Port > 0 && !builder.Uri.IsDefaultPort
+			? $":{builder.Port.ToString(CultureInfo.InvariantCulture)}"
 			: string.Empty;
-		string Path = Builder.Path.TrimEnd('/');
-		if (string.IsNullOrWhiteSpace(Path))
+		string path = builder.Path.TrimEnd('/');
+		if (string.IsNullOrWhiteSpace(path))
 		{
-			Path = "/";
+			path = "/";
 		}
 
-		string Query = Builder.Query;
-		return $"{Scheme}://{Host}{Port}{Path}{Query}";
+		string query = builder.Query;
+		return $"{scheme}://{host}{port}{path}{query}";
 	}
 
-	private static string[] ParseFeedIds(string? FeedIdsRaw)
+	private static string[] ParseFeedIds(string? feedIdsRaw)
 	{
-		if (string.IsNullOrWhiteSpace(FeedIdsRaw))
+		if (string.IsNullOrWhiteSpace(feedIdsRaw))
 		{
 			return [];
 		}
 
-		string[] FeedIds = FeedIdsRaw
+		string[] feedIds = feedIdsRaw
 			.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
 			.Distinct(StringComparer.Ordinal)
 			.ToArray();
-		return FeedIds;
+		return feedIds;
 	}
 
-	private static bool TryParseIsoDate(string? Value, out DateTimeOffset? ParsedValueUtc)
+	private static bool TryParseIsoDate(string? value, out DateTimeOffset? parsedValueUtc)
 	{
-		ParsedValueUtc = null;
-		if (string.IsNullOrWhiteSpace(Value))
+		parsedValueUtc = null;
+		if (string.IsNullOrWhiteSpace(value))
 		{
 			return true;
 		}
 
-		if (!DateTimeOffset.TryParse(Value, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out DateTimeOffset ParsedValue))
+		if (!DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out DateTimeOffset parsedValue))
 		{
 			return false;
 		}
 
-		ParsedValueUtc = ParsedValue.ToUniversalTime();
+		parsedValueUtc = parsedValue.ToUniversalTime();
 		return true;
 	}
 
-	private static string EncodeCursor(string PublishedAt, string IngestedAt, string Id)
+	private static string EncodeCursor(string publishedAt, string ingestedAt, string id)
 	{
-		string CursorText = $"{PublishedAt}|{IngestedAt}|{Id}";
-		byte[] CursorBytes = System.Text.Encoding.UTF8.GetBytes(CursorText);
-		return Convert.ToBase64String(CursorBytes);
+		string cursorText = $"{publishedAt}|{ingestedAt}|{id}";
+		byte[] cursorBytes = System.Text.Encoding.UTF8.GetBytes(cursorText);
+		return Convert.ToBase64String(cursorBytes);
 	}
 
-	private static bool TryParseCursor(string? CursorRaw, out CursorParts? Cursor)
+	private static bool TryParseCursor(string? cursorRaw, out CursorParts? cursor)
 	{
-		Cursor = null;
-		if (string.IsNullOrWhiteSpace(CursorRaw))
+		cursor = null;
+		if (string.IsNullOrWhiteSpace(cursorRaw))
 		{
 			return true;
 		}
 
 		try
 		{
-			byte[] CursorBytes = Convert.FromBase64String(CursorRaw);
-			string CursorText = System.Text.Encoding.UTF8.GetString(CursorBytes);
-			string[] Parts = CursorText.Split('|', StringSplitOptions.None);
-			if (Parts.Length != 3)
+			byte[] cursorBytes = Convert.FromBase64String(cursorRaw);
+			string cursorText = System.Text.Encoding.UTF8.GetString(cursorBytes);
+			string[] parts = cursorText.Split('|', StringSplitOptions.None);
+			if (parts.Length != 3)
 			{
 				return false;
 			}
 
-			Cursor = new CursorParts(Parts[0], Parts[1], Parts[2]);
+			cursor = new CursorParts(parts[0], parts[1], parts[2]);
 			return true;
 		}
 		catch (FormatException)
@@ -659,6 +825,20 @@ public static class MvpApi
 		public required string Id { get; init; }
 		public required string Title { get; init; }
 		public string? CanonicalUrl { get; init; }
+		public string? ImageUrl { get; init; }
+		public string? Snippet { get; init; }
+		public required string PublishedAt { get; init; }
+		public required string IngestedAt { get; init; }
+		public string? SourceNames { get; init; }
+	}
+
+	public sealed record RiverItemDetailResponse
+	{
+		public required string Id { get; init; }
+		public required string Title { get; init; }
+		public string? Url { get; init; }
+		public string? CanonicalUrl { get; init; }
+		public string? ImageUrl { get; init; }
 		public string? Snippet { get; init; }
 		public required string PublishedAt { get; init; }
 		public required string IngestedAt { get; init; }

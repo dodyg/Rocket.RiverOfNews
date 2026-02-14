@@ -13,35 +13,37 @@ namespace Rocket.RiverOfNews.Services;
 public sealed partial class FeedIngestionService
 {
 	private static readonly Regex HtmlTagRegex = HtmlRegex();
+	private static readonly Regex HtmlImageRegex = HtmlImageSrcRegex();
+	private const int SnippetLengthLimit = 1000;
 	private readonly SqliteConnectionFactory ConnectionFactory;
 	private readonly ISyndicationClient SyndicationClient;
 
 	public FeedIngestionService(
-		SqliteConnectionFactory ConnectionFactory,
-		ISyndicationClient SyndicationClient)
+		SqliteConnectionFactory connectionFactory,
+		ISyndicationClient syndicationClient)
 	{
-		ArgumentNullException.ThrowIfNull(ConnectionFactory);
-		ArgumentNullException.ThrowIfNull(SyndicationClient);
+		ArgumentNullException.ThrowIfNull(connectionFactory);
+		ArgumentNullException.ThrowIfNull(syndicationClient);
 
-		this.ConnectionFactory = ConnectionFactory;
-		this.SyndicationClient = SyndicationClient;
+		ConnectionFactory = connectionFactory;
+		SyndicationClient = syndicationClient;
 	}
 
-	public async Task<RefreshResult> RefreshAllFeedsAsync(CancellationToken CancellationToken)
+	public async Task<RefreshResult> RefreshAllFeedsAsync(CancellationToken cancellationToken)
 	{
-		return await RefreshFeedsAsync(true, CancellationToken);
+		return await RefreshFeedsAsync(true, cancellationToken);
 	}
 
-	public async Task<RefreshResult> RefreshDueFeedsAsync(CancellationToken CancellationToken)
+	public async Task<RefreshResult> RefreshDueFeedsAsync(CancellationToken cancellationToken)
 	{
-		return await RefreshFeedsAsync(false, CancellationToken);
+		return await RefreshFeedsAsync(false, cancellationToken);
 	}
 
 	private async Task<RefreshResult> RefreshFeedsAsync(
-		bool ForceAllFeeds,
-		CancellationToken CancellationToken)
+		bool forceAllFeeds,
+		CancellationToken cancellationToken)
 	{
-		const string SelectFeedsSql = """
+		const string selectFeedsSql = """
 			SELECT
 				id AS Id,
 				url AS Url,
@@ -51,146 +53,148 @@ public sealed partial class FeedIngestionService
 			ORDER BY normalized_url COLLATE NOCASE;
 			""";
 
-		await using SqliteConnection Connection = await ConnectionFactory.OpenConnectionAsync(CancellationToken);
-		IReadOnlyList<FeedRecord> Feeds = (await Connection.QueryAsync<FeedRecord>(
-			new CommandDefinition(SelectFeedsSql, cancellationToken: CancellationToken))).AsList();
+		await using SqliteConnection connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
+		IReadOnlyList<FeedRecord> feeds = (await connection.QueryAsync<FeedRecord>(
+			new CommandDefinition(selectFeedsSql, cancellationToken: cancellationToken))).AsList();
 
-		int ProcessedFeedCount = 0;
-		int SuccessFeedCount = 0;
-		int FailedFeedCount = 0;
-		int InsertedItemCount = 0;
-		int MergedItemCount = 0;
-		int SkippedFeedCount = 0;
+		int processedFeedCount = 0;
+		int successFeedCount = 0;
+		int failedFeedCount = 0;
+		int insertedItemCount = 0;
+		int mergedItemCount = 0;
+		int skippedFeedCount = 0;
 
-		foreach (FeedRecord Feed in Feeds)
+		foreach (FeedRecord feed in feeds)
 		{
-			if (!ForceAllFeeds && !IsFeedDue(Feed, DateTimeOffset.UtcNow))
+			if (!forceAllFeeds && !IsFeedDue(feed, DateTimeOffset.UtcNow))
 			{
-				SkippedFeedCount++;
+				skippedFeedCount++;
 				continue;
 			}
 
-			ProcessedFeedCount++;
-			FeedResult FeedResult = await SyndicationClient.GetFeedAsync(Feed.Url, CancellationToken);
-			if (!FeedResult.IsSuccess || FeedResult.Feed is null)
+			processedFeedCount++;
+			FeedResult feedResult = await SyndicationClient.GetFeedAsync(feed.Url, cancellationToken);
+			if (!feedResult.IsSuccess || feedResult.Feed is null)
 			{
-				FailedFeedCount++;
-				string ErrorMessage = FeedResult.Error?.Message ?? "Feed fetch failed.";
-				await MarkFeedFailedAsync(Connection, Feed, ErrorMessage, CancellationToken);
+				failedFeedCount++;
+				string errorMessage = feedResult.Error?.Message ?? "Feed fetch failed.";
+				await MarkFeedFailedAsync(connection, feed, errorMessage, cancellationToken);
 				continue;
 			}
 
-			SuccessFeedCount++;
-			ItemIngestionResult ItemIngestionResult = await IngestFeedItemsAsync(Connection, Feed, FeedResult.Feed, CancellationToken);
-			InsertedItemCount += ItemIngestionResult.InsertedItemCount;
-			MergedItemCount += ItemIngestionResult.MergedItemCount;
-			await MarkFeedSucceededAsync(Connection, Feed.Id, CancellationToken);
+			successFeedCount++;
+			ItemIngestionResult itemIngestionResult = await IngestFeedItemsAsync(connection, feed, feedResult.Feed, cancellationToken);
+			insertedItemCount += itemIngestionResult.InsertedItemCount;
+			mergedItemCount += itemIngestionResult.MergedItemCount;
+			await MarkFeedSucceededAsync(connection, feed.Id, cancellationToken);
 		}
 
 		return new RefreshResult
 		{
 			Status = "completed",
-			ProcessedFeedCount = ProcessedFeedCount,
-			SuccessFeedCount = SuccessFeedCount,
-			FailedFeedCount = FailedFeedCount,
-			SkippedFeedCount = SkippedFeedCount,
-			InsertedItemCount = InsertedItemCount,
-			MergedItemCount = MergedItemCount
+			ProcessedFeedCount = processedFeedCount,
+			SuccessFeedCount = successFeedCount,
+			FailedFeedCount = failedFeedCount,
+			SkippedFeedCount = skippedFeedCount,
+			InsertedItemCount = insertedItemCount,
+			MergedItemCount = mergedItemCount
 		};
 	}
 
-	private static bool IsFeedDue(FeedRecord Feed, DateTimeOffset NowUtc)
+	private static bool IsFeedDue(FeedRecord feed, DateTimeOffset nowUtc)
 	{
-		if (!TryParseUtcTimestamp(Feed.LastPolledAt, out DateTimeOffset? LastPolledAtUtc))
+		if (!TryParseUtcTimestamp(feed.LastPolledAt, out DateTimeOffset? lastPolledAtUtc))
 		{
 			return true;
 		}
 
-		DateTimeOffset LastPolledAt = LastPolledAtUtc!.Value;
-		if (Feed.ConsecutiveFailures >= 3)
+		DateTimeOffset lastPolledAt = lastPolledAtUtc!.Value;
+		if (feed.ConsecutiveFailures >= 3)
 		{
-			TimeSpan RetryDelay = Feed.ConsecutiveFailures switch
+			TimeSpan retryDelay = feed.ConsecutiveFailures switch
 			{
 				3 => TimeSpan.FromMinutes(5),
 				4 => TimeSpan.FromMinutes(15),
 				_ => TimeSpan.FromMinutes(60)
 			};
 
-			return (NowUtc - LastPolledAt) >= RetryDelay;
+			return (nowUtc - lastPolledAt) >= retryDelay;
 		}
 
-		return (NowUtc - LastPolledAt) >= TimeSpan.FromMinutes(15);
+		return (nowUtc - lastPolledAt) >= TimeSpan.FromMinutes(15);
 	}
 
 	private static async Task<ItemIngestionResult> IngestFeedItemsAsync(
-		SqliteConnection Connection,
-		FeedRecord Feed,
-		Feed ParsedFeed,
-		CancellationToken CancellationToken)
+		SqliteConnection connection,
+		FeedRecord feed,
+		Feed parsedFeed,
+		CancellationToken cancellationToken)
 	{
-		IReadOnlyList<FeedItem> Items = ParsedFeed.Items ?? [];
-		int InsertedItemCount = 0;
-		int MergedItemCount = 0;
+		IReadOnlyList<FeedItem> items = parsedFeed.Items ?? [];
+		int insertedItemCount = 0;
+		int mergedItemCount = 0;
 
-		await using System.Data.Common.DbTransaction Transaction = await Connection.BeginTransactionAsync(CancellationToken);
-		foreach (FeedItem Item in Items)
+		await using System.Data.Common.DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+		foreach (FeedItem item in items)
 		{
-			string Now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-			string? SourceGuid = GetSourceGuid(Item);
-			string? CanonicalUrl = CanonicalizeArticleUrl(Item.Link?.AbsoluteUri);
-			string CanonicalKey = BuildCanonicalKey(Feed.Id, SourceGuid, CanonicalUrl, Item);
-			string? ExistingItemId = await Connection.QuerySingleOrDefaultAsync<string>(
+			string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+			string? sourceGuid = GetSourceGuid(item);
+			string? canonicalUrl = CanonicalizeArticleUrl(item.Link?.AbsoluteUri);
+			string canonicalKey = BuildCanonicalKey(feed.Id, sourceGuid, canonicalUrl, item);
+			string? existingItemId = await connection.QuerySingleOrDefaultAsync<string>(
 				new CommandDefinition(
 					"SELECT id FROM items WHERE canonical_key = @CanonicalKey;",
 					new
 					{
-						CanonicalKey
+						CanonicalKey = canonicalKey
 					},
-					Transaction,
-					cancellationToken: CancellationToken));
+					transaction,
+					cancellationToken: cancellationToken));
 
-			string ItemId = ExistingItemId ?? Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-			if (ExistingItemId is null)
+			string itemId = existingItemId ?? Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+			if (existingItemId is null)
 			{
-				string Title = string.IsNullOrWhiteSpace(Item.Title) ? "(untitled)" : Item.Title.Trim();
-				string ItemUrl = Item.Link?.AbsoluteUri ?? Feed.Url;
-				string Snippet = BuildSnippet(Item);
-				string PublishedAt = (Item.PublishedDate ?? Item.UpdatedDate ?? DateTimeOffset.UtcNow).ToString("O", CultureInfo.InvariantCulture);
+				string title = string.IsNullOrWhiteSpace(item.Title) ? "(untitled)" : item.Title.Trim();
+				string itemUrl = item.Link?.AbsoluteUri ?? feed.Url;
+				string? imageUrl = BuildImageUrl(item);
+				string snippet = BuildSnippet(item);
+				string publishedAt = (item.PublishedDate ?? item.UpdatedDate ?? DateTimeOffset.UtcNow).ToString("O", CultureInfo.InvariantCulture);
 
-				await Connection.ExecuteAsync(
+				await connection.ExecuteAsync(
 					new CommandDefinition(
 						"""
 						INSERT INTO items (
-							id, canonical_key, guid, url, canonical_url, title, snippet, published_at, ingested_at, created_at, updated_at
+							id, canonical_key, guid, url, canonical_url, image_url, title, snippet, published_at, ingested_at, created_at, updated_at
 						)
 						VALUES (
-							@Id, @CanonicalKey, @Guid, @Url, @CanonicalUrl, @Title, @Snippet, @PublishedAt, @IngestedAt, @CreatedAt, @UpdatedAt
+							@Id, @CanonicalKey, @Guid, @Url, @CanonicalUrl, @ImageUrl, @Title, @Snippet, @PublishedAt, @IngestedAt, @CreatedAt, @UpdatedAt
 						);
 						""",
 						new
 						{
-							Id = ItemId,
-							CanonicalKey,
-							Guid = SourceGuid,
-							Url = ItemUrl,
-							CanonicalUrl,
-							Title,
-							Snippet,
-							PublishedAt,
-							IngestedAt = Now,
-							CreatedAt = Now,
-							UpdatedAt = Now
+							Id = itemId,
+							CanonicalKey = canonicalKey,
+							Guid = sourceGuid,
+							Url = itemUrl,
+							CanonicalUrl = canonicalUrl,
+							ImageUrl = imageUrl,
+							Title = title,
+							Snippet = snippet,
+							PublishedAt = publishedAt,
+							IngestedAt = now,
+							CreatedAt = now,
+							UpdatedAt = now
 						},
-						Transaction,
-						cancellationToken: CancellationToken));
-				InsertedItemCount++;
+						transaction,
+						cancellationToken: cancellationToken));
+				insertedItemCount++;
 			}
 			else
 			{
-				MergedItemCount++;
+				mergedItemCount++;
 			}
 
-			await Connection.ExecuteAsync(
+			await connection.ExecuteAsync(
 				new CommandDefinition(
 					"""
 					INSERT INTO item_sources (
@@ -203,27 +207,27 @@ public sealed partial class FeedIngestionService
 					""",
 					new
 					{
-						ItemId,
-						FeedId = Feed.Id,
-						SourceItemGuid = SourceGuid ?? string.Empty,
-						SourceItemUrl = Item.Link?.AbsoluteUri,
-						FirstSeenAt = Now
+						ItemId = itemId,
+						FeedId = feed.Id,
+						SourceItemGuid = sourceGuid ?? string.Empty,
+						SourceItemUrl = item.Link?.AbsoluteUri,
+						FirstSeenAt = now
 					},
-					Transaction,
-					cancellationToken: CancellationToken));
+					transaction,
+					cancellationToken: cancellationToken));
 		}
 
-		await Transaction.CommitAsync(CancellationToken);
-		return new ItemIngestionResult(InsertedItemCount, MergedItemCount);
+		await transaction.CommitAsync(cancellationToken);
+		return new ItemIngestionResult(insertedItemCount, mergedItemCount);
 	}
 
 	private static async Task MarkFeedSucceededAsync(
-		SqliteConnection Connection,
-		string FeedId,
-		CancellationToken CancellationToken)
+		SqliteConnection connection,
+		string feedId,
+		CancellationToken cancellationToken)
 	{
-		string Now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-		await Connection.ExecuteAsync(
+		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+		await connection.ExecuteAsync(
 			new CommandDefinition(
 				"""
 				UPDATE feeds
@@ -238,23 +242,23 @@ public sealed partial class FeedIngestionService
 				""",
 				new
 				{
-					FeedId,
-					Now
+					FeedId = feedId,
+					Now = now
 				},
-				cancellationToken: CancellationToken));
+				cancellationToken: cancellationToken));
 	}
 
 	private static async Task MarkFeedFailedAsync(
-		SqliteConnection Connection,
-		FeedRecord Feed,
-		string ErrorMessage,
-		CancellationToken CancellationToken)
+		SqliteConnection connection,
+		FeedRecord feed,
+		string errorMessage,
+		CancellationToken cancellationToken)
 	{
-		string Now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-		int NewFailures = Feed.ConsecutiveFailures + 1;
-		string Status = NewFailures >= 3 ? "unhealthy" : "healthy";
+		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+		int newFailures = feed.ConsecutiveFailures + 1;
+		string status = newFailures >= 3 ? "unhealthy" : "healthy";
 
-		await Connection.ExecuteAsync(
+		await connection.ExecuteAsync(
 			new CommandDefinition(
 				"""
 				UPDATE feeds
@@ -268,157 +272,209 @@ public sealed partial class FeedIngestionService
 				""",
 				new
 				{
-					FeedId = Feed.Id,
-					Status,
-					ConsecutiveFailures = NewFailures,
-					LastError = ErrorMessage,
-					Now
+					FeedId = feed.Id,
+					Status = status,
+					ConsecutiveFailures = newFailures,
+					LastError = errorMessage,
+					Now = now
 				},
-				cancellationToken: CancellationToken));
+				cancellationToken: cancellationToken));
 	}
 
-	private static string? GetSourceGuid(FeedItem Item)
+	private static string? GetSourceGuid(FeedItem item)
 	{
-		if (!string.IsNullOrWhiteSpace(Item.Id))
+		if (!string.IsNullOrWhiteSpace(item.Id))
 		{
-			return Item.Id.Trim();
+			return item.Id.Trim();
 		}
 
-		if (!string.IsNullOrWhiteSpace(Item.RssData?.Guid))
+		if (!string.IsNullOrWhiteSpace(item.RssData?.Guid))
 		{
-			return Item.RssData.Guid.Trim();
+			return item.RssData.Guid.Trim();
 		}
 
 		return null;
 	}
 
 	private static string BuildCanonicalKey(
-		string FeedId,
-		string? SourceGuid,
-		string? CanonicalUrl,
-		FeedItem Item)
+		string feedId,
+		string? sourceGuid,
+		string? canonicalUrl,
+		FeedItem item)
 	{
-		if (!string.IsNullOrWhiteSpace(SourceGuid))
+		if (!string.IsNullOrWhiteSpace(sourceGuid))
 		{
-			return $"guid:{SourceGuid}";
+			return $"guid:{sourceGuid}";
 		}
 
-		if (!string.IsNullOrWhiteSpace(CanonicalUrl))
+		if (!string.IsNullOrWhiteSpace(canonicalUrl))
 		{
-			return $"url:{CanonicalUrl}";
+			return $"url:{canonicalUrl}";
 		}
 
-		string SourcePayload = string.Join(
+		string sourcePayload = string.Join(
 			"|",
-			FeedId,
-			Item.Title ?? string.Empty,
-			Item.Link?.AbsoluteUri ?? string.Empty,
-			Item.PublishedDate?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty,
-			Item.UpdatedDate?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty,
-			Item.Content?.PlainText ?? string.Empty);
+			feedId,
+			item.Title ?? string.Empty,
+			item.Link?.AbsoluteUri ?? string.Empty,
+			item.PublishedDate?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty,
+			item.UpdatedDate?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty,
+			item.Content?.PlainText ?? string.Empty);
 
-		byte[] Hash = SHA256.HashData(Encoding.UTF8.GetBytes(SourcePayload));
-		string HashHex = Convert.ToHexString(Hash);
-		return $"unique:{HashHex}";
+		byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(sourcePayload));
+		string hashHex = Convert.ToHexString(hash);
+		return $"unique:{hashHex}";
 	}
 
-	private static string BuildSnippet(FeedItem Item)
+	private static string BuildSnippet(FeedItem item)
 	{
-		string Candidate = Item.Content?.PlainText
-			?? Item.Content?.Html
+		string candidate = item.Content?.PlainText
+			?? item.Content?.Html
 			?? string.Empty;
-		if (string.IsNullOrWhiteSpace(Candidate))
+		if (string.IsNullOrWhiteSpace(candidate))
 		{
 			return string.Empty;
 		}
 
-		string Plain = HtmlTagRegex.Replace(Candidate, " ").Trim();
-		if (Plain.Length <= 320)
+		string plain = HtmlTagRegex.Replace(candidate, " ").Trim();
+		if (plain.Length <= SnippetLengthLimit)
 		{
-			return Plain;
+			return plain;
 		}
 
-		return $"{Plain[..320].TrimEnd()}...";
+		return $"{plain[..SnippetLengthLimit].TrimEnd()}...";
 	}
 
-	private static string? CanonicalizeArticleUrl(string? Url)
+	private static string? BuildImageUrl(FeedItem item)
 	{
-		if (string.IsNullOrWhiteSpace(Url))
+		string? mediaImage = item.Media?.ThumbnailUrl?.AbsoluteUri
+			?? item.Media?.Url?.AbsoluteUri;
+		if (!string.IsNullOrWhiteSpace(mediaImage))
+		{
+			return mediaImage;
+		}
+
+		foreach (FeedEnclosure enclosure in item.Enclosures ?? [])
+		{
+			if (enclosure.Url is null)
+			{
+				continue;
+			}
+
+			if (IsImageMimeType(enclosure.MimeType))
+			{
+				return enclosure.Url.AbsoluteUri;
+			}
+		}
+
+		string? htmlContent = item.Content?.Html;
+		if (string.IsNullOrWhiteSpace(htmlContent))
 		{
 			return null;
 		}
 
-		if (!Uri.TryCreate(Url, UriKind.Absolute, out Uri? ParsedUri))
+		Match match = HtmlImageRegex.Match(htmlContent);
+		if (!match.Success)
 		{
 			return null;
 		}
 
-		UriBuilder Builder = new(ParsedUri)
+		string imageCandidate = match.Groups["url"].Value.Trim();
+		if (Uri.TryCreate(imageCandidate, UriKind.Absolute, out Uri? imageUri))
+		{
+			return imageUri.AbsoluteUri;
+		}
+
+		return null;
+	}
+
+	private static bool IsImageMimeType(string? mimeType)
+	{
+		return !string.IsNullOrWhiteSpace(mimeType)
+			&& mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase);
+	}
+
+	private static string? CanonicalizeArticleUrl(string? url)
+	{
+		if (string.IsNullOrWhiteSpace(url))
+		{
+			return null;
+		}
+
+		if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? parsedUri))
+		{
+			return null;
+		}
+
+		UriBuilder builder = new(parsedUri)
 		{
 			Fragment = string.Empty
 		};
 
-		string Query = Builder.Query;
-		if (!string.IsNullOrWhiteSpace(Query))
+		string query = builder.Query;
+		if (!string.IsNullOrWhiteSpace(query))
 		{
-			string TrimmedQuery = Query.TrimStart('?');
-			IReadOnlyList<string> RetainedQueryPairs = TrimmedQuery
+			string trimmedQuery = query.TrimStart('?');
+			IReadOnlyList<string> retainedQueryPairs = trimmedQuery
 				.Split('&', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-				.Where(QueryPart =>
+				.Where(queryPart =>
 				{
-					int EqualsIndex = QueryPart.IndexOf('=', StringComparison.Ordinal);
-					string Key = (EqualsIndex > -1 ? QueryPart[..EqualsIndex] : QueryPart).Trim();
-					if (Key.StartsWith("utm_", StringComparison.OrdinalIgnoreCase))
+					int equalsIndex = queryPart.IndexOf('=', StringComparison.Ordinal);
+					string key = (equalsIndex > -1 ? queryPart[..equalsIndex] : queryPart).Trim();
+					if (key.StartsWith("utm_", StringComparison.OrdinalIgnoreCase))
 					{
 						return false;
 					}
 
-					if (string.Equals(Key, "fbclid", StringComparison.OrdinalIgnoreCase))
+					if (string.Equals(key, "fbclid", StringComparison.OrdinalIgnoreCase))
 					{
 						return false;
 					}
 
-					return !string.Equals(Key, "gclid", StringComparison.OrdinalIgnoreCase);
+					return !string.Equals(key, "gclid", StringComparison.OrdinalIgnoreCase);
 				})
 				.ToArray();
 
-			Builder.Query = RetainedQueryPairs.Count > 0
-				? string.Join("&", RetainedQueryPairs)
+			builder.Query = retainedQueryPairs.Count > 0
+				? string.Join("&", retainedQueryPairs)
 				: string.Empty;
 		}
 
-		string Scheme = Builder.Scheme.ToLowerInvariant();
-		string Host = Builder.Host.ToLowerInvariant();
-		string Port = Builder.Port > 0 && !Builder.Uri.IsDefaultPort
-			? $":{Builder.Port.ToString(CultureInfo.InvariantCulture)}"
+		string scheme = builder.Scheme.ToLowerInvariant();
+		string host = builder.Host.ToLowerInvariant();
+		string port = builder.Port > 0 && !builder.Uri.IsDefaultPort
+			? $":{builder.Port.ToString(CultureInfo.InvariantCulture)}"
 			: string.Empty;
-		string Path = Builder.Path.TrimEnd('/');
-		if (string.IsNullOrWhiteSpace(Path))
+		string path = builder.Path.TrimEnd('/');
+		if (string.IsNullOrWhiteSpace(path))
 		{
-			Path = "/";
+			path = "/";
 		}
 
-		string CanonicalQuery = Builder.Query;
-		return $"{Scheme}://{Host}{Port}{Path}{CanonicalQuery}";
+		string canonicalQuery = builder.Query;
+		return $"{scheme}://{host}{port}{path}{canonicalQuery}";
 	}
 
 	[GeneratedRegex("<[^>]+>", RegexOptions.Compiled, 1000)]
 	private static partial Regex HtmlRegex();
 
-	private static bool TryParseUtcTimestamp(string? Timestamp, out DateTimeOffset? ParsedUtc)
+	[GeneratedRegex("<img\\b[^>]*\\bsrc\\s*=\\s*['\"](?<url>[^'\"]+)['\"][^>]*>", RegexOptions.IgnoreCase | RegexOptions.Compiled, 1000)]
+	private static partial Regex HtmlImageSrcRegex();
+
+	private static bool TryParseUtcTimestamp(string? timestamp, out DateTimeOffset? parsedUtc)
 	{
-		ParsedUtc = null;
-		if (string.IsNullOrWhiteSpace(Timestamp))
+		parsedUtc = null;
+		if (string.IsNullOrWhiteSpace(timestamp))
 		{
 			return false;
 		}
 
-		if (!DateTimeOffset.TryParse(Timestamp, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTimeOffset Parsed))
+		if (!DateTimeOffset.TryParse(timestamp, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTimeOffset parsed))
 		{
 			return false;
 		}
 
-		ParsedUtc = Parsed.ToUniversalTime();
+		parsedUtc = parsed.ToUniversalTime();
 		return true;
 	}
 

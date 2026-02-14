@@ -6,36 +6,36 @@ public sealed class SqliteConnectionFactory
 {
 	private readonly string DatabasePath;
 
-	public SqliteConnectionFactory(string DatabasePath)
+	public SqliteConnectionFactory(string databasePath)
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(DatabasePath);
-		this.DatabasePath = DatabasePath;
+		ArgumentException.ThrowIfNullOrWhiteSpace(databasePath);
+		DatabasePath = databasePath;
 	}
 
-	public async Task<SqliteConnection> OpenConnectionAsync(CancellationToken CancellationToken)
+	public async Task<SqliteConnection> OpenConnectionAsync(CancellationToken cancellationToken)
 	{
-		SqliteConnectionStringBuilder ConnectionStringBuilder = new()
+		SqliteConnectionStringBuilder connectionStringBuilder = new()
 		{
 			DataSource = DatabasePath,
 			Mode = SqliteOpenMode.ReadWriteCreate,
 			Cache = SqliteCacheMode.Shared
 		};
 
-		SqliteConnection Connection = new(ConnectionStringBuilder.ConnectionString);
-		await Connection.OpenAsync(CancellationToken);
+		SqliteConnection connection = new(connectionStringBuilder.ConnectionString);
+		await connection.OpenAsync(cancellationToken);
 
-		await using SqliteCommand ForeignKeysCommand = Connection.CreateCommand();
-		ForeignKeysCommand.CommandText = "PRAGMA foreign_keys=ON;";
-		await ForeignKeysCommand.ExecuteNonQueryAsync(CancellationToken);
+		await using SqliteCommand foreignKeysCommand = connection.CreateCommand();
+		foreignKeysCommand.CommandText = "PRAGMA foreign_keys=ON;";
+		await foreignKeysCommand.ExecuteNonQueryAsync(cancellationToken);
 
-		await using SqliteCommand WalCommand = Connection.CreateCommand();
-		WalCommand.CommandText = "PRAGMA journal_mode=WAL;";
-		await WalCommand.ExecuteNonQueryAsync(CancellationToken);
+		await using SqliteCommand walCommand = connection.CreateCommand();
+		walCommand.CommandText = "PRAGMA journal_mode=WAL;";
+		await walCommand.ExecuteNonQueryAsync(cancellationToken);
 
-		await using SqliteCommand SyncCommand = Connection.CreateCommand();
-		SyncCommand.CommandText = "PRAGMA synchronous=NORMAL;";
-		await SyncCommand.ExecuteNonQueryAsync(CancellationToken);
+		await using SqliteCommand syncCommand = connection.CreateCommand();
+		syncCommand.CommandText = "PRAGMA synchronous=NORMAL;";
+		await syncCommand.ExecuteNonQueryAsync(cancellationToken);
 
-		return Connection;
+		return connection;
 	}
 }
