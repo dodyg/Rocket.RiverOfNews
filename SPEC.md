@@ -10,6 +10,8 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 
 ### 3.1 Feed Management
 - Users can manually add RSS/Atom feed URLs.
+- The river page provides an "Add feed" form with required URL and optional title fields.
+- Feed add attempts show inline success/error feedback in the UI.
 - Users can remove existing feeds.
 - The system validates feed URLs and stores accepted feeds.
 
@@ -54,6 +56,8 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 ## 4) Non-Functional Requirements (MVP)
 - Platform target: desktop web browsers first.
 - Performance target: load the latest 200 river items in under 2 seconds on typical broadband.
+- Automated API regression tests must be implemented with TUnit using a version range `>= 1.0`.
+- Feed-add API coverage must include: successful add, duplicate normalized URL conflict, and invalid URL rejection.
 
 ## 5) Out of Scope (MVP)
 - OPML import/export.
@@ -68,8 +72,10 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 **Story A1: Add feed URL**
 - As a user, I can add an RSS/Atom URL so its items appear in the river.
 - Acceptance criteria:
+  - River UI provides an add form with required URL and optional title.
   - Valid feed URL can be submitted from UI.
   - Duplicate feed URLs are rejected with a clear message.
+  - Validation/failure responses are shown inline on the river page.
   - Newly added valid feed is persisted and appears in feed list.
 
 **Story A2: Remove feed URL**
@@ -154,6 +160,14 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Latest 200 items load in under 2 seconds on typical broadband.
   - Query path for latest items is indexed/optimized.
   - Performance check is documented and repeatable.
+
+### Epic I: Automated API Testing
+**Story I1: Feed add API regression suite**
+- As a maintainer, I can validate feed add behavior automatically before shipping changes.
+- Acceptance criteria:
+  - A TUnit-based test project is part of the solution using version range `>= 1.0`.
+  - Tests cover `POST /api/feeds` for success, duplicate URL conflict, and invalid URL validation.
+  - Tests run through standard .NET test execution in local development.
 
 ## 7) Pre-Implementation Decisions (Locked)
 

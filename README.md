@@ -3,6 +3,7 @@ This is a website that allows river of news style of RSS aggregration
 
 ## Development
 - Build: `dotnet build Rocket.RiverOfNews.slnx`
+- Test: `dotnet test --solution Rocket.RiverOfNews.slnx`
 - Run: `dotnet run --project src/Rocket.RiverOfNews`
 - River UI: `http://localhost:5000/river` (or configured URL)
 

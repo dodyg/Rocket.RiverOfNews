@@ -34,6 +34,24 @@ public static class MvpApi
 					</header>
 
 					<section class="mb-6 rounded border border-slate-800 bg-slate-900 p-4">
+						<div class="mb-2 text-sm font-semibold">Add feed</div>
+						<div class="grid gap-3 md:grid-cols-3">
+							<label class="text-sm md:col-span-2">
+								<span class="mb-1 block text-slate-300">Feed URL</span>
+								<input id="addFeedUrl" type="url" placeholder="https://example.com/feed.xml" class="w-full rounded border border-slate-700 bg-slate-950 px-2 py-2 text-slate-100">
+							</label>
+							<label class="text-sm">
+								<span class="mb-1 block text-slate-300">Title (optional)</span>
+								<input id="addFeedTitle" type="text" placeholder="My feed" class="w-full rounded border border-slate-700 bg-slate-950 px-2 py-2 text-slate-100">
+							</label>
+						</div>
+						<div class="mt-3 flex items-center gap-3">
+							<button id="addFeedButton" class="rounded bg-emerald-600 px-3 py-2 text-sm font-semibold hover:bg-emerald-500">Add feed</button>
+							<p id="addFeedStatus" class="text-sm text-slate-400"></p>
+						</div>
+					</section>
+
+					<section class="mb-6 rounded border border-slate-800 bg-slate-900 p-4">
 						<div class="mb-2 text-sm font-semibold">Filters</div>
 						<div class="grid gap-3 md:grid-cols-3">
 							<label class="text-sm">
@@ -78,6 +96,10 @@ public static class MvpApi
 					const FilterError = document.getElementById("filterError");
 					const RefreshStatus = document.getElementById("refreshStatus");
 					const LoadMoreButton = document.getElementById("loadMore");
+					const AddFeedButton = document.getElementById("addFeedButton");
+					const AddFeedStatus = document.getElementById("addFeedStatus");
+					const AddFeedUrlInput = document.getElementById("addFeedUrl");
+					const AddFeedTitleInput = document.getElementById("addFeedTitle");
 
 					function toIsoUtc(datetimeLocalValue) {
 						if (!datetimeLocalValue) return "";
@@ -100,6 +122,13 @@ public static class MvpApi
 							`;
 							ItemsContainer.appendChild(article);
 						}
+					}
+
+					function setAddFeedStatus(message, isError) {
+						AddFeedStatus.textContent = message || "";
+						AddFeedStatus.classList.toggle("text-rose-400", !!isError);
+						AddFeedStatus.classList.toggle("text-emerald-400", !!message && !isError);
+						AddFeedStatus.classList.toggle("text-slate-400", !message);
 					}
 
 					async function loadFeeds() {
@@ -155,6 +184,49 @@ public static class MvpApi
 							State.loading = false;
 						}
 					}
+
+					AddFeedButton.addEventListener("click", async () => {
+						const url = AddFeedUrlInput.value.trim();
+						const title = AddFeedTitleInput.value.trim();
+						if (!url) {
+							setAddFeedStatus("Feed URL is required.", true);
+							return;
+						}
+
+						AddFeedButton.disabled = true;
+						AddFeedButton.classList.add("opacity-50");
+						setAddFeedStatus("Adding feed...", false);
+						try {
+							const response = await fetch("/api/feeds", {
+								method: "POST",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({ url, title: title || null })
+							});
+							let payload = {};
+							try {
+								payload = await response.json();
+							} catch {
+								payload = {};
+							}
+
+							if (!response.ok) {
+								setAddFeedStatus(payload.message || "Failed to add feed.", true);
+								return;
+							}
+
+							AddFeedUrlInput.value = "";
+							AddFeedTitleInput.value = "";
+							setAddFeedStatus("Feed added.", false);
+							await loadFeeds();
+							State.cursor = null;
+							await loadItems(true);
+						} catch {
+							setAddFeedStatus("Network error while adding feed.", true);
+						} finally {
+							AddFeedButton.disabled = false;
+							AddFeedButton.classList.remove("opacity-50");
+						}
+					});
 
 					document.getElementById("applyFilters").addEventListener("click", () => {
 						const startDate = document.getElementById("startDate").value;

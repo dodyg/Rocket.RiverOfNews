@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Rocket.RiverOfNews/Rocket.RiverOfNews.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Rocket.RiverOfNews.Tests/Rocket.RiverOfNews.Tests.csproj" />
+  </Folder>
 </Solution>
