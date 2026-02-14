@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Rocket.RiverOfNews/Rocket.RiverOfNews.csproj" />
+  </Folder>
+</Solution>
