@@ -222,7 +222,7 @@ public static class MvpApi
 							if (State.startDate) params.set("start_date", State.startDate);
 							if (State.endDate) params.set("end_date", State.endDate);
 							if (State.cursor) params.set("cursor", State.cursor);
-							params.set("limit", "50");
+							params.set("limit", "200");
 
 							const response = await fetch(`/api/items?${params}`);
 							const payload = await response.json();
@@ -355,10 +355,11 @@ public static class MvpApi
 						<div id="itemDates" class="mb-3 text-xs text-slate-400"></div>
 						<img id="itemImage" class="mb-4 hidden h-auto w-auto max-w-full rounded" alt="">
 						<p id="itemSnippet" class="mb-4 text-sm text-slate-300 whitespace-pre-wrap"></p>
-						<div class="flex flex-wrap gap-3 text-sm">
+						<div id="itemLinks" class="flex flex-wrap gap-3 text-sm">
 							<a id="itemCanonicalLink" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open canonical article</a>
 							<a id="itemOriginalLink" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open original article URL</a>
 						</div>
+						<p id="itemLinkError" class="mt-3 hidden text-sm text-slate-500"></p>
 						<p id="itemError" class="mt-4 text-sm text-rose-400"></p>
 					</article>
 				</main>
@@ -371,6 +372,8 @@ public static class MvpApi
 					const itemSnippet = document.getElementById("itemSnippet");
 					const itemCanonicalLink = document.getElementById("itemCanonicalLink");
 					const itemOriginalLink = document.getElementById("itemOriginalLink");
+					const itemLinks = document.getElementById("itemLinks");
+					const itemLinkError = document.getElementById("itemLinkError");
 					const itemError = document.getElementById("itemError");
 
 					async function loadItem() {
@@ -399,10 +402,24 @@ public static class MvpApi
 						}
 						itemSnippet.textContent = payload.snippet || "";
 
-						const canonicalLink = payload.canonicalUrl || payload.url || "#";
-						const originalLink = payload.url || payload.canonicalUrl || "#";
-						itemCanonicalLink.href = canonicalLink;
-						itemOriginalLink.href = originalLink;
+						const hasCanonicalUrl = !!payload.canonicalUrl;
+						const hasOriginalUrl = !!payload.url;
+						if (!hasCanonicalUrl && !hasOriginalUrl) {
+							itemLinks.classList.add("hidden");
+							itemLinkError.textContent = "No article URL available for this item.";
+							itemLinkError.classList.remove("hidden");
+						} else {
+							if (hasCanonicalUrl) {
+								itemCanonicalLink.href = payload.canonicalUrl;
+							} else {
+								itemCanonicalLink.classList.add("hidden");
+							}
+							if (hasOriginalUrl) {
+								itemOriginalLink.href = payload.url;
+							} else {
+								itemOriginalLink.classList.add("hidden");
+							}
+						}
 					}
 
 					loadItem();

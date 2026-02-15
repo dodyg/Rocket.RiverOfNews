@@ -1,5 +1,6 @@
 using System.Globalization;
 using Dapper;
+using Rocket.RiverOfNews.Configuration;
 using Rocket.RiverOfNews.Data;
 
 namespace Rocket.RiverOfNews.Services;
@@ -7,11 +8,17 @@ namespace Rocket.RiverOfNews.Services;
 public sealed class RetentionCleanupBackgroundService : BackgroundService
 {
 	private readonly IServiceScopeFactory ServiceScopeFactory;
+	private readonly RiverOfNewsSettings Settings;
 
-	public RetentionCleanupBackgroundService(IServiceScopeFactory serviceScopeFactory)
+	public RetentionCleanupBackgroundService(
+		IServiceScopeFactory serviceScopeFactory,
+		RiverOfNewsSettings settings)
 	{
 		ArgumentNullException.ThrowIfNull(serviceScopeFactory);
+		ArgumentNullException.ThrowIfNull(settings);
+
 		ServiceScopeFactory = serviceScopeFactory;
+		Settings = settings;
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -31,7 +38,7 @@ public sealed class RetentionCleanupBackgroundService : BackgroundService
 		await using Microsoft.Data.Sqlite.SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
 
 		string cutoffTimestamp = DateTimeOffset.UtcNow
-			.AddDays(-30)
+			.AddDays(-Settings.Feed.RetentionDays)
 			.ToString("O", CultureInfo.InvariantCulture);
 
 		const string sql = """

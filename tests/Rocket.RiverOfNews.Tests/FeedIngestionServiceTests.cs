@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.Data.Sqlite;
+using Rocket.RiverOfNews.Configuration;
 using Rocket.RiverOfNews.Data;
 using Rocket.RiverOfNews.Services;
 using Rocket.Syndication;
@@ -54,7 +55,7 @@ Html = "<p>long</p><img src='https://example.com/fallback-long.png'>"
 ]
 };
 
-FeedIngestionService service = new(database.ConnectionFactory, new StubSyndicationClient(feed));
+		FeedIngestionService service = new(database.ConnectionFactory, new StubSyndicationClient(feed), new RiverOfNewsSettings());
 await service.RefreshAllFeedsAsync(CancellationToken.None);
 
 (string? shortSnippet, string? shortImageUrl) = await GetItemDataByGuidAsync(database.ConnectionFactory, "item-short");

@@ -6,6 +6,9 @@
 - Use Datastar https://data-star.dev/ as UX framework and tie it with ASP.NET Core MInimal API 
 - Use TailwindCSS
 
+# Project Context
+
+**Read `memory.md` first** - it contains a complete map of this codebase including architecture, project structure, database schema, API endpoints, key patterns, configuration, and file details. This provides essential context for working with Rocket.RiverOfNews.
 
 # What AI agents should know about me
 

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Dapper;
 using Microsoft.Data.Sqlite;
+using Rocket.RiverOfNews.Configuration;
 using Rocket.RiverOfNews.Data;
 using Rocket.Syndication;
 using Rocket.Syndication.Models;
@@ -17,16 +18,20 @@ public sealed partial class FeedIngestionService
 	private const int SnippetLengthLimit = 1000;
 	private readonly SqliteConnectionFactory ConnectionFactory;
 	private readonly ISyndicationClient SyndicationClient;
+	private readonly FeedSettings Settings;
 
 	public FeedIngestionService(
 		SqliteConnectionFactory connectionFactory,
-		ISyndicationClient syndicationClient)
+		ISyndicationClient syndicationClient,
+		RiverOfNewsSettings settings)
 	{
 		ArgumentNullException.ThrowIfNull(connectionFactory);
 		ArgumentNullException.ThrowIfNull(syndicationClient);
+		ArgumentNullException.ThrowIfNull(settings);
 
 		ConnectionFactory = connectionFactory;
 		SyndicationClient = syndicationClient;
+		Settings = settings.Feed;
 	}
 
 	public async Task<RefreshResult> RefreshAllFeedsAsync(CancellationToken cancellationToken)
@@ -101,7 +106,7 @@ public sealed partial class FeedIngestionService
 		};
 	}
 
-	private static bool IsFeedDue(FeedRecord feed, DateTimeOffset nowUtc)
+	private bool IsFeedDue(FeedRecord feed, DateTimeOffset nowUtc)
 	{
 		if (!TryParseUtcTimestamp(feed.LastPolledAt, out DateTimeOffset? lastPolledAtUtc))
 		{
@@ -109,19 +114,19 @@ public sealed partial class FeedIngestionService
 		}
 
 		DateTimeOffset lastPolledAt = lastPolledAtUtc!.Value;
-		if (feed.ConsecutiveFailures >= 3)
+		if (feed.ConsecutiveFailures >= Settings.UnhealthyThreshold)
 		{
 			TimeSpan retryDelay = feed.ConsecutiveFailures switch
 			{
-				3 => TimeSpan.FromMinutes(5),
-				4 => TimeSpan.FromMinutes(15),
-				_ => TimeSpan.FromMinutes(60)
+				3 => TimeSpan.FromMinutes(Settings.BackoffLevel1Minutes),
+				4 => TimeSpan.FromMinutes(Settings.BackoffLevel2Minutes),
+				_ => TimeSpan.FromMinutes(Settings.BackoffLevel3Minutes)
 			};
 
 			return (nowUtc - lastPolledAt) >= retryDelay;
 		}
 
-		return (nowUtc - lastPolledAt) >= TimeSpan.FromMinutes(15);
+		return (nowUtc - lastPolledAt) >= TimeSpan.FromMinutes(Settings.PollingIntervalMinutes);
 	}
 
 	private static async Task<ItemIngestionResult> IngestFeedItemsAsync(
@@ -248,7 +253,7 @@ public sealed partial class FeedIngestionService
 				cancellationToken: cancellationToken));
 	}
 
-	private static async Task MarkFeedFailedAsync(
+	private async Task MarkFeedFailedAsync(
 		SqliteConnection connection,
 		FeedRecord feed,
 		string errorMessage,
@@ -256,7 +261,7 @@ public sealed partial class FeedIngestionService
 	{
 		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
 		int newFailures = feed.ConsecutiveFailures + 1;
-		string status = newFailures >= 3 ? "unhealthy" : "healthy";
+		string status = newFailures >= Settings.UnhealthyThreshold ? "unhealthy" : "healthy";
 
 		await connection.ExecuteAsync(
 			new CommandDefinition(

@@ -186,16 +186,17 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 ## 7) Pre-Implementation Decisions (Locked)
 
 ### 7.1 Deduplication Identity Rules
-- Deduplication key priority: `guid` (if present and non-empty) -> canonicalized article URL -> no merge.
+- Deduplication key priority: `guid` (if present and non-empty) -> canonicalized article URL -> content hash.
 - URL canonicalization removes fragment and known tracking query params (`utm_*`, `fbclid`, `gclid`) before matching.
-- If neither `guid` nor URL is usable, the item is treated as unique for MVP (no fuzzy title-based merge).
+- If neither `guid` nor URL is usable, a SHA256 hash is computed from feed ID, title, URL, published/updated dates, and content to create a unique key (`unique:<hash>`). This enables deduplication of items without explicit identifiers.
 - Canonical merged item is the earliest ingested matching item; later duplicates attach as additional sources.
 
 ### 7.2 Polling, Retry, and Unhealthy Threshold
-- Default polling interval: every 15 minutes (configurable).
-- Feed request timeout: 10 seconds per feed fetch.
-- A feed is marked unhealthy after 3 consecutive failed fetch attempts.
-- Retry backoff for unhealthy feeds: 5m -> 15m -> 60m (cap at 60m) until success.
+- All timing and threshold values are configurable via `appsettings.json` under the `RiverOfNews.Feed` section.
+- Default polling interval: every 15 minutes (`PollingIntervalMinutes`).
+- Feed request timeout: 10 seconds per feed fetch (`RequestTimeoutSeconds`).
+- A feed is marked unhealthy after 3 consecutive failed fetch attempts (`UnhealthyThreshold`).
+- Retry backoff for unhealthy feeds: 5m -> 15m -> 60m (`BackoffLevel1Minutes`, `BackoffLevel2Minutes`, `BackoffLevel3Minutes`) until success.
 - Any successful fetch resets failure count and returns feed status to healthy.
 - Manual refresh attempts all feeds immediately, including unhealthy feeds.
 
