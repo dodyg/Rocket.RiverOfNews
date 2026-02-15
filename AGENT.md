@@ -10,6 +10,8 @@
 
 **Read `memory.md` first** - it contains a complete map of this codebase including architecture, project structure, database schema, API endpoints, key patterns, configuration, and file details. This provides essential context for working with Rocket.RiverOfNews.
 
+**Read `SPEC.md`** - it contains the functional requirements specification for the system, including product goals, MVP scope, user stories, API contracts, and data model contracts. **Always update `SPEC.md` when requirements and specification are modified.**
+
 # What AI agents should know about me
 
 C# / ASP.NET Core developer (Razor Pages + Minimal API) targeting .NET 8–10.
