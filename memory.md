@@ -106,7 +106,7 @@ tests/Rocket.RiverOfNews.Tests/
 - `Dapper` (2.1.66) - Micro-ORM
 - `Microsoft.Data.Sqlite` (10.0.0) - SQLite
 - `TUnit` - Testing framework
-- **Datastar** (1.0.0-beta.11) - Reactive hypermedia framework (loaded via CDN)
+- **Datastar** (1.0.0-RC.7) - Reactive hypermedia framework (loaded via CDN)
 
 ## File Details
 
