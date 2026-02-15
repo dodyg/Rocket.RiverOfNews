@@ -1,7 +1,5 @@
 # Rocket.RiverOfNews - Functional Requirements Specification
 
-> **For AI Agents:** Refer to `memory.md` to understand the current codebase structure, including project layout, database schema, API endpoints, and key implementation patterns. **Always update `memory.md` when the structure of the codebase is updated** (new files, renamed components, schema changes, new endpoints, etc.).
-
 ## 1) Product Goal
 Build a web-based "River of News" RSS aggregator that presents posts from multiple feeds in a single chronological stream for desktop web users.
 

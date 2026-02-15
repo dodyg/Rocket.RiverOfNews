@@ -8,6 +8,13 @@ A web-based "River of News" RSS aggregator built with ASP.NET Core 10 and C# 14.
 
 **Tech Stack:** ASP.NET Core Minimal APIs, Dapper + SQLite, TailwindCSS, TUnit
 
+## Project Context
+
+**Read `memory.md` first** - it contains a complete map of this codebase including architecture, project structure, database schema, API endpoints, key patterns, configuration, and file details. This provides essential context for working with Rocket.RiverOfNews.
+
+**Read `SPEC.md`** - it contains the functional requirements specification for the system, including product goals, MVP scope, user stories, API contracts, and data model contracts. **Always update `SPEC.md` when requirements and specification are modified.**
+
+
 ## Build / Test / Lint Commands
 
 ```bash
