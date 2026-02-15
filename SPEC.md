@@ -14,6 +14,7 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - Feed add attempts show inline success/error feedback in the UI.
 - Users can remove existing feeds.
 - The system validates feed URLs and stores accepted feeds.
+- The feed sources list updates immediately after add/remove operations without requiring a page refresh.
 
 ### 3.2 Feed Refresh and Ingestion
 - The system automatically polls feeds on a fixed interval.
@@ -81,7 +82,8 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Valid feed URL can be submitted from UI.
   - Duplicate feed URLs are rejected with a clear message.
   - Validation/failure responses are shown inline on the river page.
-  - Newly added valid feed is persisted and appears in feed list.
+  - Newly added valid feed is persisted and appears in feed list immediately without page refresh.
+  - The items list refreshes to show any items from the newly added feed.
 
 **Story A2: Remove feed URL**
 - As a user, I can remove a feed I no longer want.
@@ -89,6 +91,8 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Feed can be removed from feed list.
   - Feed is no longer polled after removal.
   - Previously aggregated items remain available until retention cleanup.
+  - Feed list updates immediately after removal without page refresh.
+  - If the removed feed was selected as a filter, it is automatically deselected.
 
 ### Epic B: Ingestion and Refresh Pipeline
 **Story B1: Scheduled refresh**
@@ -104,6 +108,8 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Manual refresh action is available in UI.
   - Action triggers fetch for all active feeds.
   - UI shows in-progress and completion/failure state.
+  - Feed list updates immediately with latest health status.
+  - Items list refreshes with any newly ingested items.
 
 ### Epic C: Aggregation and Deduplication
 **Story C1: Canonical item merging**
@@ -144,6 +150,7 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - One or more sources can be selected.
   - Results update to match selected sources.
   - Clearing filter returns full river list.
+  - Clearing filters immediately refreshes both the feed list and items list.
 
 **Story E2: Date range filter**
 - As a user, I can filter by publish date range.

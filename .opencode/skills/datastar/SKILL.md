@@ -1,7 +1,7 @@
 ---
 name: datastar
 description: Hypermedia framework for building reactive web applications with backend-driven UI. Use this skill for Datastar development patterns, SSE streaming, signal management, DOM morphing, and the "Datastar way" philosophy. Covers data-* attributes, backend integration, and real-time collaborative app patterns.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Datastar
@@ -362,6 +362,20 @@ GET /river/items?reset=true&datastar=%7B%22selectedFeedIds%22%3A%22abc123%22%7D
    ```
 8. **Reading signals from body on GET requests**: For GET requests, Datastar sends signals via the `datastar` query parameter, NOT the request body. Always check both locations.
 9. **Setting Connection header in SSE**: Do NOT set `response.Headers.Connection = "keep-alive"` in SSE responses. This header is invalid for HTTP/2 and HTTP/3 - Kestrel handles keep-alive automatically and will emit warnings if these headers are present.
+10. **Using `data-init` on dynamically added elements**: `data-init` on elements added via SSE patching is **unreliable**. Datastar's morphing may not properly execute `data-init` on dynamically appended content. Instead, the backend should directly render and patch the updated HTML fragments:
+    ```csharp
+    // WRONG: Trying to trigger follow-up requests via data-init
+    await sse.PatchElementsAsync(
+        "<div data-init=\"@get('/feeds'); @get('/items')\"></div>",
+        "body", "append", cancellationToken);
+
+    // CORRECT: Directly render and patch the updated content
+    string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+    await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
+
+    string itemsHtml = await BuildItemsHtmlAsync(signals, connectionFactory, cancellationToken);
+    await sse.PatchElementsAsync(itemsHtml, "#items", "inner", cancellationToken);
+    ```
 
 ## When to Use This Skill
 

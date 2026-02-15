@@ -107,47 +107,11 @@ public static class DatastarApi
 		SqliteConnectionFactory connectionFactory,
 		CancellationToken cancellationToken)
 	{
-		const string sql = """
-			SELECT
-				id AS Id,
-				url AS Url,
-				normalized_url AS NormalizedUrl,
-				title AS Title,
-				status AS Status,
-				consecutive_failures AS ConsecutiveFailures,
-				last_error AS LastError,
-				last_polled_at AS LastPolledAt,
-				last_success_at AS LastSuccessAt
-			FROM feeds
-			ORDER BY title COLLATE NOCASE, normalized_url COLLATE NOCASE;
-			""";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		IReadOnlyList<FeedResponse> feeds = (await connection.QueryAsync<FeedResponse>(new CommandDefinition(sql, cancellationToken: cancellationToken))).AsList();
-
-		StringBuilder html = new();
-		if (feeds.Count == 0)
-		{
-			html.AppendLine("<div class='text-xs text-slate-500'>No feeds added yet.</div>");
-		}
-		else
-		{
-			foreach (FeedResponse feed in feeds)
-			{
-				string checkboxId = $"feed_{feed.Id}";
-				html.AppendLine($"""<div class="mb-1 flex items-center justify-between gap-2 text-xs">""");
-				html.AppendLine($"""  <label class="flex items-center gap-2">""");
-				html.AppendLine($"""    <input type="checkbox" id="{checkboxId}" value="{feed.Id}" data-on:change="@get('/river/toggle-feed/{feed.Id}')" class="accent-sky-500">""");
-				html.AppendLine($"""    <span>{feed.Title} <span class="text-slate-500">({feed.Status})</span></span>""");
-				html.AppendLine($"""  </label>""");
-				html.AppendLine($"""  <button data-on:click="confirm('Delete feed?') && @delete('/river/feeds/{feed.Id}')" class="rounded border border-rose-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-950">Delete</button>""");
-				html.AppendLine($"""</div>""");
-			}
-		}
+		string html = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
 
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
-		await sse.PatchElementsAsync(html.ToString(), "#source-filters", "inner", cancellationToken);
+		await sse.PatchElementsAsync(html, "#source-filters", "inner", cancellationToken);
 	}
 
 	public static async Task ToggleFeedAsync(
@@ -187,6 +151,376 @@ public static class DatastarApi
 		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
 		bool reset = request.Query["reset"] == "true";
 
+		ItemsResult result = await BuildItemsHtmlAsync(signals, reset, connectionFactory, cancellationToken);
+
+		SseHelper sseHelper = response.CreateSseHelper();
+		await sseHelper.StartAsync(cancellationToken);
+
+		if (result.FilterError is not null)
+		{
+			await sseHelper.PatchSignalsAsync(new { _filterError = result.FilterError }, cancellationToken);
+			return;
+		}
+
+		string mode = reset ? "inner" : "append";
+		await sseHelper.PatchElementsAsync(result.Html, "#items", mode, cancellationToken);
+
+		int currentCount = reset ? result.Count : (signals.TryGetValue("_itemsCount", out JsonElement countElement) && countElement.ValueKind == JsonValueKind.Number
+			? countElement.GetInt32() + result.Count
+			: result.Count);
+
+		await sseHelper.PatchSignalsAsync(new
+		{
+			cursor = result.NextCursor ?? "",
+			_itemsCount = currentCount,
+			_hasMore = result.HasMore,
+			_filterError = ""
+		}, cancellationToken);
+	}
+
+	public static async Task ClearFiltersAsync(
+		HttpResponse response,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			selectedFeedIds = "",
+			startDate = "",
+			endDate = "",
+			cursor = "",
+			_filterError = ""
+		}, cancellationToken);
+
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
+
+		Dictionary<string, JsonElement> emptySignals = new();
+		ItemsResult itemsResult = await BuildItemsHtmlAsync(emptySignals, true, connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(itemsResult.Html, "#items", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			cursor = itemsResult.NextCursor ?? "",
+			_itemsCount = itemsResult.Count,
+			_hasMore = itemsResult.HasMore
+		}, cancellationToken);
+	}
+
+	public static async Task AddFeedAsync(
+		HttpRequest request,
+		HttpResponse response,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
+
+		string url = signals.TryGetValue("addFeedUrl", out JsonElement urlElement) && urlElement.ValueKind == JsonValueKind.String
+			? urlElement.GetString()?.Trim() ?? ""
+			: "";
+
+		string title = signals.TryGetValue("addFeedTitle", out JsonElement titleElement) && titleElement.ValueKind == JsonValueKind.String
+			? titleElement.GetString()?.Trim() ?? ""
+			: "";
+
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+
+		if (string.IsNullOrWhiteSpace(url))
+		{
+			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Feed URL is required." }, cancellationToken);
+			return;
+		}
+
+		string normalizedUrl;
+		try
+		{
+			normalizedUrl = NormalizeUrl(url);
+		}
+		catch (UriFormatException)
+		{
+			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Invalid feed URL." }, cancellationToken);
+			return;
+		}
+
+		string feedId = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+
+		const string sql = """
+			INSERT INTO feeds (
+				id, url, normalized_url, title, status, consecutive_failures, created_at, updated_at
+			)
+			VALUES (
+				@Id, @Url, @NormalizedUrl, @Title, 'healthy', 0, @Now, @Now
+			);
+			""";
+
+		try
+		{
+			await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+			await connection.ExecuteAsync(
+				new CommandDefinition(
+					sql,
+					new
+					{
+						Id = feedId,
+						Url = url,
+						NormalizedUrl = normalizedUrl,
+						Title = title.Length > 0 ? title : normalizedUrl,
+						Now = now
+					},
+					cancellationToken: cancellationToken));
+		}
+		catch (SqliteException exception) when (exception.SqliteErrorCode == 19)
+		{
+			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Feed URL already exists." }, cancellationToken);
+			return;
+		}
+
+		await sse.PatchSignalsAsync(new
+		{
+			addFeedUrl = "",
+			addFeedTitle = "",
+			_addFeedStatus = "Feed added."
+		}, cancellationToken);
+
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
+
+		ItemsResult itemsResult = await BuildItemsHtmlAsync(signals, true, connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(itemsResult.Html, "#items", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			cursor = itemsResult.NextCursor ?? "",
+			_itemsCount = itemsResult.Count,
+			_hasMore = itemsResult.HasMore
+		}, cancellationToken);
+	}
+
+	public static async Task DeleteFeedAsync(
+		string feedId,
+		HttpRequest request,
+		HttpResponse response,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
+
+		const string sql = "DELETE FROM feeds WHERE id = @FeedId;";
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		int rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { FeedId = feedId }, cancellationToken: cancellationToken));
+
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+
+		if (rowsAffected == 0)
+		{
+			await sse.PatchSignalsAsync(new { _feedActionStatus = "Error: Feed not found." }, cancellationToken);
+			return;
+		}
+
+		string currentSelected = signals.TryGetValue("selectedFeedIds", out JsonElement selectedElement) && selectedElement.ValueKind == JsonValueKind.String
+			? selectedElement.GetString() ?? ""
+			: "";
+
+		HashSet<string> selectedSet = currentSelected.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+		selectedSet.Remove(feedId);
+		string newSelected = string.Join(",", selectedSet);
+
+		await sse.PatchSignalsAsync(new
+		{
+			selectedFeedIds = newSelected,
+			_feedActionStatus = "Feed deleted."
+		}, cancellationToken);
+
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
+
+		Dictionary<string, JsonElement> updatedSignals = new(signals)
+		{
+			["selectedFeedIds"] = JsonDocument.Parse($"\"{newSelected}\"").RootElement.Clone()
+		};
+		ItemsResult itemsResult = await BuildItemsHtmlAsync(updatedSignals, true, connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(itemsResult.Html, "#items", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			cursor = itemsResult.NextCursor ?? "",
+			_itemsCount = itemsResult.Count,
+			_hasMore = itemsResult.HasMore
+		}, cancellationToken);
+	}
+
+	public static async Task RefreshAsync(
+		HttpResponse response,
+		FeedIngestionService feedIngestionService,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		RefreshResult refreshResult = await feedIngestionService.RefreshAllFeedsAsync(cancellationToken);
+
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			_refreshStatus = $"Done: {refreshResult.SuccessFeedCount} success, {refreshResult.FailedFeedCount} failed"
+		}, cancellationToken);
+
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
+
+		Dictionary<string, JsonElement> emptySignals = new();
+		ItemsResult itemsResult = await BuildItemsHtmlAsync(emptySignals, true, connectionFactory, cancellationToken);
+		await sse.PatchElementsAsync(itemsResult.Html, "#items", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			cursor = itemsResult.NextCursor ?? "",
+			_itemsCount = itemsResult.Count,
+			_hasMore = itemsResult.HasMore
+		}, cancellationToken);
+	}
+
+	public static IResult GetRiverItemPage(string itemId)
+	{
+		string html = $$"""
+			<!doctype html>
+			<html lang="en">
+			<head>
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
+				<title>River item details</title>
+				{{TailwindScript}}
+				{{DatastarScript}}
+			</head>
+			<body class="bg-slate-950 text-slate-100">
+				<main class="mx-auto max-w-4xl p-4 md:p-8" data-signals="{id:'{{itemId}}',title:'',sourceNames:'',publishedAt:'',ingestedAt:'',imageUrl:'',canonicalUrl:'',url:'',snippet:'',_error:''}">
+					<a href="/river" class="text-sm text-sky-400 hover:text-sky-300">← Back to river</a>
+					<article class="mt-4 rounded border border-slate-800 bg-slate-900 p-4">
+						<div data-text="$sourceNames" class="mb-2 text-xs text-slate-400"></div>
+						<h1 data-text="$title" class="mb-3 text-2xl font-semibold"></h1>
+						<div data-text="`Published: ${$publishedAt} | Ingested: ${$ingestedAt}`" class="mb-3 text-xs text-slate-400"></div>
+						<img data-show="$imageUrl" data-attr:src="$imageUrl" class="mb-4 h-auto w-auto max-w-full rounded" alt="">
+						<p data-text="$snippet" class="mb-4 text-sm text-slate-300 whitespace-pre-wrap"></p>
+						<div data-show="$canonicalUrl || $url" class="flex flex-wrap gap-3 text-sm">
+							<a data-show="$canonicalUrl" data-attr:href="$canonicalUrl" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open canonical article</a>
+							<a data-show="$url" data-attr:href="$url" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open original article URL</a>
+						</div>
+						<p data-show="!$canonicalUrl && !$url && !$_error" class="mt-3 text-sm text-slate-500">No article URL available for this item.</p>
+						<p data-text="$_error" class="mt-4 text-sm text-rose-400"></p>
+					</article>
+				</main>
+				<div data-init="@get('/river/items/{{itemId}}/detail')"></div>
+			</body>
+			</html>
+			""";
+
+		return Results.Content(html, "text/html; charset=utf-8");
+	}
+
+	public static async Task GetItemDetailAsync(
+		string itemId,
+		HttpResponse response,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		const string sql = """
+			SELECT
+				i.id AS Id,
+				i.title AS Title,
+				i.url AS Url,
+				i.canonical_url AS CanonicalUrl,
+				i.image_url AS ImageUrl,
+				i.snippet AS Snippet,
+				i.published_at AS PublishedAt,
+				i.ingested_at AS IngestedAt,
+				(
+					SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
+					FROM item_sources s
+					INNER JOIN feeds f ON f.id = s.feed_id
+					WHERE s.item_id = i.id
+				) AS SourceNames
+			FROM items i
+			WHERE i.id = @ItemId
+			LIMIT 1;
+			""";
+
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		RiverItemDetailResponse? item = await connection.QuerySingleOrDefaultAsync<RiverItemDetailResponse>(
+			new CommandDefinition(sql, new { ItemId = itemId }, cancellationToken: cancellationToken));
+
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+
+		if (item is null)
+		{
+			await sse.PatchSignalsAsync(new { _error = "Item not found." }, cancellationToken);
+			return;
+		}
+
+		await sse.PatchSignalsAsync(new
+		{
+			title = item.Title,
+			sourceNames = item.SourceNames ?? "Unknown source",
+			publishedAt = FormatDate(item.PublishedAt),
+			ingestedAt = FormatDate(item.IngestedAt),
+			imageUrl = item.ImageUrl ?? "",
+			canonicalUrl = item.CanonicalUrl ?? "",
+			url = item.Url ?? "",
+			snippet = item.Snippet ?? ""
+		}, cancellationToken);
+	}
+
+	private static async Task<string> BuildFeedsHtmlAsync(
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		const string sql = """
+			SELECT
+				id AS Id,
+				url AS Url,
+				normalized_url AS NormalizedUrl,
+				title AS Title,
+				status AS Status,
+				consecutive_failures AS ConsecutiveFailures,
+				last_error AS LastError,
+				last_polled_at AS LastPolledAt,
+				last_success_at AS LastSuccessAt
+			FROM feeds
+			ORDER BY title COLLATE NOCASE, normalized_url COLLATE NOCASE;
+			""";
+
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		IReadOnlyList<FeedResponse> feeds = (await connection.QueryAsync<FeedResponse>(new CommandDefinition(sql, cancellationToken: cancellationToken))).AsList();
+
+		StringBuilder html = new();
+		if (feeds.Count == 0)
+		{
+			html.AppendLine("<div class='text-xs text-slate-500'>No feeds added yet.</div>");
+		}
+		else
+		{
+			foreach (FeedResponse feed in feeds)
+			{
+				string checkboxId = $"feed_{feed.Id}";
+				html.AppendLine($"""<div class="mb-1 flex items-center justify-between gap-2 text-xs">""");
+				html.AppendLine($"""  <label class="flex items-center gap-2">""");
+				html.AppendLine($"""    <input type="checkbox" id="{checkboxId}" value="{feed.Id}" data-on:change="@get('/river/toggle-feed/{feed.Id}')" class="accent-sky-500">""");
+				html.AppendLine($"""    <span>{feed.Title} <span class="text-slate-500">({feed.Status})</span></span>""");
+				html.AppendLine($"""  </label>""");
+				html.AppendLine($"""  <button data-on:click="confirm('Delete feed?') && @delete('/river/feeds/{feed.Id}')" class="rounded border border-rose-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-950">Delete</button>""");
+				html.AppendLine($"""</div>""");
+			}
+		}
+
+		return html.ToString();
+	}
+
+	private static async Task<ItemsResult> BuildItemsHtmlAsync(
+		Dictionary<string, JsonElement> signals,
+		bool reset,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
 		string currentCursor = reset ? "" : (signals.TryGetValue("cursor", out JsonElement cursorElement) && cursorElement.ValueKind == JsonValueKind.String
 			? cursorElement.GetString() ?? ""
 			: "");
@@ -209,10 +543,7 @@ public static class DatastarApi
 
 		if (startDate.HasValue && endDate.HasValue && endDate.Value < startDate.Value)
 		{
-			SseHelper sse = response.CreateSseHelper();
-			await sse.StartAsync(cancellationToken);
-			await sse.PatchSignalsAsync(new { _filterError = "Invalid date range. End date must be on or after start date." }, cancellationToken);
-			return;
+			return new ItemsResult("", null, false, 0, "Invalid date range. End date must be on or after start date.");
 		}
 
 		const string sql = """
@@ -311,274 +642,10 @@ public static class DatastarApi
 			html.AppendLine($"""</article>""");
 		}
 
-		SseHelper sseHelper = response.CreateSseHelper();
-		await sseHelper.StartAsync(cancellationToken);
-
-		string mode = reset ? "inner" : "append";
-		string selector = reset ? "#items" : "#items";
-		await sseHelper.PatchElementsAsync(html.ToString(), selector, mode, cancellationToken);
-
-		int currentCount = reset ? items.Count : (signals.TryGetValue("_itemsCount", out JsonElement countElement) && countElement.ValueKind == JsonValueKind.Number
-			? countElement.GetInt32() + items.Count
-			: items.Count);
-
-		await sseHelper.PatchSignalsAsync(new
-		{
-			cursor = nextCursor ?? "",
-			_itemsCount = currentCount,
-			_hasMore = hasMore,
-			_filterError = ""
-		}, cancellationToken);
+		return new ItemsResult(html.ToString(), nextCursor, hasMore, items.Count, null);
 	}
 
-	public static async Task ClearFiltersAsync(
-		HttpResponse response,
-		CancellationToken cancellationToken)
-	{
-		SseHelper sse = response.CreateSseHelper();
-		await sse.StartAsync(cancellationToken);
-		await sse.PatchSignalsAsync(new
-		{
-			selectedFeedIds = "",
-			startDate = "",
-			endDate = "",
-			cursor = "",
-			_filterError = ""
-		}, cancellationToken);
-		await sse.PatchElementsAsync("<div data-init=\"@get('/river/feeds'); @get('/river/items?reset=true')\"></div>", "body", "append", cancellationToken);
-	}
-
-	public static async Task AddFeedAsync(
-		HttpRequest request,
-		HttpResponse response,
-		SqliteConnectionFactory connectionFactory,
-		CancellationToken cancellationToken)
-	{
-		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
-
-		string url = signals.TryGetValue("addFeedUrl", out JsonElement urlElement) && urlElement.ValueKind == JsonValueKind.String
-			? urlElement.GetString()?.Trim() ?? ""
-			: "";
-
-		string title = signals.TryGetValue("addFeedTitle", out JsonElement titleElement) && titleElement.ValueKind == JsonValueKind.String
-			? titleElement.GetString()?.Trim() ?? ""
-			: "";
-
-		SseHelper sse = response.CreateSseHelper();
-		await sse.StartAsync(cancellationToken);
-
-		if (string.IsNullOrWhiteSpace(url))
-		{
-			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Feed URL is required." }, cancellationToken);
-			return;
-		}
-
-		string normalizedUrl;
-		try
-		{
-			normalizedUrl = NormalizeUrl(url);
-		}
-		catch (UriFormatException)
-		{
-			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Invalid feed URL." }, cancellationToken);
-			return;
-		}
-
-		string feedId = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-
-		const string sql = """
-			INSERT INTO feeds (
-				id, url, normalized_url, title, status, consecutive_failures, created_at, updated_at
-			)
-			VALUES (
-				@Id, @Url, @NormalizedUrl, @Title, 'healthy', 0, @Now, @Now
-			);
-			""";
-
-		try
-		{
-			await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-			await connection.ExecuteAsync(
-				new CommandDefinition(
-					sql,
-					new
-					{
-						Id = feedId,
-						Url = url,
-						NormalizedUrl = normalizedUrl,
-						Title = title.Length > 0 ? title : normalizedUrl,
-						Now = now
-					},
-					cancellationToken: cancellationToken));
-		}
-		catch (SqliteException exception) when (exception.SqliteErrorCode == 19)
-		{
-			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Feed URL already exists." }, cancellationToken);
-			return;
-		}
-
-		await sse.PatchSignalsAsync(new
-		{
-			addFeedUrl = "",
-			addFeedTitle = "",
-			_addFeedStatus = "Feed added.",
-			cursor = "",
-			_itemsCount = 0
-		}, cancellationToken);
-
-		await sse.PatchElementsAsync("<div data-init=\"@get('/river/feeds'); @get('/river/items?reset=true')\"></div>", "body", "append", cancellationToken);
-	}
-
-	public static async Task DeleteFeedAsync(
-		string feedId,
-		HttpRequest request,
-		HttpResponse response,
-		SqliteConnectionFactory connectionFactory,
-		CancellationToken cancellationToken)
-	{
-		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
-
-		const string sql = "DELETE FROM feeds WHERE id = @FeedId;";
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		int rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { FeedId = feedId }, cancellationToken: cancellationToken));
-
-		SseHelper sse = response.CreateSseHelper();
-		await sse.StartAsync(cancellationToken);
-
-		if (rowsAffected == 0)
-		{
-			await sse.PatchSignalsAsync(new { _feedActionStatus = "Error: Feed not found." }, cancellationToken);
-			return;
-		}
-
-		string currentSelected = signals.TryGetValue("selectedFeedIds", out JsonElement selectedElement) && selectedElement.ValueKind == JsonValueKind.String
-			? selectedElement.GetString() ?? ""
-			: "";
-
-		HashSet<string> selectedSet = currentSelected.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
-		selectedSet.Remove(feedId);
-		string newSelected = string.Join(",", selectedSet);
-
-		await sse.PatchSignalsAsync(new
-		{
-			selectedFeedIds = newSelected,
-			_feedActionStatus = "Feed deleted.",
-			cursor = "",
-			_itemsCount = 0
-		}, cancellationToken);
-
-		await sse.PatchElementsAsync("<div data-init=\"@get('/river/feeds'); @get('/river/items?reset=true')\"></div>", "body", "append", cancellationToken);
-	}
-
-	public static async Task RefreshAsync(
-		HttpResponse response,
-		FeedIngestionService feedIngestionService,
-		CancellationToken cancellationToken)
-	{
-		RefreshResult refreshResult = await feedIngestionService.RefreshAllFeedsAsync(cancellationToken);
-
-		SseHelper sse = response.CreateSseHelper();
-		await sse.StartAsync(cancellationToken);
-		await sse.PatchSignalsAsync(new
-		{
-			_refreshStatus = $"Done: {refreshResult.SuccessFeedCount} success, {refreshResult.FailedFeedCount} failed",
-			cursor = "",
-			_itemsCount = 0
-		}, cancellationToken);
-
-		await sse.PatchElementsAsync("<div data-init=\"@get('/river/feeds'); @get('/river/items?reset=true')\"></div>", "body", "append", cancellationToken);
-	}
-
-	public static IResult GetRiverItemPage(string itemId)
-	{
-		string html = $$"""
-			<!doctype html>
-			<html lang="en">
-			<head>
-				<meta charset="utf-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1">
-				<title>River item details</title>
-				{{TailwindScript}}
-				{{DatastarScript}}
-			</head>
-			<body class="bg-slate-950 text-slate-100">
-				<main class="mx-auto max-w-4xl p-4 md:p-8" data-signals="{id:'{{itemId}}',title:'',sourceNames:'',publishedAt:'',ingestedAt:'',imageUrl:'',canonicalUrl:'',url:'',snippet:'',_error:''}">
-					<a href="/river" class="text-sm text-sky-400 hover:text-sky-300">← Back to river</a>
-					<article class="mt-4 rounded border border-slate-800 bg-slate-900 p-4">
-						<div data-text="$sourceNames" class="mb-2 text-xs text-slate-400"></div>
-						<h1 data-text="$title" class="mb-3 text-2xl font-semibold"></h1>
-						<div data-text="`Published: ${$publishedAt} | Ingested: ${$ingestedAt}`" class="mb-3 text-xs text-slate-400"></div>
-						<img data-show="$imageUrl" data-attr:src="$imageUrl" class="mb-4 h-auto w-auto max-w-full rounded" alt="">
-						<p data-text="$snippet" class="mb-4 text-sm text-slate-300 whitespace-pre-wrap"></p>
-						<div data-show="$canonicalUrl || $url" class="flex flex-wrap gap-3 text-sm">
-							<a data-show="$canonicalUrl" data-attr:href="$canonicalUrl" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open canonical article</a>
-							<a data-show="$url" data-attr:href="$url" class="text-sky-400 hover:text-sky-300" target="_blank" rel="noreferrer">Open original article URL</a>
-						</div>
-						<p data-show="!$canonicalUrl && !$url && !$_error" class="mt-3 text-sm text-slate-500">No article URL available for this item.</p>
-						<p data-text="$_error" class="mt-4 text-sm text-rose-400"></p>
-					</article>
-				</main>
-				<div data-init="@get('/river/items/{{itemId}}/detail')"></div>
-			</body>
-			</html>
-			""";
-
-		return Results.Content(html, "text/html; charset=utf-8");
-	}
-
-	public static async Task GetItemDetailAsync(
-		string itemId,
-		HttpResponse response,
-		SqliteConnectionFactory connectionFactory,
-		CancellationToken cancellationToken)
-	{
-		const string sql = """
-			SELECT
-				i.id AS Id,
-				i.title AS Title,
-				i.url AS Url,
-				i.canonical_url AS CanonicalUrl,
-				i.image_url AS ImageUrl,
-				i.snippet AS Snippet,
-				i.published_at AS PublishedAt,
-				i.ingested_at AS IngestedAt,
-				(
-					SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
-					FROM item_sources s
-					INNER JOIN feeds f ON f.id = s.feed_id
-					WHERE s.item_id = i.id
-				) AS SourceNames
-			FROM items i
-			WHERE i.id = @ItemId
-			LIMIT 1;
-			""";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		RiverItemDetailResponse? item = await connection.QuerySingleOrDefaultAsync<RiverItemDetailResponse>(
-			new CommandDefinition(sql, new { ItemId = itemId }, cancellationToken: cancellationToken));
-
-		SseHelper sse = response.CreateSseHelper();
-		await sse.StartAsync(cancellationToken);
-
-		if (item is null)
-		{
-			await sse.PatchSignalsAsync(new { _error = "Item not found." }, cancellationToken);
-			return;
-		}
-
-		await sse.PatchSignalsAsync(new
-		{
-			title = item.Title,
-			sourceNames = item.SourceNames ?? "Unknown source",
-			publishedAt = FormatDate(item.PublishedAt),
-			ingestedAt = FormatDate(item.IngestedAt),
-			imageUrl = item.ImageUrl ?? "",
-			canonicalUrl = item.CanonicalUrl ?? "",
-			url = item.Url ?? "",
-			snippet = item.Snippet ?? ""
-		}, cancellationToken);
-	}
+	private sealed record ItemsResult(string Html, string? NextCursor, bool HasMore, int Count, string? FilterError);
 
 	private static string NormalizeUrl(string url)
 	{

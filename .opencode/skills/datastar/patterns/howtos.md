@@ -338,3 +338,109 @@ Redirect from the backend by patching a signal that triggers navigation:
 ```
 
 Or use the standard approach - send a redirect header and let the browser handle it.
+
+## Refreshing UI After Mutations
+
+### The Problem: `data-init` on Dynamically Added Elements
+
+Using `data-init` on elements added via SSE patching is **unreliable**. Datastar's morphing may not properly execute `data-init` on content appended via SSE.
+
+**Anti-pattern - DO NOT USE:**
+```csharp
+// Backend tries to trigger follow-up requests via data-init
+await sse.PatchElementsAsync(
+    "<div data-init=\"@get('/feeds'); @get('/items')\"></div>",
+    "body", "append", cancellationToken);
+```
+
+This approach often fails because:
+1. `data-init` execution on dynamically added content is inconsistent
+2. The appended div may be morphed away before `data-init` executes
+3. Race conditions between SSE events can cause missed updates
+
+### The Solution: Direct Backend Rendering
+
+Follow the "Datastar way" - the backend should directly render and patch the updated HTML fragments instead of relying on client-side triggers.
+
+**Pattern: Extract reusable HTML builders**
+
+```csharp
+// Extract HTML generation into reusable helper methods
+private static async Task<string> BuildFeedsHtmlAsync(
+    SqliteConnectionFactory connectionFactory,
+    CancellationToken cancellationToken)
+{
+    // Query data and build HTML string
+    // ...
+    return html.ToString();
+}
+
+private static async Task<ItemsResult> BuildItemsHtmlAsync(
+    Dictionary<string, JsonElement> signals,
+    bool reset,
+    SqliteConnectionFactory connectionFactory,
+    CancellationToken cancellationToken)
+{
+    // Query data, apply filters, build HTML string
+    // ...
+    return new ItemsResult(html, nextCursor, hasMore, count, null);
+}
+
+private sealed record ItemsResult(
+    string Html, 
+    string? NextCursor, 
+    bool HasMore, 
+    int Count, 
+    string? Error);
+```
+
+**Pattern: Direct patching after mutations**
+
+```csharp
+public static async Task AddFeedAsync(
+    HttpRequest request,
+    HttpResponse response,
+    SqliteConnectionFactory connectionFactory,
+    CancellationToken cancellationToken)
+{
+    // ... perform the mutation (insert feed) ...
+
+    SseHelper sse = response.CreateSseHelper();
+    await sse.StartAsync(cancellationToken);
+
+    // Patch signals (clear form, show status)
+    await sse.PatchSignalsAsync(new
+    {
+        addFeedUrl = "",
+        _addFeedStatus = "Feed added."
+    }, cancellationToken);
+
+    // Directly render and patch the updated feeds list
+    string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+    await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
+
+    // Directly render and patch the updated items list
+    ItemsResult itemsResult = await BuildItemsHtmlAsync(signals, true, connectionFactory, cancellationToken);
+    await sse.PatchElementsAsync(itemsResult.Html, "#items", "inner", cancellationToken);
+    await sse.PatchSignalsAsync(new
+    {
+        cursor = itemsResult.NextCursor ?? "",
+        _itemsCount = itemsResult.Count,
+        _hasMore = itemsResult.HasMore
+    }, cancellationToken);
+}
+```
+
+### When This Pattern Applies
+
+- After create/update/delete operations that affect displayed lists
+- When a single action should update multiple UI regions
+- After background refresh operations that change displayed data
+- Any mutation that requires immediate UI synchronization
+
+### Benefits
+
+1. **Reliability**: No dependency on `data-init` execution timing
+2. **Consistency**: Backend is the source of truth for both data and rendered state
+3. **Atomicity**: All UI updates happen in a single SSE response
+4. **Simplicity**: Clear, predictable flow from mutation to rendered output
