@@ -88,11 +88,13 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 **Story A2: Remove feed URL**
 - As a user, I can remove a feed I no longer want.
 - Acceptance criteria:
-  - Feed can be removed from feed list.
-  - Feed is no longer polled after removal.
-  - Previously aggregated items remain available until retention cleanup.
-  - Feed list updates immediately after removal without page refresh.
-  - If the removed feed was selected as a filter, it is automatically deselected.
+   - Feed can be removed from feed list.
+   - Feed is no longer polled after removal.
+   - Items that were only sourced from the deleted feed are removed immediately.
+   - Items with multiple source feeds (due to deduplication) remain visible.
+   - Feed list updates immediately after removal without page refresh.
+   - Items list updates immediately after removal to reflect deleted items.
+   - If the removed feed was selected as a filter, it is automatically deselected.
 
 ### Epic B: Ingestion and Refresh Pipeline
 **Story B1: Scheduled refresh**
@@ -222,14 +224,15 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 ### 7.5 API Contract (MVP)
 - `GET /api/feeds` -> list feeds with health metadata.
 - `POST /api/feeds` -> add a feed URL; rejects duplicates by normalized URL.
-- `DELETE /api/feeds/{feed_id}` -> remove feed from polling.
+- `DELETE /api/feeds/{feed_id}` -> remove feed from polling; deletes orphaned items that only came from this feed.
 - `POST /api/refresh` -> trigger immediate refresh of all active feeds.
 - `GET /api/items` -> river query with optional `feed_ids`, `start_date`, `end_date`, `limit`, `cursor`; each item includes optional `image_url` when available.
 
 ### 7.6 Data Model Contract (MVP)
 - `feeds`: `id`, `url`, `normalized_url` (unique), `title`, `status`, `consecutive_failures`, `last_error`, `last_polled_at`, `last_success_at`, timestamps.
 - `items`: `id`, `canonical_key`, `guid`, `url`, `canonical_url`, `image_url`, `title`, `snippet`, `published_at`, `ingested_at`, timestamps.
-- `item_sources`: `item_id`, `feed_id`, `source_item_guid`, `source_item_url`, `first_seen_at`; unique on (`item_id`, `feed_id`, `source_item_guid`).
+- `item_sources`: `item_id`, `feed_id`, `source_item_guid`, `source_item_url`, `first_seen_at`; unique on (`item_id`, `feed_id`, `source_item_guid`); foreign keys cascade on delete.
+- Feed deletion removes orphaned items (items whose only source was the deleted feed) and cascades related `item_sources`.
 - Retention cleanup removes rows from `items` older than 30 days by `published_at` and cascades related `item_sources`.
 
 ## 8) Prioritized Implementation Sequence

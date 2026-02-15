@@ -529,9 +529,29 @@ public static class MvpApi
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(feedId);
 
-		const string sql = "DELETE FROM feeds WHERE id = @FeedId;";
+		const string deleteOrphanedItemsSql = """
+			DELETE FROM items 
+			WHERE id IN (
+				SELECT is1.item_id 
+				FROM item_sources is1 
+				WHERE is1.feed_id = @FeedId
+				AND NOT EXISTS (
+					SELECT 1 FROM item_sources is2 
+					WHERE is2.item_id = is1.item_id 
+					AND is2.feed_id != @FeedId
+				)
+			);
+			""";
+		const string deleteFeedSql = "DELETE FROM feeds WHERE id = @FeedId;";
+
 		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		int rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { FeedId = feedId }, cancellationToken: cancellationToken));
+		await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+		await connection.ExecuteAsync(new CommandDefinition(deleteOrphanedItemsSql, new { FeedId = feedId }, transaction, cancellationToken: cancellationToken));
+		int rowsAffected = await connection.ExecuteAsync(new CommandDefinition(deleteFeedSql, new { FeedId = feedId }, transaction, cancellationToken: cancellationToken));
+
+		await transaction.CommitAsync(cancellationToken);
+
 		return rowsAffected > 0 ? Results.NoContent() : Results.NotFound(new ErrorResponse("Feed not found."));
 	}
 
