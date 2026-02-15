@@ -205,6 +205,7 @@ When writing SSE responses, ensure:
 1. **Content-Type**: `text/event-stream`
 2. **No BOM**: Use UTF-8 without BOM (`new UTF8Encoding(false)` in C#)
 3. **Multiline data**: Prefix each line with the data key
+4. **No HTTP/1.x headers**: Do NOT set `Connection`, `Transfer-Encoding`, `Keep-Alive`, `Upgrade`, or `Proxy-Connection` headers - these are invalid for HTTP/2 and HTTP/3 and will cause Kestrel warnings
 
 ```
 event: datastar-patch-elements
@@ -360,6 +361,7 @@ GET /river/items?reset=true&datastar=%7B%22selectedFeedIds%22%3A%22abc123%22%7D
    <button data-on:click="confirm('Delete?') && @delete('/item/1')">Delete</button>
    ```
 8. **Reading signals from body on GET requests**: For GET requests, Datastar sends signals via the `datastar` query parameter, NOT the request body. Always check both locations.
+9. **Setting Connection header in SSE**: Do NOT set `response.Headers.Connection = "keep-alive"` in SSE responses. This header is invalid for HTTP/2 and HTTP/3 - Kestrel handles keep-alive automatically and will emit warnings if these headers are present.
 
 ## When to Use This Skill
 
