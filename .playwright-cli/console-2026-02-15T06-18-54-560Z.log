@@ -1,0 +1,22 @@
+[     268ms] Error: KeyAndValueProvided
+More info: https://data-star.dev/errors/key_and_value_provided?metadata=%7B%22plugin%22%3A%7B%22type%22%3A%22attribute%22%2C%22name%22%3A%22bind%22%7D%2C%22element%22%3A%7B%22id%22%3A%22%22%2C%22tag%22%3A%22INPUT%22%7D%2C%22expression%22%3A%7B%22rawKey%22%3A%22bind%3Avalue%22%2C%22key%22%3A%22value%22%2C%22value%22%3A%22_addFeedUrl%22%7D%7D
+Context: {
+  "plugin": {
+    "type": "attribute",
+    "name": "bind"
+  },
+  "element": {
+    "id": "",
+    "tag": "INPUT"
+  },
+  "expression": {
+    "rawKey": "bind:value",
+    "key": "value",
+    "value": "_addFeedUrl"
+  }
+}
+    at Number.he (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:2:5427)
+    at xt (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:2531)
+    at _e (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:854)
+    at nn (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:1599)
+    at https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:336

@@ -1,0 +1,38 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "River of News" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Unified newest-first feed stream
+    - button "Refresh now" [ref=e8]
+  - generic [ref=e9]:
+    - generic [ref=e10]: Add feed
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Feed URL
+        - textbox "Feed URL" [ref=e14]:
+          - /placeholder: https://example.com/feed.xml
+          - text: https://feeds.bbci.co.uk/news/rss.xml
+      - generic [ref=e15]:
+        - generic [ref=e16]: Title (optional)
+        - textbox "Title (optional)" [ref=e17]:
+          - /placeholder: My feed
+    - generic [ref=e18]:
+      - button "Add feed" [active] [ref=e19]
+      - generic [ref=e37]: "Error: Feed URL is required."
+  - generic [ref=e20]:
+    - generic [ref=e21]: Filters
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Start date (UTC)
+        - textbox "Start date (UTC)" [ref=e25]
+      - generic [ref=e26]:
+        - generic [ref=e27]: End date (UTC)
+        - textbox "End date (UTC)" [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e30]: Sources
+        - paragraph
+    - generic [ref=e32]:
+      - button "Apply filters" [ref=e33]
+      - button "Clear" [ref=e34]
+    - paragraph
+  - generic [ref=e36]: Loaded 0 items

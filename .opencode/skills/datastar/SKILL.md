@@ -1,12 +1,18 @@
 ---
 name: datastar
 description: Hypermedia framework for building reactive web applications with backend-driven UI. Use this skill for Datastar development patterns, SSE streaming, signal management, DOM morphing, and the "Datastar way" philosophy. Covers data-* attributes, backend integration, and real-time collaborative app patterns.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Datastar
 
 Datastar is a lightweight (~11KB) hypermedia framework for building reactive web applications. It enables server-side rendering with frontend framework capabilities by accepting HTML and SSE responses. The backend drives the frontend - this is the core philosophy.
+
+## Installation
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js"></script>
+```
 
 ## The Tao of Datastar (Philosophy)
 
@@ -55,6 +61,8 @@ Modifies DOM elements through morphing.
 
 ```
 event: datastar-patch-elements
+data: mode inner
+data: selector #target
 data: elements <div id="foo">Hello world!</div>
 ```
 
@@ -63,13 +71,24 @@ data: elements <div id="foo">Hello world!</div>
 - `mode` - `outer` (default), `inner`, `replace`, `prepend`, `append`, `before`, `after`, `remove`
 - `useViewTransition` - Enable view transitions
 
+**Multiline Elements:** Each line must be prefixed with `elements`:
+```
+event: datastar-patch-elements
+data: mode inner
+data: selector #target
+data: elements <div>
+data: elements   <span>Line 1</span>
+data: elements   <span>Line 2</span>
+data: elements </div>
+```
+
 ### `datastar-patch-signals`
 
 Updates reactive state on the page.
 
 ```
 event: datastar-patch-signals
-data: signals {foo: 1, bar: 2}
+data: signals {"foo": 1, "bar": 2}
 ```
 
 Remove signals by setting to `null`.
@@ -84,16 +103,16 @@ Remove signals by setting to `null`.
 - `data-on-interval` - Periodic triggers
 
 ### State Management
-- `data-signals` - Define local signals: `data-signals="{count: 0}"`
-- `data-bind` - Two-way binding: `data-bind:value="email"`
+- `data-signals` - Define signals: `data-signals="{count: 0}"`
+- `data-bind` - Two-way binding: `data-bind="email"` (NOT `data-bind:value="email"`)
 - `data-computed` - Derived values
-- `data-init` - Initialize on load
+- `data-init` - Run expression on load (NOT `data-on-load`)
 
 ### DOM Updates
 - `data-text` - Set text content: `data-text="$count"`
-- `data-show` - Conditional visibility
+- `data-show` - Conditional visibility: `data-show="$isVisible"`
 - `data-class` - Dynamic classes
-- `data-attr` - Dynamic attributes
+- `data-attr` - Dynamic attributes: `data-attr:src="$imageUrl"`
 - `data-ref` - Element references
 
 ### Morphing Control
@@ -113,10 +132,26 @@ Remove signals by setting to `null`.
 - `@setAll()` - Set all matching signals
 - `@toggleAll()` - Toggle boolean signals
 
+## Signal Reference Syntax
+
+**CRITICAL:** In expressions, signals MUST be prefixed with `$`:
+
+```html
+<!-- CORRECT -->
+<span data-text="$count"></span>
+<div data-show="$isVisible"></div>
+<img data-attr:src="$imageUrl">
+<span data-text="`Loaded ${$count} items`"></span>
+
+<!-- WRONG - Missing $ prefix -->
+<span data-text="count"></span>
+<div data-show="isVisible"></div>
+```
+
 ## Signal Naming Convention
 
-- Regular signals: sent with every request
-- `_`-prefixed signals: local only, NOT sent to backend
+- **Regular signals**: Sent with every backend request
+- **`_`-prefixed signals**: LOCAL ONLY, NOT sent to backend
 
 ```html
 <div data-signals="{username: '', _isMenuOpen: false}">
@@ -124,43 +159,84 @@ Remove signals by setting to `null`.
 </div>
 ```
 
+**IMPORTANT:** Do NOT use `_` prefix for signals that need to be sent to the backend (like form values). Use regular names for data that must reach the server.
+
+## data-bind Syntax
+
+The signal name goes in the VALUE, not as a key suffix:
+
+```html
+<!-- CORRECT -->
+<input data-bind="email">
+<input data-bind="username">
+
+<!-- WRONG -->
+<input data-bind:value="email">
+```
+
 ## Backend SDK Pattern
 
 All SDKs provide helpers for reading signals and streaming responses:
 
-```go
-// Go example
-func handler(w http.ResponseWriter, r *http.Request) {
-    signals := datastar.ReadSignals(r)
+```csharp
+// ASP.NET Core example
+public static async Task GetFeedsAsync(
+    HttpResponse response,
+    SqliteConnectionFactory connectionFactory,
+    CancellationToken cancellationToken)
+{
+    // Build HTML content
+    StringBuilder html = new();
+    html.AppendLine("<div class=\"feed-item\">...</div>");
 
-    sse := datastar.NewSSE(w)
-    sse.PatchElements("#result", "<div>Updated!</div>")
-    sse.PatchSignals(map[string]any{"count": signals.Count + 1})
+    // Stream SSE response
+    SseHelper sse = response.CreateSseHelper();
+    await sse.StartAsync(cancellationToken);
+    await sse.PatchElementsAsync(html.ToString(), "#target", "inner", cancellationToken);
 }
 ```
 
 Available SDKs: Go, Python, TypeScript, PHP, Ruby, Rust, Java, Kotlin, Scala, C#, Clojure
 
-## Common Patterns
+## SSE Response Format
 
-### Loading Indicators
+When writing SSE responses, ensure:
 
-```html
-<button data-on:click="@post('/submit')"
-        data-indicator="#loading">
-  Submit
-</button>
-<span id="loading" style="display:none">Loading...</span>
+1. **Content-Type**: `text/event-stream`
+2. **No BOM**: Use UTF-8 without BOM (`new UTF8Encoding(false)` in C#)
+3. **Multiline data**: Prefix each line with the data key
+
 ```
+event: datastar-patch-elements
+data: mode inner
+data: selector #source-filters
+data: elements <div class="item">
+data: elements   Content here
+data: elements </div>
+data: elements <div class="item">
+data: elements   More content
+data: elements </div>
+
+```
+
+## Common Patterns
 
 ### Form Binding
 
 ```html
-<form data-signals="{email: '', password: ''}">
-  <input type="email" data-bind:value="email">
-  <input type="password" data-bind:value="password">
+<div data-signals="{email: '', password: ''}">
+  <input type="email" data-bind="email">
+  <input type="password" data-bind="password">
   <button data-on:click="@post('/login')">Login</button>
-</form>
+</div>
+```
+
+### Initialization on Load
+
+```html
+<div data-init="@get('/feeds'); @get('/items')">
+  <!-- Content loaded on page init -->
+</div>
 ```
 
 ### Conditional Rendering
@@ -168,10 +244,28 @@ Available SDKs: Go, Python, TypeScript, PHP, Ruby, Rust, Java, Kotlin, Scala, C#
 ```html
 <div data-signals="{_showDetails: false}">
   <button data-on:click="_showDetails = !_showDetails">Toggle</button>
-  <div data-show="_showDetails">
+  <div data-show="$_showDetails">
     Details here...
   </div>
 </div>
+```
+
+### Loading Indicators
+
+```html
+<button data-on:click="@post('/submit')"
+        data-indicator="fetching"
+        data-attr:disabled="$fetching">
+  Submit
+</button>
+<div data-show="$fetching">Loading...</div>
+```
+
+### Template Literals in Expressions
+
+```html
+<span data-text="`Loaded ${$count} items`"></span>
+<span data-text="`Hello, ${$username}!`"></span>
 ```
 
 ### Polling
@@ -202,7 +296,16 @@ This enables real-time collaboration patterns.
 
 1. **Use Compression**: Brotli on SSE streams can achieve 200:1 ratios due to repetitive DOM data
 2. **Fat Morph**: Don't fear sending large HTML chunks - morphing is efficient
-3. **Debounce Input**: Use `data-on:input.debounce_500ms` for search fields
+3. **Debounce Input**: Use `data-on:input__debounce.500ms` for search fields
+
+## Common Mistakes to Avoid
+
+1. **Missing `$` prefix in expressions**: Always use `$signalName` in `data-text`, `data-show`, `data-attr`, etc.
+2. **Wrong data-bind syntax**: Use `data-bind="signalName"`, not `data-bind:value="signalName"`
+3. **Using `data-on-load`**: Use `data-init` instead
+4. **Underscore signals to backend**: Signals starting with `_` are NOT sent to the backend
+5. **SSE BOM**: Ensure SSE responses don't include UTF-8 BOM
+6. **Incomplete multiline data**: Each line in SSE must have the data key prefix
 
 ## When to Use This Skill
 
@@ -212,11 +315,6 @@ This enables real-time collaboration patterns.
 - Questions about Datastar attributes, patterns, or philosophy
 - Debugging SSE connections or signal behavior
 - Choosing between client-side and server-side state
-
-## Skill Contents
-
-- `patterns/` - Common implementation patterns and anti-patterns
-- `reference/` - Attribute and action reference documentation
 
 ## Links
 

@@ -1,0 +1,34 @@
+[     136ms] [ERROR] ReferenceError: _itemsCount is not defined
+    at eval (eval at rn (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:5:428), <anonymous>:3:20)
+    at https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:5:720
+    at l.rx (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:2720)
+    at Object.n [as d] (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:8:10931)
+    at S (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:2:810)
+    at Object.apply (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:8:11022)
+    at xt (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:2739)
+    at _e (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:854)
+    at nn (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:1599)
+    at https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:336 @ https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4
+[     142ms] Error: ExecuteExpression
+More info: https://data-star.dev/errors/execute_expression?metadata=%7B%22element%22%3A%7B%22id%22%3A%22%22%2C%22tag%22%3A%22SPAN%22%7D%2C%22expression%22%3A%7B%22fnContent%22%3A%22return+%28%60Loaded+%24%24%7B_itemsCount%7D+items%60%29%3B%22%2C%22value%22%3A%22%60Loaded+%24%24%7B_itemsCount%7D+items%60%22%7D%2C%22error%22%3A%22_itemsCount+is+not+defined%22%7D
+Context: {
+  "element": {
+    "id": "",
+    "tag": "SPAN"
+  },
+  "expression": {
+    "fnContent": "return (`Loaded $${_itemsCount} items`);",
+    "value": "`Loaded $${_itemsCount} items`"
+  },
+  "error": "_itemsCount is not defined"
+}
+    at he (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:2:5427)
+    at https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:5:773
+    at l.rx (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:2720)
+    at Object.n [as d] (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:8:10931)
+    at S (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:2:810)
+    at Object.apply (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:8:11022)
+    at xt (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:2739)
+    at _e (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:854)
+    at nn (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:1599)
+    at https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:336

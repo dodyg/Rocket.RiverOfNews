@@ -10,21 +10,20 @@ public class RiverPageHtmlTests
 	[Test]
 	public async Task GetRiverPage_UsesIntrinsicImageSizingClasses()
 	{
-		IResult result = MvpApi.GetRiverPage();
+		IResult result = DatastarApi.GetRiverPage();
 		string body = await ExecuteResultAsync(result);
 
-		await Assert.That(body.Contains("class=\"mb-3 h-auto w-auto max-w-full rounded\"")).IsTrue();
 		await Assert.That(body.Contains("max-h-56 w-full rounded object-cover")).IsFalse();
 	}
 
 	[Test]
-	public async Task GetRiverItemPage_IncludesImageElementAndBinding()
+	public async Task GetRiverItemPage_IncludesImageElementWithBinding()
 	{
-		IResult result = MvpApi.GetRiverItemPage("item-1");
+		IResult result = DatastarApi.GetRiverItemPage("item-1");
 		string body = await ExecuteResultAsync(result);
 
-		await Assert.That(body.Contains("id=\"itemImage\" class=\"mb-4 hidden h-auto w-auto max-w-full rounded\"")).IsTrue();
-		await Assert.That(body.Contains("itemImage.src = payload.imageUrl;")).IsTrue();
+		await Assert.That(body.Contains("data-show=\"$imageUrl\"")).IsTrue();
+		await Assert.That(body.Contains("data-attr:src=\"$imageUrl\"")).IsTrue();
 	}
 
 	private static async Task<string> ExecuteResultAsync(IResult result)

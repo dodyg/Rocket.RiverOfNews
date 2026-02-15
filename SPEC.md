@@ -60,6 +60,7 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 ## 4) Non-Functional Requirements (MVP)
 - Platform target: desktop web browsers first.
 - Performance target: load the latest 200 river items in under 2 seconds on typical broadband.
+- HTTPS is enabled by default with automatic HTTP-to-HTTPS redirection.
 - Automated API regression tests must be implemented with TUnit using a version range `>= 1.0`.
 - Feed-add API coverage must include: successful add, duplicate normalized URL conflict, and invalid URL rejection.
 
@@ -206,14 +207,19 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - Additional loading uses cursor-based pagination (not offset-based) to avoid duplicates/skips during concurrent ingestion.
 - Date range filtering is inclusive (`start_date <= published_at <= end_date`).
 
-### 7.4 API Contract (MVP)
+### 7.4 HTTPS Configuration
+- HTTPS profile is the default launch configuration (`https://localhost:7188`).
+- HTTP-to-HTTPS redirection middleware is enabled to enforce secure connections.
+- Development certificates are managed by .NET CLI (`dotnet dev-certs https`).
+
+### 7.5 API Contract (MVP)
 - `GET /api/feeds` -> list feeds with health metadata.
 - `POST /api/feeds` -> add a feed URL; rejects duplicates by normalized URL.
 - `DELETE /api/feeds/{feed_id}` -> remove feed from polling.
 - `POST /api/refresh` -> trigger immediate refresh of all active feeds.
 - `GET /api/items` -> river query with optional `feed_ids`, `start_date`, `end_date`, `limit`, `cursor`; each item includes optional `image_url` when available.
 
-### 7.5 Data Model Contract (MVP)
+### 7.6 Data Model Contract (MVP)
 - `feeds`: `id`, `url`, `normalized_url` (unique), `title`, `status`, `consecutive_failures`, `last_error`, `last_polled_at`, `last_success_at`, timestamps.
 - `items`: `id`, `canonical_key`, `guid`, `url`, `canonical_url`, `image_url`, `title`, `snippet`, `published_at`, `ingested_at`, timestamps.
 - `item_sources`: `item_id`, `feed_id`, `source_item_guid`, `source_item_url`, `first_seen_at`; unique on (`item_id`, `feed_id`, `source_item_guid`).

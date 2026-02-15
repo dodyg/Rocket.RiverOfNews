@@ -1,7 +1,7 @@
 # Codebase Map: Rocket.RiverOfNews
 
 ## Architecture Overview
-A **River of News** RSS aggregator built with ASP.NET Core 10 Minimal APIs, Dapper + SQLite, and TailwindCSS.
+A **River of News** RSS aggregator built with ASP.NET Core 10 Minimal APIs, Dapper + SQLite, TailwindCSS, and Datastar for reactive UI.
 
 ## Project Structure
 ```
@@ -10,10 +10,14 @@ src/Rocket.RiverOfNews/
 ├── appsettings.json                    # Configuration (polling, timeout, retention)
 ├── Configuration/
 │   └── RiverOfNewsSettings.cs          # Settings classes for configuration
-├── Api/MvpApi.cs                       # All Minimal API endpoints + DTOs
+├── Api/
+│   ├── MvpApi.cs                       # JSON API endpoints + DTOs (kept for backward compatibility)
+│   └── DatastarApi.cs                  # Datastar SSE endpoints + HTML pages
 ├── Data/
 │   ├── SqliteConnectionFactory.cs      # Connection factory with PRAGMA setup
 │   └── SqliteDatabaseBootstrapper.cs   # Migration runner
+├── Datastar/
+│   └── SseHelper.cs                    # Datastar SSE helper for ASP.NET Core
 └── Services/
     ├── FeedIngestionService.cs         # RSS parsing, deduplication, ingestion
     ├── FeedPollingBackgroundService.cs # 1-min polling timer
@@ -38,11 +42,29 @@ tests/Rocket.RiverOfNews.Tests/
 - **item_sources**: Many-to-many linking items to feeds (for dedup across feeds)
 
 ## API Endpoints
+
+### Page Endpoints (Datastar HTML)
 | Method | Path | Handler |
 |--------|------|---------|
 | GET | `/` | Redirect to `/river` |
-| GET | `/river` | `MvpApi.GetRiverPage` (HTML UI) |
-| GET | `/river/items/{itemId}` | `MvpApi.GetRiverItemPage` (HTML detail) |
+| GET | `/river` | `DatastarApi.GetRiverPage` (HTML UI with Datastar) |
+| GET | `/river/items/{itemId}` | `DatastarApi.GetRiverItemPage` (HTML detail) |
+
+### Datastar SSE Endpoints
+| Method | Path | Handler |
+|--------|------|---------|
+| GET | `/river/feeds` | `DatastarApi.GetFeedsAsync` (SSE HTML fragment) |
+| GET | `/river/toggle-feed/{feedId}` | `DatastarApi.ToggleFeedAsync` (SSE signal patch) |
+| GET | `/river/items` | `DatastarApi.GetItemsAsync` (SSE HTML fragment) |
+| GET | `/river/clear-filters` | `DatastarApi.ClearFiltersAsync` (SSE signal patch) |
+| POST | `/river/feeds` | `DatastarApi.AddFeedAsync` (SSE) |
+| DELETE | `/river/feeds/{feedId}` | `DatastarApi.DeleteFeedAsync` (SSE) |
+| POST | `/river/refresh` | `DatastarApi.RefreshAsync` (SSE) |
+| GET | `/river/items/{itemId}/detail` | `DatastarApi.GetItemDetailAsync` (SSE signal patch) |
+
+### JSON API Endpoints (Backward Compatible)
+| Method | Path | Handler |
+|--------|------|---------|
 | GET | `/health` | Health check |
 | GET | `/api/feeds` | `MvpApi.GetFeedsAsync` |
 | POST | `/api/feeds` | `MvpApi.AddFeedAsync` |
@@ -84,6 +106,7 @@ tests/Rocket.RiverOfNews.Tests/
 - `Dapper` (2.1.66) - Micro-ORM
 - `Microsoft.Data.Sqlite` (10.0.0) - SQLite
 - `TUnit` - Testing framework
+- **Datastar** (1.0.0-beta.11) - Reactive hypermedia framework (loaded via CDN)
 
 ## File Details
 
@@ -109,11 +132,11 @@ tests/Rocket.RiverOfNews.Tests/
   - `BackoffLevel1Minutes`, `BackoffLevel2Minutes`, `BackoffLevel3Minutes` (default: 5, 15, 60)
 
 ### Api/MvpApi.cs
-Static class containing all API handlers and DTOs.
+Static class containing JSON API handlers and DTOs (kept for backward compatibility).
 
-**Page Handlers:**
-- `GetRiverPage()` - Returns full HTML page with embedded JavaScript for SPA-like behavior, loads 200 items initially
-- `GetRiverItemPage(itemId)` - Returns item detail HTML page, shows "No article URL available" when URL missing
+**Page Handlers (deprecated, use DatastarApi):**
+- `GetRiverPage()` - Returns full HTML page with embedded JavaScript (legacy)
+- `GetRiverItemPage(itemId)` - Returns item detail HTML page (legacy)
 
 **API Handlers:**
 - `GetFeedsAsync` - Lists all feeds ordered by title
@@ -127,6 +150,43 @@ Static class containing all API handlers and DTOs.
 **DTOs:**
 - `AddFeedRequest`, `FeedResponse`, `RiverItemResponse`, `RiverItemDetailResponse`
 - `RiverQueryResponse`, `ErrorResponse`, `Latest200PerformanceResponse`
+
+### Api/DatastarApi.cs
+Static class containing Datastar SSE handlers for reactive UI.
+
+**Page Handlers:**
+- `GetRiverPage()` - Returns HTML page with Datastar attributes, no JavaScript
+- `GetRiverItemPage(itemId)` - Returns item detail HTML with Datastar bindings
+
+**SSE Handlers:**
+- `GetFeedsAsync` - Returns HTML fragment for feed list
+- `ToggleFeedAsync` - Patches signals to toggle feed selection
+- `GetItemsAsync` - Returns HTML fragments for items (supports append mode)
+- `ClearFiltersAsync` - Resets filter signals and reloads data
+- `AddFeedAsync` - Adds feed, patches signals, triggers reload
+- `DeleteFeedAsync` - Deletes feed, patches signals, triggers reload
+- `RefreshAsync` - Refreshes all feeds, patches status signal
+- `GetItemDetailAsync` - Patches signals with item detail data
+
+**Key Patterns:**
+- Uses `SseHelper` for SSE response streaming
+- `data-on:click="@post('/path')"` for actions
+- `data-bind:value="signal"` for form inputs
+- `data-text="$signal"` for text content
+- `data-show="condition"` for conditional visibility
+- Signals prefixed with `_` are local-only (not sent to backend)
+
+### Datastar/SseHelper.cs
+Helper class for Datastar SSE responses.
+
+**Methods:**
+- `StartAsync()` - Sets up SSE response headers
+- `PatchElementsAsync()` - Sends `datastar-patch-elements` event
+- `PatchSignalsAsync()` - Sends `datastar-patch-signals` event
+
+**Extensions:**
+- `CreateSseHelper(HttpResponse)` - Creates helper from response
+- `ReadSignalsAsync(HttpRequest)` - Reads signals from request body
 
 ### Data/SqliteConnectionFactory.cs
 - Opens connections with PRAGMA settings: `foreign_keys=ON`, `journal_mode=WAL`, `synchronous=NORMAL`
@@ -187,7 +247,7 @@ Tests use `TestDatabaseContext` helper that:
 **Test Classes:**
 - `AddFeedApiTests` - Feed creation, duplicate handling, URL validation
 - `ItemDetailsApiTests` - Item retrieval, not found handling
-- `RiverPageHtmlTests` - HTML output verification
+- `RiverPageHtmlTests` - HTML output verification (now tests DatastarApi)
 - `FeedIngestionServiceTests` - Image priority, snippet truncation (uses `StubSyndicationClient`, passes default `RiverOfNewsSettings`)
 
 ## Build Commands

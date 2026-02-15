@@ -28,9 +28,19 @@ builder.Services.AddHostedService<RetentionCleanupBackgroundService>();
 
 WebApplication app = builder.Build();
 
+app.UseHttpsRedirection();
+
 app.MapGet("/", () => Results.Redirect("/river"));
-app.MapGet("/river", MvpApi.GetRiverPage);
-app.MapGet("/river/items/{itemId}", MvpApi.GetRiverItemPage);
+app.MapGet("/river", DatastarApi.GetRiverPage);
+app.MapGet("/river/items/{itemId}", DatastarApi.GetRiverItemPage);
+app.MapGet("/river/feeds", DatastarApi.GetFeedsAsync);
+app.MapGet("/river/toggle-feed/{feedId}", DatastarApi.ToggleFeedAsync);
+app.MapGet("/river/items", DatastarApi.GetItemsAsync);
+app.MapGet("/river/clear-filters", DatastarApi.ClearFiltersAsync);
+app.MapPost("/river/feeds", DatastarApi.AddFeedAsync);
+app.MapDelete("/river/feeds/{feedId}", DatastarApi.DeleteFeedAsync);
+app.MapPost("/river/refresh", DatastarApi.RefreshAsync);
+app.MapGet("/river/items/{itemId}/detail", DatastarApi.GetItemDetailAsync);
 app.MapGet("/health", () => Results.Ok(new
 {
 	Status = "ok"
