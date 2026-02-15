@@ -15,7 +15,6 @@ public sealed class SseHelper(HttpResponse response)
 	{
 		response.ContentType = "text/event-stream";
 		response.Headers.CacheControl = "no-cache";
-		response.Headers.Connection = "keep-alive";
 		await response.StartAsync(cancellationToken);
 	}
 
