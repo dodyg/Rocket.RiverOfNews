@@ -1,0 +1,514 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "River of News" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Unified newest-first feed stream
+    - button "Refresh now" [ref=e8]
+  - generic [ref=e9]:
+    - generic [ref=e10]: Add feed
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Feed URL
+        - textbox "Feed URL" [ref=e14]:
+          - /placeholder: https://example.com/feed.xml
+      - generic [ref=e15]:
+        - generic [ref=e16]: Title (optional)
+        - textbox "Title (optional)" [ref=e17]:
+          - /placeholder: My feed
+    - button "Add feed" [ref=e19]
+  - generic [ref=e20]:
+    - generic [ref=e21]: Filters
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Start date (UTC)
+        - textbox "Start date (UTC)" [ref=e25]
+      - generic [ref=e26]:
+        - generic [ref=e27]: End date (UTC)
+        - textbox "End date (UTC)" [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e30]: Sources
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - checkbox "http://scripting.com/rss.xml (healthy)" [ref=e34]
+              - generic [ref=e35]: http://scripting.com/rss.xml (healthy)
+            - button "Delete" [ref=e36]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - checkbox "https://feeds.bbci.co.uk/news/rss.xml (healthy)" [ref=e39]
+              - generic [ref=e40]: https://feeds.bbci.co.uk/news/rss.xml (healthy)
+            - button "Delete" [ref=e41]
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - checkbox "https://news.ycombinator.com/rss (healthy)" [checked] [ref=e44]
+              - generic [ref=e45]: https://news.ycombinator.com/rss (healthy)
+            - button "Delete" [ref=e46]
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - checkbox "https://test.example.com/feed.rss (unhealthy)" [ref=e49]
+              - generic [ref=e50]: https://test.example.com/feed.rss (unhealthy)
+            - button "Delete" [ref=e51]
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - checkbox "https://www.theguardian.com/uk/rss (healthy)" [ref=e54]
+              - generic [ref=e55]: https://www.theguardian.com/uk/rss (healthy)
+            - button "Delete" [ref=e56]
+        - paragraph
+    - generic [ref=e57]:
+      - button "Apply filters" [active] [ref=e58]
+      - button "Clear" [ref=e59]
+    - paragraph
+  - generic [ref=e62]:
+    - article [ref=e63]:
+      - generic [ref=e64]: https://news.ycombinator.com/rss
+      - heading "Two different tricks for fast LLM inference" [level=2] [ref=e414]:
+        - link "Two different tricks for fast LLM inference" [ref=e415] [cursor=pointer]:
+          - /url: /river/items/8a7793401aaa4fac8921bc889b6d95d8
+      - generic [ref=e67]: Sun, 15 Feb 2026 09:27:33 GMT
+      - paragraph [ref=e68]: Comments
+      - link "Open article" [ref=e69] [cursor=pointer]:
+        - /url: https://www.seangoedecke.com/fast-llm-inference
+    - article [ref=e70]:
+      - generic [ref=e71]: https://news.ycombinator.com/rss
+      - heading "Git is a file system. We need a database for the code" [level=2] [ref=e416]:
+        - link "Git is a file system. We need a database for the code" [ref=e417] [cursor=pointer]:
+          - /url: /river/items/5469a4f6f1e8477aa1f5f3429cf49a51
+      - generic [ref=e74]: Sun, 15 Feb 2026 09:09:31 GMT
+      - paragraph [ref=e75]: Comments
+      - link "Open article" [ref=e76] [cursor=pointer]:
+        - /url: https://gist.github.com/gritzko/6e81b5391eacb585ae207f5e634db07e
+    - article [ref=e77]:
+      - generic [ref=e78]: https://news.ycombinator.com/rss
+      - heading "Seeing Theory" [level=2] [ref=e418]:
+        - link "Seeing Theory" [ref=e419] [cursor=pointer]:
+          - /url: /river/items/45e77ef4550b47418afeafe8d0242a16
+      - generic [ref=e81]: Sun, 15 Feb 2026 08:40:12 GMT
+      - paragraph [ref=e82]: Comments
+      - link "Open article" [ref=e83] [cursor=pointer]:
+        - /url: https://seeing-theory.brown.edu/
+    - article [ref=e84]:
+      - generic [ref=e85]: https://news.ycombinator.com/rss
+      - heading "No Coding Before 10am" [level=2] [ref=e420]:
+        - link "No Coding Before 10am" [ref=e421] [cursor=pointer]:
+          - /url: /river/items/19b58dced7a149b2a2e912904a778d92
+      - generic [ref=e88]: Sun, 15 Feb 2026 08:21:10 GMT
+      - paragraph [ref=e89]: Comments
+      - link "Open article" [ref=e90] [cursor=pointer]:
+        - /url: https://michaelxbloch.substack.com/p/no-coding-before-10am
+    - article [ref=e91]:
+      - generic [ref=e92]: https://news.ycombinator.com/rss
+      - heading "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library" [level=2] [ref=e422]:
+        - link "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library" [ref=e423] [cursor=pointer]:
+          - /url: /river/items/0a868d6e72aa455384db8b92107a0cd9
+      - generic [ref=e95]: Sun, 15 Feb 2026 08:17:05 GMT
+      - paragraph [ref=e96]: Comments
+      - link "Open article" [ref=e97] [cursor=pointer]:
+        - /url: https://oat.ink/
+    - article [ref=e98]:
+      - generic [ref=e99]: https://news.ycombinator.com/rss
+      - heading "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm" [level=2] [ref=e424]:
+        - link "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm" [ref=e425] [cursor=pointer]:
+          - /url: /river/items/cc8d7af84c2e4a4088fe526ad2fa8db6
+      - generic [ref=e102]: Sun, 15 Feb 2026 06:00:42 GMT
+      - paragraph [ref=e103]: Comments
+      - link "Open article" [ref=e104] [cursor=pointer]:
+        - /url: https://kotaku.com/discord-palantir-peter-thiel-persona-age-verification-2000668951
+    - article [ref=e105]:
+      - generic [ref=e106]: https://news.ycombinator.com/rss
+      - heading "Flashpoint Archive – Over 200k web games and animations preserved" [level=2] [ref=e426]:
+        - link "Flashpoint Archive – Over 200k web games and animations preserved" [ref=e427] [cursor=pointer]:
+          - /url: /river/items/6936d97d410942f1805c04d3483f1cda
+      - generic [ref=e109]: Sun, 15 Feb 2026 05:43:59 GMT
+      - paragraph [ref=e110]: Comments
+      - link "Open article" [ref=e111] [cursor=pointer]:
+        - /url: https://flashpointarchive.org/
+    - article [ref=e112]:
+      - generic [ref=e113]: https://news.ycombinator.com/rss
+      - heading "Linear Representations and Superposition" [level=2] [ref=e428]:
+        - link "Linear Representations and Superposition" [ref=e429] [cursor=pointer]:
+          - /url: /river/items/158a9d66eb13460eb3040153544f4e7a
+      - generic [ref=e116]: Sun, 15 Feb 2026 04:29:44 GMT
+      - paragraph [ref=e117]: Comments
+      - link "Open article" [ref=e118] [cursor=pointer]:
+        - /url: http://ternarysearch.blogspot.com/2026/02/linear-representations-and-superposition.html
+    - article [ref=e119]:
+      - generic [ref=e120]: https://news.ycombinator.com/rss
+      - heading "Guitars of the USSR and the Jolana Special in Azerbaijani Music" [level=2] [ref=e430]:
+        - link "Guitars of the USSR and the Jolana Special in Azerbaijani Music" [ref=e431] [cursor=pointer]:
+          - /url: /river/items/347039e1a9d040ffad08c4206754d5a0
+      - generic [ref=e123]: Sun, 15 Feb 2026 03:29:39 GMT
+      - paragraph [ref=e124]: Comments
+      - link "Open article" [ref=e125] [cursor=pointer]:
+        - /url: https://caucascapades.wordpress.com/2012/06/14/guitars-of-the-ussr-and-the-jolana-special-in-azerbaijani-music
+    - article [ref=e126]:
+      - generic [ref=e127]: https://news.ycombinator.com/rss
+      - 'heading "NewPipe: YouTube client without vertical videos and algorithmic feed" [level=2] [ref=e432]':
+        - 'link "NewPipe: YouTube client without vertical videos and algorithmic feed" [ref=e433] [cursor=pointer]':
+          - /url: /river/items/237423a85a084d7ca9d35b74fc2a89e7
+      - generic [ref=e130]: Sun, 15 Feb 2026 01:24:16 GMT
+      - paragraph [ref=e131]: Comments
+      - link "Open article" [ref=e132] [cursor=pointer]:
+        - /url: https://newpipe.net/
+    - article [ref=e133]:
+      - generic [ref=e134]: https://news.ycombinator.com/rss
+      - heading "I love the work of the ArchWiki maintainers" [level=2] [ref=e434]:
+        - link "I love the work of the ArchWiki maintainers" [ref=e435] [cursor=pointer]:
+          - /url: /river/items/1b043f91339d4bb882bd415e3531cc54
+      - generic [ref=e137]: Sun, 15 Feb 2026 01:20:58 GMT
+      - paragraph [ref=e138]: Comments
+      - link "Open article" [ref=e139] [cursor=pointer]:
+        - /url: https://k7r.eu/i-love-the-work-of-the-archwiki-maintainers
+    - article [ref=e140]:
+      - generic [ref=e141]: https://news.ycombinator.com/rss
+      - 'heading "Show HN: Off Grid – Run AI text, image gen, vision offline on your phone" [level=2] [ref=e436]':
+        - 'link "Show HN: Off Grid – Run AI text, image gen, vision offline on your phone" [ref=e437] [cursor=pointer]':
+          - /url: /river/items/a42c8d6135944867901679c331bfeea3
+      - generic [ref=e144]: Sat, 14 Feb 2026 22:39:24 GMT
+      - paragraph [ref=e145]: Comments
+      - link "Open article" [ref=e146] [cursor=pointer]:
+        - /url: https://github.com/alichherawalla/off-grid-mobile
+    - article [ref=e147]:
+      - generic [ref=e148]: https://news.ycombinator.com/rss
+      - heading "Colored Petri Nets, LLMs, and distributed applications" [level=2] [ref=e438]:
+        - link "Colored Petri Nets, LLMs, and distributed applications" [ref=e439] [cursor=pointer]:
+          - /url: /river/items/e55e5fc030154c8689c44f8ce11d4da3
+      - generic [ref=e151]: Sat, 14 Feb 2026 21:08:08 GMT
+      - paragraph [ref=e152]: Comments
+      - link "Open article" [ref=e153] [cursor=pointer]:
+        - /url: https://blog.sao.dev/cpns-llms-distributed-apps
+    - article [ref=e154]:
+      - generic [ref=e155]: https://news.ycombinator.com/rss
+      - heading "Descent, ported to the web" [level=2] [ref=e440]:
+        - link "Descent, ported to the web" [ref=e441] [cursor=pointer]:
+          - /url: /river/items/903f9fb806cc449c993b3e4f397be578
+      - generic [ref=e158]: Sat, 14 Feb 2026 19:33:24 GMT
+      - paragraph [ref=e159]: Comments
+      - link "Open article" [ref=e160] [cursor=pointer]:
+        - /url: https://mrdoob.github.io/three-descent
+    - article [ref=e161]:
+      - generic [ref=e162]: https://news.ycombinator.com/rss
+      - heading "News publishers limit Internet Archive access due to AI scraping concerns" [level=2] [ref=e442]:
+        - link "News publishers limit Internet Archive access due to AI scraping concerns" [ref=e443] [cursor=pointer]:
+          - /url: /river/items/406e5dc1cfec4f098d61051d0ae08c8f
+      - generic [ref=e165]: Sat, 14 Feb 2026 18:46:32 GMT
+      - paragraph [ref=e166]: Comments
+      - link "Open article" [ref=e167] [cursor=pointer]:
+        - /url: https://www.niemanlab.org/2026/01/news-publishers-limit-internet-archive-access-due-to-ai-scraping-concerns
+    - article [ref=e168]:
+      - generic [ref=e169]: https://news.ycombinator.com/rss
+      - heading "A header-only C vector database library" [level=2] [ref=e444]:
+        - link "A header-only C vector database library" [ref=e445] [cursor=pointer]:
+          - /url: /river/items/d0af2a15c63f48a8af2d9dca0fdf0e19
+      - generic [ref=e172]: Sat, 14 Feb 2026 17:45:09 GMT
+      - paragraph [ref=e173]: Comments
+      - link "Open article" [ref=e174] [cursor=pointer]:
+        - /url: https://github.com/abdimoallim/vdb
+    - article [ref=e175]:
+      - generic [ref=e176]: https://news.ycombinator.com/rss
+      - heading "uBlock filter list to hide all YouTube Shorts" [level=2] [ref=e446]:
+        - link "uBlock filter list to hide all YouTube Shorts" [ref=e447] [cursor=pointer]:
+          - /url: /river/items/b9122b5157694d5db9edb11d6a044cf2
+      - generic [ref=e179]: Sat, 14 Feb 2026 17:36:45 GMT
+      - paragraph [ref=e180]: Comments
+      - link "Open article" [ref=e181] [cursor=pointer]:
+        - /url: https://github.com/i5heu/ublock-hide-yt-shorts
+    - article [ref=e182]:
+      - generic [ref=e183]: https://news.ycombinator.com/rss
+      - 'heading "Show HN: Arcmark – macOS bookmark manager that attaches to browser as sidebar" [level=2] [ref=e448]':
+        - 'link "Show HN: Arcmark – macOS bookmark manager that attaches to browser as sidebar" [ref=e449] [cursor=pointer]':
+          - /url: /river/items/0eab98a438e941bbb16107d7d9735836
+      - generic [ref=e186]: Sat, 14 Feb 2026 16:55:24 GMT
+      - paragraph [ref=e187]: Comments
+      - link "Open article" [ref=e188] [cursor=pointer]:
+        - /url: https://github.com/Geek-1001/arcmark
+    - article [ref=e189]:
+      - generic [ref=e190]: https://news.ycombinator.com/rss
+      - heading "Stoat removes all LLM-generated code following user criticism" [level=2] [ref=e450]:
+        - link "Stoat removes all LLM-generated code following user criticism" [ref=e451] [cursor=pointer]:
+          - /url: /river/items/1328c62df08b41848e6b4d4ef152cd7e
+      - generic [ref=e193]: Sat, 14 Feb 2026 16:54:30 GMT
+      - paragraph [ref=e194]: Comments
+      - link "Open article" [ref=e195] [cursor=pointer]:
+        - /url: https://github.com/orgs/stoatchat/discussions/1022
+    - article [ref=e196]:
+      - generic [ref=e197]: https://news.ycombinator.com/rss
+      - heading "Amsterdam Compiler Kit" [level=2] [ref=e452]:
+        - link "Amsterdam Compiler Kit" [ref=e453] [cursor=pointer]:
+          - /url: /river/items/d2a0c9d9aa1d438b96d6d94f0040f288
+      - generic [ref=e200]: Sat, 14 Feb 2026 16:50:47 GMT
+      - paragraph [ref=e201]: Comments
+      - link "Open article" [ref=e202] [cursor=pointer]:
+        - /url: https://github.com/davidgiven/ack
+    - article [ref=e203]:
+      - generic [ref=e204]: https://news.ycombinator.com/rss
+      - heading "Audiophiles Can't Distinguish Audio Sent Through Copper, Banana or Mud" [level=2] [ref=e454]:
+        - link "Audiophiles Can't Distinguish Audio Sent Through Copper, Banana or Mud" [ref=e455] [cursor=pointer]:
+          - /url: /river/items/f7897335a6e045e1b012086158d68cb3
+      - generic [ref=e207]: Sat, 14 Feb 2026 16:48:17 GMT
+      - paragraph [ref=e208]: Comments
+      - link "Open article" [ref=e209] [cursor=pointer]:
+        - /url: https://www.tomshardware.com/speakers/in-a-blind-test-audiophiles-couldnt-tell-the-difference-between-audio-signals-sent-through-copper-wire-a-banana-or-wet-mud-the-mud-should-sound-perfectly-awful-but-it-doesnt-notes-the-experiment-creator
+    - article [ref=e210]:
+      - generic [ref=e211]: https://news.ycombinator.com/rss
+      - heading "A Review of M Disc Archival Capability. With long term testing results" [level=2] [ref=e456]:
+        - link "A Review of M Disc Archival Capability. With long term testing results" [ref=e457] [cursor=pointer]:
+          - /url: /river/items/488aa62fba97408e83a29f33abcf0e56
+      - generic [ref=e214]: Sat, 14 Feb 2026 16:07:44 GMT
+      - paragraph [ref=e215]: Comments
+      - link "Open article" [ref=e216] [cursor=pointer]:
+        - /url: http://www.microscopy-uk.org.uk/mag/artsep16/mol-mdisc-review.html
+    - article [ref=e217]:
+      - generic [ref=e218]: https://news.ycombinator.com/rss
+      - heading "Platforms bend over backward to help DHS censor ICE critics, advocates say" [level=2] [ref=e458]:
+        - link "Platforms bend over backward to help DHS censor ICE critics, advocates say" [ref=e459] [cursor=pointer]:
+          - /url: /river/items/7f67efd4be2741e88fed9f6af71dd237
+      - generic [ref=e221]: Sat, 14 Feb 2026 15:49:56 GMT
+      - paragraph [ref=e222]: Comments
+      - link "Open article" [ref=e223] [cursor=pointer]:
+        - /url: https://arstechnica.com/tech-policy/2026/02/platforms-bend-over-backward-to-help-dhs-censor-ice-critics-advocates-say
+    - article [ref=e224]:
+      - generic [ref=e225]: https://news.ycombinator.com/rss
+      - heading "Vim 9.2 Released" [level=2] [ref=e460]:
+        - link "Vim 9.2 Released" [ref=e461] [cursor=pointer]:
+          - /url: /river/items/437032626d7a4e0abc0efee1bc2b76d8
+      - generic [ref=e228]: Sat, 14 Feb 2026 15:39:43 GMT
+      - paragraph [ref=e229]: Comments
+      - link "Open article" [ref=e230] [cursor=pointer]:
+        - /url: https://www.vim.org/vim-9.2-released.php
+    - article [ref=e231]:
+      - generic [ref=e232]: https://news.ycombinator.com/rss
+      - heading "My smart sleep mask broadcasts users' brainwaves to an open MQTT broker" [level=2] [ref=e462]:
+        - link "My smart sleep mask broadcasts users' brainwaves to an open MQTT broker" [ref=e463] [cursor=pointer]:
+          - /url: /river/items/03e33b546da44ef58cbce40a06859e74
+      - generic [ref=e235]: Sat, 14 Feb 2026 15:35:47 GMT
+      - paragraph [ref=e236]: Comments
+      - link "Open article" [ref=e237] [cursor=pointer]:
+        - /url: https://aimilios.bearblog.dev/reverse-engineering-sleep-mask
+    - article [ref=e238]:
+      - generic [ref=e239]: https://news.ycombinator.com/rss
+      - heading "7zip.com Is Serving Malware" [level=2] [ref=e464]:
+        - link "7zip.com Is Serving Malware" [ref=e465] [cursor=pointer]:
+          - /url: /river/items/a31aabb13ed24730851c27c853ff7e9e
+      - generic [ref=e242]: Sat, 14 Feb 2026 14:58:29 GMT
+      - paragraph [ref=e243]: Comments
+      - link "Open article" [ref=e244] [cursor=pointer]:
+        - /url: https://www.malwarebytes.com/blog/threat-intel/2026/02/fake-7-zip-downloads-are-turning-home-pcs-into-proxy-nodes
+    - article [ref=e245]:
+      - generic [ref=e246]: https://news.ycombinator.com/rss
+      - 'heading "Show HN: Sameshi – a ~1200 Elo chess engine that fits within 2KB" [level=2] [ref=e466]':
+        - 'link "Show HN: Sameshi – a ~1200 Elo chess engine that fits within 2KB" [ref=e467] [cursor=pointer]':
+          - /url: /river/items/afe514b4d865414da5ceb3911e5fe9b7
+      - generic [ref=e249]: Sat, 14 Feb 2026 13:47:44 GMT
+      - paragraph [ref=e250]: Comments
+      - link "Open article" [ref=e251] [cursor=pointer]:
+        - /url: https://github.com/datavorous/sameshi
+    - article [ref=e252]:
+      - generic [ref=e253]: https://news.ycombinator.com/rss
+      - 'heading "Ooh.directory: a place to find good blogs that interest you" [level=2] [ref=e468]':
+        - 'link "Ooh.directory: a place to find good blogs that interest you" [ref=e469] [cursor=pointer]':
+          - /url: /river/items/24993766ce8d4408bb3a723bf78de19a
+      - generic [ref=e256]: Sat, 14 Feb 2026 13:40:20 GMT
+      - paragraph [ref=e257]: Comments
+      - link "Open article" [ref=e258] [cursor=pointer]:
+        - /url: https://ooh.directory/
+    - article [ref=e259]:
+      - generic [ref=e260]: https://news.ycombinator.com/rss
+      - heading "How many registers does an x86-64 CPU have? (2020)" [level=2] [ref=e470]:
+        - link "How many registers does an x86-64 CPU have? (2020)" [ref=e471] [cursor=pointer]:
+          - /url: /river/items/2f5106542a964426b3bb80e0f7e52bd7
+      - generic [ref=e263]: Sat, 14 Feb 2026 13:33:03 GMT
+      - paragraph [ref=e264]: Comments
+      - link "Open article" [ref=e265] [cursor=pointer]:
+        - /url: https://blog.yossarian.net/2020/11/30/How-many-registers-does-an-x86-64-cpu-have
+    - article [ref=e266]:
+      - generic [ref=e267]: https://news.ycombinator.com/rss
+      - heading "Unicorn Jelly" [level=2] [ref=e472]:
+        - link "Unicorn Jelly" [ref=e473] [cursor=pointer]:
+          - /url: /river/items/418f052f246e4ac48a6bde02ab6a476a
+      - generic [ref=e270]: Sat, 14 Feb 2026 13:08:35 GMT
+      - paragraph [ref=e271]: Comments
+      - link "Open article" [ref=e272] [cursor=pointer]:
+        - /url: https://unicornjelly.com/
+    - article [ref=e273]:
+      - generic [ref=e274]: https://news.ycombinator.com/rss
+      - heading "Ars Technica makes up quotes from Matplotlib maintainer; pulls story" [level=2] [ref=e474]:
+        - link "Ars Technica makes up quotes from Matplotlib maintainer; pulls story" [ref=e475] [cursor=pointer]:
+          - /url: /river/items/8e5b820dd3fe4c2daea54d9265302a97
+      - generic [ref=e277]: Sat, 14 Feb 2026 09:28:45 GMT
+      - paragraph [ref=e278]: Comments
+      - link "Open article" [ref=e279] [cursor=pointer]:
+        - /url: https://infosec.exchange/@mttaggart/116065340523529645
+    - article [ref=e280]:
+      - generic [ref=e281]: https://news.ycombinator.com/rss
+      - heading "YouTube as Storage" [level=2] [ref=e476]:
+        - link "YouTube as Storage" [ref=e477] [cursor=pointer]:
+          - /url: /river/items/6056cf60e918403293e5cabee464eaf9
+      - generic [ref=e284]: Sat, 14 Feb 2026 09:10:15 GMT
+      - paragraph [ref=e285]: Comments
+      - link "Open article" [ref=e286] [cursor=pointer]:
+        - /url: https://github.com/PulseBeat02/yt-media-storage
+    - article [ref=e287]:
+      - generic [ref=e288]: https://news.ycombinator.com/rss
+      - heading "Zig – io_uring and Grand Central Dispatch std.Io implementations landed" [level=2] [ref=e478]:
+        - link "Zig – io_uring and Grand Central Dispatch std.Io implementations landed" [ref=e479] [cursor=pointer]:
+          - /url: /river/items/d45e41c7687d471d9b327dcf4f37efcd
+      - generic [ref=e291]: Sat, 14 Feb 2026 08:22:11 GMT
+      - paragraph [ref=e292]: Comments
+      - link "Open article" [ref=e293] [cursor=pointer]:
+        - /url: https://ziglang.org/devlog/2026
+    - article [ref=e294]:
+      - generic [ref=e295]: https://news.ycombinator.com/rss
+      - heading "OpenAI should build Slack" [level=2] [ref=e480]:
+        - link "OpenAI should build Slack" [ref=e481] [cursor=pointer]:
+          - /url: /river/items/a1f7abca40da41ac8bb955acce68d223
+      - generic [ref=e298]: Sat, 14 Feb 2026 07:50:13 GMT
+      - paragraph [ref=e299]: Comments
+      - link "Open article" [ref=e300] [cursor=pointer]:
+        - /url: https://www.latent.space/p/ainews-why-openai-should-build-slack
+    - article [ref=e301]:
+      - generic [ref=e302]: https://news.ycombinator.com/rss
+      - heading "Cogram (YC W22) – Hiring former technical founders" [level=2] [ref=e482]:
+        - link "Cogram (YC W22) – Hiring former technical founders" [ref=e483] [cursor=pointer]:
+          - /url: /river/items/e6d90a369340420ea4b7535f0cfb5e53
+      - generic [ref=e305]: Sat, 14 Feb 2026 07:00:15 GMT
+      - paragraph [ref=e306]: Comments
+      - link "Open article" [ref=e307] [cursor=pointer]:
+        - /url: https://www.ycombinator.com/companies/cogram/jobs/LDTrViN-ex-technical-founder-product-engineer
+    - article [ref=e308]:
+      - generic [ref=e309]: https://news.ycombinator.com/rss
+      - 'heading "Show HN: SQL-tap – Real-time SQL traffic viewer for PostgreSQL and MySQL" [level=2] [ref=e484]':
+        - 'link "Show HN: SQL-tap – Real-time SQL traffic viewer for PostgreSQL and MySQL" [ref=e485] [cursor=pointer]':
+          - /url: /river/items/fb12df7deabf4b98a31d803ec4a6d113
+      - generic [ref=e312]: Sat, 14 Feb 2026 04:27:35 GMT
+      - paragraph [ref=e313]: Comments
+      - link "Open article" [ref=e314] [cursor=pointer]:
+        - /url: https://github.com/mickamy/sql-tap
+    - article [ref=e315]:
+      - generic [ref=e316]: https://news.ycombinator.com/rss
+      - heading "Launching Interop 2026" [level=2] [ref=e486]:
+        - link "Launching Interop 2026" [ref=e487] [cursor=pointer]:
+          - /url: /river/items/8835aa813b6c4049b99d1c45641d0865
+      - generic [ref=e319]: Fri, 13 Feb 2026 22:40:28 GMT
+      - paragraph [ref=e320]: Comments
+      - link "Open article" [ref=e321] [cursor=pointer]:
+        - /url: https://hacks.mozilla.org/2026/02/launching-interop-2026
+    - article [ref=e322]:
+      - generic [ref=e323]: https://news.ycombinator.com/rss
+      - heading "How often do full-body MRIs find cancer?" [level=2] [ref=e488]:
+        - link "How often do full-body MRIs find cancer?" [ref=e489] [cursor=pointer]:
+          - /url: /river/items/9afc44ca321543fa8e75807b04c7a603
+      - generic [ref=e326]: Fri, 13 Feb 2026 22:21:55 GMT
+      - paragraph [ref=e327]: Comments
+      - link "Open article" [ref=e328] [cursor=pointer]:
+        - /url: https://www.usatoday.com/story/life/health-wellness/2026/02/11/full-body-mris-cancer-aneurysm/88396037007
+    - article [ref=e329]:
+      - generic [ref=e330]: https://news.ycombinator.com/rss
+      - 'heading "Show HN: Data Engineering Book – An open source, community-driven guide" [level=2] [ref=e490]':
+        - 'link "Show HN: Data Engineering Book – An open source, community-driven guide" [ref=e491] [cursor=pointer]':
+          - /url: /river/items/c22fe4c8f86c4b80946bbf30e9908415
+      - generic [ref=e333]: Fri, 13 Feb 2026 21:35:52 GMT
+      - paragraph [ref=e334]: Comments
+      - link "Open article" [ref=e335] [cursor=pointer]:
+        - /url: https://github.com/datascale-ai/data_engineering_book/blob/main/README_en.md
+    - article [ref=e336]:
+      - generic [ref=e337]: https://news.ycombinator.com/rss
+      - heading "Breaking the spell of vibe coding" [level=2] [ref=e492]:
+        - link "Breaking the spell of vibe coding" [ref=e493] [cursor=pointer]:
+          - /url: /river/items/e7ec703522cd4329b66c63670e07c8a9
+      - generic [ref=e340]: Fri, 13 Feb 2026 19:22:18 GMT
+      - paragraph [ref=e341]: Comments
+      - link "Open article" [ref=e342] [cursor=pointer]:
+        - /url: https://www.fast.ai/posts/2026-01-28-dark-flow
+    - article [ref=e343]:
+      - generic [ref=e344]: https://news.ycombinator.com/rss
+      - heading "GPT-5.2 derives a new result in theoretical physics" [level=2] [ref=e494]:
+        - link "GPT-5.2 derives a new result in theoretical physics" [ref=e495] [cursor=pointer]:
+          - /url: /river/items/7b0729d206394c5988e9b58083ea3976
+      - generic [ref=e347]: Fri, 13 Feb 2026 19:20:12 GMT
+      - paragraph [ref=e348]: Comments
+      - link "Open article" [ref=e349] [cursor=pointer]:
+        - /url: https://openai.com/index/new-result-theoretical-physics
+    - article [ref=e350]:
+      - generic [ref=e351]: https://news.ycombinator.com/rss
+      - heading "The consequences of task switching in supervisory programming" [level=2] [ref=e496]:
+        - link "The consequences of task switching in supervisory programming" [ref=e497] [cursor=pointer]:
+          - /url: /river/items/431e41f8a6544907ac947b5b9f891764
+      - generic [ref=e354]: Fri, 13 Feb 2026 18:18:48 GMT
+      - paragraph [ref=e355]: Comments
+      - link "Open article" [ref=e356] [cursor=pointer]:
+        - /url: https://martinfowler.com/fragments/2026-02-13.html
+    - article [ref=e357]:
+      - generic [ref=e358]: https://news.ycombinator.com/rss
+      - heading "Building a TUI is easy now" [level=2] [ref=e498]:
+        - link "Building a TUI is easy now" [ref=e499] [cursor=pointer]:
+          - /url: /river/items/f881c184c0ab4c9b86b6696432bffe0d
+      - generic [ref=e361]: Fri, 13 Feb 2026 17:50:54 GMT
+      - paragraph [ref=e362]: Comments
+      - link "Open article" [ref=e363] [cursor=pointer]:
+        - /url: https://hatchet.run/blog/tuis-are-easy-now
+    - article [ref=e364]:
+      - generic [ref=e365]: https://news.ycombinator.com/rss
+      - heading "Instagram's URL Blackhole" [level=2] [ref=e500]:
+        - link "Instagram's URL Blackhole" [ref=e501] [cursor=pointer]:
+          - /url: /river/items/36e028f1a7b4474f9eadc677fab7c10b
+      - generic [ref=e368]: Fri, 13 Feb 2026 16:42:04 GMT
+      - paragraph [ref=e369]: Comments
+      - link "Open article" [ref=e370] [cursor=pointer]:
+        - /url: https://medium.com/@shredlife/instagrams-url-blackhole-c1733e081664
+    - article [ref=e371]:
+      - generic [ref=e372]: https://news.ycombinator.com/rss
+      - 'heading "Zvec: A lightweight, fast, in-process vector database" [level=2] [ref=e502]':
+        - 'link "Zvec: A lightweight, fast, in-process vector database" [ref=e503] [cursor=pointer]':
+          - /url: /river/items/f83a53d7bc5b444db5b007b7db5a066f
+      - generic [ref=e375]: Fri, 13 Feb 2026 08:53:51 GMT
+      - paragraph [ref=e376]: Comments
+      - link "Open article" [ref=e377] [cursor=pointer]:
+        - /url: https://github.com/alibaba/zvec
+    - article [ref=e378]:
+      - generic [ref=e379]: https://news.ycombinator.com/rss
+      - heading "Babylon 5 is now free to watch on YouTube" [level=2] [ref=e504]:
+        - link "Babylon 5 is now free to watch on YouTube" [ref=e505] [cursor=pointer]:
+          - /url: /river/items/9cc179a85d704290ab41c3071fb7936f
+      - generic [ref=e382]: Fri, 13 Feb 2026 08:49:02 GMT
+      - paragraph [ref=e383]: Comments
+      - link "Open article" [ref=e384] [cursor=pointer]:
+        - /url: https://cordcuttersnews.com/babylon-5-is-now-free-to-watch-on-youtube
+    - article [ref=e385]:
+      - generic [ref=e386]: https://news.ycombinator.com/rss
+      - heading "Interference Pattern Formed in a Finger Gap Is Not Single Slit Diffraction" [level=2] [ref=e506]:
+        - link "Interference Pattern Formed in a Finger Gap Is Not Single Slit Diffraction" [ref=e507] [cursor=pointer]:
+          - /url: /river/items/bd3c25a4cf0b40c1b66dbc718aeb497d
+      - generic [ref=e389]: Fri, 13 Feb 2026 03:28:47 GMT
+      - paragraph [ref=e390]: Comments
+      - link "Open article" [ref=e391] [cursor=pointer]:
+        - /url: https://note.com/hydraenids/n/nbe89030deaba
+    - article [ref=e392]:
+      - generic [ref=e393]: https://news.ycombinator.com/rss
+      - heading "Connes Embedding Problem" [level=2] [ref=e508]:
+        - link "Connes Embedding Problem" [ref=e509] [cursor=pointer]:
+          - /url: /river/items/ed41a4a2219e44149a7dce1bb931f7e7
+      - generic [ref=e396]: Thu, 12 Feb 2026 19:19:30 GMT
+      - paragraph [ref=e397]: Comments
+      - link "Open article" [ref=e398] [cursor=pointer]:
+        - /url: https://en.wikipedia.org/wiki/Connes_embedding_problem
+    - article [ref=e399]:
+      - generic [ref=e400]: https://news.ycombinator.com/rss
+      - heading "A practical guide to observing the night sky for real skies and real equipment" [level=2] [ref=e510]:
+        - link "A practical guide to observing the night sky for real skies and real equipment" [ref=e511] [cursor=pointer]:
+          - /url: /river/items/6647de4186b14edc821ba60634e54173
+      - generic [ref=e403]: Thu, 12 Feb 2026 16:35:10 GMT
+      - paragraph [ref=e404]: Comments
+      - link "Open article" [ref=e405] [cursor=pointer]:
+        - /url: https://stargazingbuddy.com/
+    - article [ref=e406]:
+      - generic [ref=e407]: https://news.ycombinator.com/rss
+      - heading "Inspecting the Source of Go Modules" [level=2] [ref=e512]:
+        - link "Inspecting the Source of Go Modules" [ref=e513] [cursor=pointer]:
+          - /url: /river/items/81102ac55202454ca1266ec354d30112
+      - generic [ref=e410]: Thu, 12 Feb 2026 15:17:25 GMT
+      - paragraph [ref=e411]: Comments
+      - link "Open article" [ref=e412] [cursor=pointer]:
+        - /url: https://words.filippo.io/go-source
+  - generic [ref=e60]:
+    - generic [ref=e61]: Loaded 50 items
+    - button "Load more" [ref=e413]

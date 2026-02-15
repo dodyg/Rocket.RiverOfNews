@@ -1,0 +1,61 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "River of News" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Unified newest-first feed stream
+    - button "Refresh now" [ref=e8]
+  - generic [ref=e9]:
+    - generic [ref=e10]: Add feed
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Feed URL
+        - textbox "Feed URL" [ref=e14]:
+          - /placeholder: https://example.com/feed.xml
+      - generic [ref=e15]:
+        - generic [ref=e16]: Title (optional)
+        - textbox "Title (optional)" [ref=e17]:
+          - /placeholder: My feed
+    - button "Add feed" [ref=e19]
+  - generic [ref=e20]:
+    - generic [ref=e21]: Filters
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Start date (UTC)
+        - textbox "Start date (UTC)" [ref=e25]
+      - generic [ref=e26]:
+        - generic [ref=e27]: End date (UTC)
+        - textbox "End date (UTC)" [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e30]: Sources
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - checkbox "http://scripting.com/rss.xml (healthy)" [ref=e34]
+              - generic [ref=e35]: http://scripting.com/rss.xml (healthy)
+            - button "Delete" [ref=e36]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - checkbox "https://feeds.bbci.co.uk/news/rss.xml (healthy)" [ref=e39]
+              - generic [ref=e40]: https://feeds.bbci.co.uk/news/rss.xml (healthy)
+            - button "Delete" [ref=e41]
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - checkbox "https://news.ycombinator.com/rss (healthy)" [ref=e44]
+              - generic [ref=e45]: https://news.ycombinator.com/rss (healthy)
+            - button "Delete" [ref=e46]
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - checkbox "https://test.example.com/feed.rss (unhealthy)" [ref=e49]
+              - generic [ref=e50]: https://test.example.com/feed.rss (unhealthy)
+            - button "Delete" [ref=e51]
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - checkbox "https://www.theguardian.com/uk/rss (healthy)" [ref=e54]
+              - generic [ref=e55]: https://www.theguardian.com/uk/rss (healthy)
+            - button "Delete" [ref=e56]
+        - paragraph
+    - generic [ref=e57]:
+      - button "Apply filters" [ref=e58]
+      - button "Clear" [ref=e59]
+    - paragraph
+  - generic [ref=e61]: Loaded 0 items

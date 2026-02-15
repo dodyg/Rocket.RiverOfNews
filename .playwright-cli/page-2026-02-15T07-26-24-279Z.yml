@@ -1,0 +1,514 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "River of News" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Unified newest-first feed stream
+    - button "Refresh now" [ref=e8]
+  - generic [ref=e9]:
+    - generic [ref=e10]: Add feed
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Feed URL
+        - textbox "Feed URL" [ref=e14]:
+          - /placeholder: https://example.com/feed.xml
+      - generic [ref=e15]:
+        - generic [ref=e16]: Title (optional)
+        - textbox "Title (optional)" [ref=e17]:
+          - /placeholder: My feed
+    - button "Add feed" [ref=e19]
+  - generic [ref=e20]:
+    - generic [ref=e21]: Filters
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Start date (UTC)
+        - textbox "Start date (UTC)" [ref=e25]
+      - generic [ref=e26]:
+        - generic [ref=e27]: End date (UTC)
+        - textbox "End date (UTC)" [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e30]: Sources
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - checkbox "http://scripting.com/rss.xml (healthy)" [ref=e34]
+              - generic [ref=e35]: http://scripting.com/rss.xml (healthy)
+            - button "Delete" [ref=e36]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - checkbox "https://feeds.bbci.co.uk/news/rss.xml (healthy)" [ref=e39]
+              - generic [ref=e40]: https://feeds.bbci.co.uk/news/rss.xml (healthy)
+            - button "Delete" [ref=e41]
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - checkbox "https://news.ycombinator.com/rss (healthy)" [ref=e44]
+              - generic [ref=e45]: https://news.ycombinator.com/rss (healthy)
+            - button "Delete" [ref=e46]
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - checkbox "https://test.example.com/feed.rss (healthy)" [checked] [ref=e49]
+              - generic [ref=e50]: https://test.example.com/feed.rss (healthy)
+            - button "Delete" [ref=e51]
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - checkbox "https://www.theguardian.com/uk/rss (healthy)" [ref=e54]
+              - generic [ref=e55]: https://www.theguardian.com/uk/rss (healthy)
+            - button "Delete" [ref=e56]
+        - paragraph
+    - generic [ref=e57]:
+      - button "Apply filters" [active] [ref=e58]
+      - button "Clear" [ref=e59]
+    - paragraph
+  - generic [ref=e60]:
+    - article [ref=e61]:
+      - generic [ref=e62]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Is Zubimendi Arsenal's best player?" [level=2] [ref=e63]:
+        - link "Is Zubimendi Arsenal's best player?" [ref=e64] [cursor=pointer]:
+          - /url: /river/items/75051813b11a4be684ff6b2b993caad6
+      - generic [ref=e65]: Sun, 15 Feb 2026 06:52:01 GMT
+      - paragraph [ref=e66]: After an impressive start to his Arsenal career, BBC Sport looks at whether Martin Zubimendi is the Gunners' most important player.
+      - link "Open article" [ref=e67] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/football/articles/c2lr9rp9q12o?at_medium=RSS&at_campaign=rss
+    - article [ref=e68]:
+      - generic [ref=e69]: https://www.theguardian.com/uk/rss
+      - heading "New Zealand officials warn more flooding could hit north island as man killed after heavy rain" [level=2] [ref=e70]:
+        - link "New Zealand officials warn more flooding could hit north island as man killed after heavy rain" [ref=e71] [cursor=pointer]:
+          - /url: /river/items/cc143612887046bba27f21252aad0826
+      - generic [ref=e72]: Sun, 15 Feb 2026 06:42:05 GMT
+      - paragraph [ref=e73]: Worst weather forecast to hit late on Sunday, a day after floods caused power outages, road collapses and home evacuations New Zealand’s weather bureau has warned more flooding could hit the country’s North Island, a day after floods caused power outages, road collapses, home evacuations and caused the death of a man whose vehicle was submerged on a highway. There was “threat to life from dangerous river conditions, significant flooding and slips” as a deepening low-pressure system east of the North Island brought heavy rain and severe gales to several regions, the weather bureau said. Continue reading...
+      - link "Open article" [ref=e74] [cursor=pointer]:
+        - /url: https://www.theguardian.com/world/2026/feb/15/new-zealand-officials-warn-more-flooding-could-hit-north-island-as-man-killed-after-heavy-rain
+    - article [ref=e75]:
+      - generic [ref=e76]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Three years on, Deulofeu is still fighting for 'miracle' return" [level=2] [ref=e77]:
+        - link "Three years on, Deulofeu is still fighting for 'miracle' return" [ref=e78] [cursor=pointer]:
+          - /url: /river/items/cf2961bd47854872a0d4cf67127557a4
+      - generic [ref=e79]: Sun, 15 Feb 2026 06:19:28 GMT
+      - paragraph [ref=e80]: Gerard Deulofeu has not played for more than three years but believes he can make "history" by fighting for a "miracle" comeback.
+      - link "Open article" [ref=e81] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/football/articles/c89kxxpj1vko?at_medium=RSS&at_campaign=rss
+    - article [ref=e82]:
+      - generic [ref=e83]: https://www.theguardian.com/uk/rss
+      - 'heading "TV tonight: a remarkable interview with Gisèle Pelicot" [level=2] [ref=e84]':
+        - 'link "TV tonight: a remarkable interview with Gisèle Pelicot" [ref=e85] [cursor=pointer]':
+          - /url: /river/items/5103c4f542b6473fb75c0cd7628cb4e6
+      - generic [ref=e86]: Sun, 15 Feb 2026 06:15:14 GMT
+      - paragraph [ref=e87]: "Pelicot tells her story about finding justice in a Newsnight special. Plus: hit thriller Yellowjackets comes to ITV1. Here’s what to watch this evening 10pm, BBC Two Continue reading..."
+      - link "Open article" [ref=e88] [cursor=pointer]:
+        - /url: https://www.theguardian.com/tv-and-radio/2026/feb/15/tv-tonight-a-remarkable-interview-with-gisele-pelicot
+    - article [ref=e89]:
+      - generic [ref=e90]: https://www.theguardian.com/uk/rss
+      - heading "Alleged cat burglar arrested after priceless Egyptian artefacts taken in Queensland museum heist" [level=2] [ref=e91]:
+        - link "Alleged cat burglar arrested after priceless Egyptian artefacts taken in Queensland museum heist" [ref=e92] [cursor=pointer]:
+          - /url: /river/items/780e6f77c9824607a1568b4f8994878e
+      - generic [ref=e93]: Sun, 15 Feb 2026 06:12:42 GMT
+      - paragraph [ref=e94]: Man charged after 2,600-year-old cat sculpture, mummy mask and necklace stolen from Caboolture museum Get our breaking news email, free app or daily news podcast Queensland police have arrested a man accused of staging a brazen cat burglary of priceless Egyptian artefacts from a museum in Caboolture, north of Brisbane. The man, 52, of no fixed address, was arrested on Russell Island in Moreton Bay on Saturday evening, after police allegedly found most of the stolen artefacts in a camper van parked at a ferry terminal. Continue reading...
+      - link "Open article" [ref=e95] [cursor=pointer]:
+        - /url: https://www.theguardian.com/australia-news/2026/feb/15/alleged-cat-burglar-arrested-after-priceless-egyptian-artefacts-taken-in-queensland-museum-heist
+    - article [ref=e96]:
+      - generic [ref=e97]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Iran ready to discuss compromises to reach nuclear deal, minister tells BBC in Tehran" [level=2] [ref=e98]:
+        - link "Iran ready to discuss compromises to reach nuclear deal, minister tells BBC in Tehran" [ref=e99] [cursor=pointer]:
+          - /url: /river/items/fda0be24b63444b8843c9dedab6b93bc
+      - generic [ref=e100]: Sun, 15 Feb 2026 06:00:36 GMT
+      - paragraph [ref=e101]: Majid Takht-Ravanchi, Iran's deputy foreign minister, tells the BBC's Lyse Doucet that the ball was "in America's court to prove that they want to do a deal".
+      - link "Open article" [ref=e102] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/clyz4y3zwz5o?at_medium=RSS&at_campaign=rss
+    - article [ref=e103]:
+      - generic [ref=e104]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Children 'weaponised' by both sides of trans debate, says author of report into gender identity services" [level=2] [ref=e105]:
+        - link "Children 'weaponised' by both sides of trans debate, says author of report into gender identity services" [ref=e106] [cursor=pointer]:
+          - /url: /river/items/d05a038e9ae047deaf2d9a827ee77eaf
+      - generic [ref=e107]: Sun, 15 Feb 2026 06:00:35 GMT
+      - paragraph [ref=e108]: Clinician Dr Hilary Cass says "people at the extremes" had caused a lot of distress for young people.
+      - link "Open article" [ref=e109] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c0k1vkmxgd6o?at_medium=RSS&at_campaign=rss
+    - article [ref=e110]:
+      - generic [ref=e111]: https://www.theguardian.com/uk/rss
+      - heading "Nobody knows what would follow regime change in Iran – but what happened in 1979 offers some pointers | Jason Burke" [level=2] [ref=e112]:
+        - link "Nobody knows what would follow regime change in Iran – but what happened in 1979 offers some pointers | Jason Burke" [ref=e113] [cursor=pointer]:
+          - /url: /river/items/a7f6b818bbc64e0bafdc641b04f8a72f
+      - generic [ref=e114]: Sun, 15 Feb 2026 06:00:16 GMT
+      - paragraph [ref=e115]: The similarities between now and events preceding the shah’s exile are striking. The radical clerics benefited then, but who would prevail this time? A critical moment looms for Iran, and so for the Middle East. The global consequences of any upheaval in Tehran have been made amply clear since the revolution in 1979 that ushered in the rule of radical Islamist clerics. In Oman, the Iranian foreign minister Abbas Araghchi and his team have begun indirect talks with a high-powered US delegation. Many analysts believe the gap between the two sides is too wide to be bridged, and that a conflict is inevitable. Just this weekend, having already threatened military action, Donald Trump said regime change is the “the best thing that could happen” in Iran. The tension, and risks grow higher. The hold on Iran of those who came to power in the aftermath of the 1979 revolution is now at stake. The ultimate objective of the US appears to be regime change. This may, in fact, already be under way. In...
+      - link "Open article" [ref=e116] [cursor=pointer]:
+        - /url: https://www.theguardian.com/commentisfree/2026/feb/15/regime-change-iran-1979-pointers-shah-exile
+    - article [ref=e117]:
+      - generic [ref=e118]: https://www.theguardian.com/uk/rss
+      - heading "New photos give glimpse inside Iran’s bloody crackdown on anti-government protests" [level=2] [ref=e119]:
+        - link "New photos give glimpse inside Iran’s bloody crackdown on anti-government protests" [ref=e120] [cursor=pointer]:
+          - /url: /river/items/5f3192bc6cf1480babd3eadafca5c6a0
+      - generic [ref=e121]: Sun, 15 Feb 2026 06:00:15 GMT
+      - paragraph [ref=e122]: "Exclusive: images and testimony from the January uprising, when Iranian security forces are believed to have killed thousands of men, women and children who had flocked on to the streets After imposing a nationwide internet blackout, the Iranian regime appears to have largely obscured the mass killing of protesters. However, a photographer in Tehran has managed to share their documentation of what happened, along with the testimony of those who joined in and survived the protests. Continue reading..."
+      - link "Open article" [ref=e123] [cursor=pointer]:
+        - /url: https://www.theguardian.com/global-development/ng-interactive/2026/feb/15/new-photos-give-glimpse-inside-irans-bloody-crackdown-on-anti-government-protests
+    - article [ref=e124]:
+      - generic [ref=e125]: https://www.theguardian.com/uk/rss
+      - heading "No fuel, no tourists, no cash - this was the week the Cuban crisis got real" [level=2] [ref=e126]:
+        - link "No fuel, no tourists, no cash - this was the week the Cuban crisis got real" [ref=e127] [cursor=pointer]:
+          - /url: /river/items/0962d1be658f40478074640445d7719d
+      - generic [ref=e128]: Sun, 15 Feb 2026 06:00:15 GMT
+      - paragraph [ref=e129]: "Diplomats in Havana are preparing for an alternative Trump tactic: the country being starved until people take to the streets and the US can step in Among the verdant gardens of Havana’s diplomatic quarter, Siboney, ambassadors from countries traditionally allied to the United States are expressing increasing frustration with Washington’s attempt to unseat Cuba’s government, while simultaneously drawing up plans to draw down their missions. Cuba is in crisis. Already reeling from a four-year economic slump, worsened by hyper-inflation and the migration of nearly 20% of the population, the 67-year-old communist government is at its weakest. After Washington’s successful military operation against Cuba’s ally Venezuela at the beginning of January, the US administration is actively seeking regime change. Continue reading..."
+      - link "Open article" [ref=e130] [cursor=pointer]:
+        - /url: https://www.theguardian.com/news/ng-interactive/2026/feb/15/cuba-crisis-oil-shortage-venezuela-donald-trump-havana
+    - article [ref=e131]:
+      - generic [ref=e132]: https://www.theguardian.com/uk/rss
+      - 'heading "Koba, London W1: ‘I admire their chutzpah’ – restaurant review" [level=2] [ref=e133]':
+        - 'link "Koba, London W1: ‘I admire their chutzpah’ – restaurant review" [ref=e134] [cursor=pointer]':
+          - /url: /river/items/45d7b5450331439a983b931c8a563e19
+      - generic [ref=e135]: Sun, 15 Feb 2026 06:00:14 GMT
+      - paragraph [ref=e136]: "Ripping up your own rulebook after 20-odd years is brave, but Koba 2.0 is somehow still kicking it Sometimes, my memories of a restaurant begin at the end, and at Koba in Fitzrovia, central London, the enduring image is the warm, fresh, sugary, bean paste doughnut served with a pot of buckwheat tea. It was an utter delight, but then, Korean sweet bean paste, which is made with adzuki beans, is so very satisfying: pleasantly claggy, almost nutty, and a little decadent, while at the same time still convincing you that it might count as one of your five a day, were it not stuffed inside a hot fresh doughnut with a whopping great dollop of whipped cream. It was a cold winter’s day – the sort where, by lunchtime, my own umbrella had blown inside-out twice and everyone else’s seemed determined to poke my eye out. Against that backdrop, this doughnut was a moment of pure bliss. Koba, a Korean restaurant by Linda Lee, has been providing moments of such joy for 20 solid years, not least with it..."
+      - link "Open article" [ref=e137] [cursor=pointer]:
+        - /url: https://www.theguardian.com/food/2026/feb/15/koba-london-w1-grace-dent-restaurant-review
+    - article [ref=e138]:
+      - generic [ref=e139]: https://www.theguardian.com/uk/rss
+      - heading "Facing meltdown? Over 75% of people suffer from burnout - here’s what you need to know" [level=2] [ref=e140]:
+        - link "Facing meltdown? Over 75% of people suffer from burnout - here’s what you need to know" [ref=e141] [cursor=pointer]:
+          - /url: /river/items/be479e18ff1d4289b76f0de9373488f7
+      - generic [ref=e142]: Sun, 15 Feb 2026 06:00:14 GMT
+      - paragraph [ref=e143]: Does it only affect weak people? Is work always the cause? Burnout myths, busted by the experts Once, after surviving yet another round of redundancies in a former job, I did something very odd. I turned off the lights in my room and lay face-down on the bed, unable to move. Rather than feeling relief at having escaped the axe, I was exhausted and numb. I’m not the only one. Fatigue, apathy and hopelessness are all textbook signs of burnout, a bleak phenomenon that has come to define many of our working lives. In 2025, a report from Moodle found that 66% of US workers had experienced some kind of burnout, while a Mental Health UK survey found that one in three adults came under high levels of pressure or stress in the previous year. Despite the prevalence of burnout, plenty of misconceptions around it persist. “Everybody thinks it’s some sort of disease or medical condition,” says Christina Maslach, the psychology professor who was the first to study the syndrome in the 1970s. “But it’...
+      - link "Open article" [ref=e144] [cursor=pointer]:
+        - /url: https://www.theguardian.com/lifeandstyle/2026/feb/15/75-of-people-suffer-from-burnout-what-you-need-to-know
+    - article [ref=e145]:
+      - generic [ref=e146]: https://www.theguardian.com/uk/rss
+      - heading "My husband has started a friendship with a woman he used to work with. Am I right to be worried? | Ask Annalisa Barbieri" [level=2] [ref=e147]:
+        - link "My husband has started a friendship with a woman he used to work with. Am I right to be worried? | Ask Annalisa Barbieri" [ref=e148] [cursor=pointer]:
+          - /url: /river/items/186a5669deda4ef7a97a20b59edd688d
+      - generic [ref=e149]: Sun, 15 Feb 2026 06:00:13 GMT
+      - paragraph [ref=e150]: It’s possible this is a platonic relationship, but your concerns are valid and your husband isn’t providing any reassurance My husband and I are in our 60s. We have been married for 40 years, some of it happily, some not so much. Our children are grown up and gone, and we have recently retired. Some of our tensions over the years have been around my husband’s tendency to be undermining and belittling. He claims not to understand why I might find certain things upsetting, yet refuses to engage with couples counselling (apparently I would tell lies). We have muddled through and mostly get on well now, though he dislikes most of my friends and siblings, and won’t socialise with them. To be fair, he is self-contained and doesn’t seem to need friends in the way I do – he has one friend. A few months ago, an ex-colleague got in touch with my husband and asked to meet for coffee. They met, had a long lunch, and my husband mentioned a few weeks later that they were arranging to meet again as h...
+      - link "Open article" [ref=e151] [cursor=pointer]:
+        - /url: https://www.theguardian.com/lifeandstyle/2026/feb/15/my-husband-friendship-woman-he-used-to-work-with
+    - article [ref=e152]:
+      - generic [ref=e153]: https://news.ycombinator.com/rss
+      - heading "Flashpoint Archive – Over 200k web games and animations preserved" [level=2] [ref=e154]:
+        - link "Flashpoint Archive – Over 200k web games and animations preserved" [ref=e155] [cursor=pointer]:
+          - /url: /river/items/6936d97d410942f1805c04d3483f1cda
+      - generic [ref=e156]: Sun, 15 Feb 2026 05:43:59 GMT
+      - paragraph [ref=e157]: Comments
+      - link "Open article" [ref=e158] [cursor=pointer]:
+        - /url: https://flashpointarchive.org/
+    - article [ref=e159]:
+      - generic [ref=e160]: https://www.theguardian.com/uk/rss
+      - heading "Hungarians have had enough of Viktor Orbán. But Trump’s tailwind could save his skin" [level=2] [ref=e161]:
+        - link "Hungarians have had enough of Viktor Orbán. But Trump’s tailwind could save his skin" [ref=e162] [cursor=pointer]:
+          - /url: /river/items/a282893d09774712814959dacd2e5c5b
+      - generic [ref=e163]: Sun, 15 Feb 2026 05:00:13 GMT
+      - paragraph [ref=e164]: Opposition challenger Péter Magyar is ahead in the polls on a promise of hope. Orbán is betting on fear of war to stay in power After 16 years of uninterrupted power, Viktor Orbán is facing his biggest electoral challenge. For years Hungary’s prime minister has spun weak policy performance as success. The rise of a rival, Péter Magyar, and the opposition Tisza party has exposed the limits of that strategy. The economy is stagnating, despite repeated promises of a long-awaited takeoff. Over the past decade and a half, Hungary has slipped from being one of central and eastern Europe’s strongest performers to one of its weakest. Public services, from healthcare to transport, are widely seen as neglected, and Policy Solutions surveys show that voters have noticed. Hungary is not alone in facing a cost of living crisis, but comparisons offer little consolation to voters who were assured that Orbán’s model would deliver exceptional results. András Bíró-Nagy is a senior research fellow at the...
+      - link "Open article" [ref=e165] [cursor=pointer]:
+        - /url: https://www.theguardian.com/commentisfree/2026/feb/15/hungarians-have-had-enough-of-viktor-orban-but-trumps-tailwind-could-save-his-skin
+    - article [ref=e166]:
+      - generic [ref=e167]: https://www.theguardian.com/uk/rss
+      - 'heading "‘You think: Do I really need anyone?’ – the hidden burden of being a hyper-independent person" [level=2] [ref=e168]':
+        - 'link "‘You think: Do I really need anyone?’ – the hidden burden of being a hyper-independent person" [ref=e169] [cursor=pointer]':
+          - /url: /river/items/c986abba45dc4f30b39b8ff9bde0c519
+      - generic [ref=e170]: Sun, 15 Feb 2026 05:00:12 GMT
+      - paragraph [ref=e171]: "Self-reliance is often encouraged over asking others for help in the modern world. But doing everything yourself can be a sign that you are scared of intimacy When a relative was seriously ill and in intensive care for more than a month, Cianne Jones stepped in. “I took it upon myself to be that person in the hospital every single day – chasing doctors, taking notes, making sure I understood why they were doing things.” It was so stressful, she says, that at one point her hair started falling out, but she ploughed on. It was Jones’s therapist who gently questioned whether she was going to ask for help. Jones laughs. “The hair falling out didn’t suggest to me that I needed help, it was somebody else looking in and saying that.” She has a large, close family who would have helped immediately – and did, once Jones asked – it’s just that it didn’t occur to her to ask. “I had taken that role on: ‘I’m just going to get everything done.’ I just took off, and that was it.” Continue reading..."
+      - link "Open article" [ref=e172] [cursor=pointer]:
+        - /url: https://www.theguardian.com/lifeandstyle/2026/feb/15/hyper-independence-self-reliance-relationships
+    - article [ref=e173]:
+      - generic [ref=e174]: https://news.ycombinator.com/rss
+      - heading "Linear Representations and Superposition" [level=2] [ref=e175]:
+        - link "Linear Representations and Superposition" [ref=e176] [cursor=pointer]:
+          - /url: /river/items/158a9d66eb13460eb3040153544f4e7a
+      - generic [ref=e177]: Sun, 15 Feb 2026 04:29:44 GMT
+      - paragraph [ref=e178]: Comments
+      - link "Open article" [ref=e179] [cursor=pointer]:
+        - /url: http://ternarysearch.blogspot.com/2026/02/linear-representations-and-superposition.html
+    - article [ref=e180]:
+      - generic [ref=e181]: https://www.theguardian.com/uk/rss
+      - heading "Destanee Aiava calls out ‘racist’ tennis culture in explosive retirement post" [level=2] [ref=e182]:
+        - link "Destanee Aiava calls out ‘racist’ tennis culture in explosive retirement post" [ref=e183] [cursor=pointer]:
+          - /url: /river/items/c2fb3cc2769f45908642d3a68249a68e
+      - generic [ref=e184]: Sun, 15 Feb 2026 04:26:49 GMT
+      - paragraph [ref=e185]: Australian hits out at online trolls who have targeted her appearance Former prodigy to call time on professional career at end of 2026 Australia’s Destanee Aiava has announced her plans to retire from professional tennis in a scathing and expletive-laden statement on social media. The 25-year-old hit out at a tennis culture she said was “racist, misogynistic, homophobic and hostile to anyone who doesn’t fit the mould”, as she revealed plans to call time on her playing career at the end of 2026. Continue reading...
+      - link "Open article" [ref=e186] [cursor=pointer]:
+        - /url: https://www.theguardian.com/sport/2026/feb/15/tennis-australia-destanee-aiava-retirement-post
+    - article [ref=e187]:
+      - generic [ref=e188]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Actor Ross Kemp to return to EastEnders for short stint" [level=2] [ref=e189]:
+        - link "Actor Ross Kemp to return to EastEnders for short stint" [ref=e190] [cursor=pointer]:
+          - /url: /river/items/3fdb109ec78240dfa8041d2a32670ad6
+      - generic [ref=e191]: Sun, 15 Feb 2026 04:25:16 GMT
+      - paragraph [ref=e192]: Kemp plays the infamous Grant Mitchell in the long-running soap.
+      - link "Open article" [ref=e193] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cwy8j4zw8e4o?at_medium=RSS&at_campaign=rss
+    - article [ref=e194]:
+      - generic [ref=e195]: https://news.ycombinator.com/rss
+      - heading "Guitars of the USSR and the Jolana Special in Azerbaijani Music" [level=2] [ref=e196]:
+        - link "Guitars of the USSR and the Jolana Special in Azerbaijani Music" [ref=e197] [cursor=pointer]:
+          - /url: /river/items/347039e1a9d040ffad08c4206754d5a0
+      - generic [ref=e198]: Sun, 15 Feb 2026 03:29:39 GMT
+      - paragraph [ref=e199]: Comments
+      - link "Open article" [ref=e200] [cursor=pointer]:
+        - /url: https://caucascapades.wordpress.com/2012/06/14/guitars-of-the-ussr-and-the-jolana-special-in-azerbaijani-music
+    - article [ref=e201]:
+      - generic [ref=e202]: https://www.theguardian.com/uk/rss
+      - heading "Assailants kill at least 32 in north-west Nigerian villages, residents say" [level=2] [ref=e203]:
+        - link "Assailants kill at least 32 in north-west Nigerian villages, residents say" [ref=e204] [cursor=pointer]:
+          - /url: /river/items/284d898ba643449390ab955ae544d7f8
+      - generic [ref=e205]: Sun, 15 Feb 2026 03:14:42 GMT
+      - paragraph [ref=e206]: Residents who escaped violence tell of bandits riding in on motorbikes and shooting indiscriminately Armed assailants on motorbikes killed at least 32 people and burned houses and shops during raids on three villages in north-west Nigeria’s Niger state early on Saturday, local officials and residents who escaped the violence said. The dawn raids targeted the communities of Tunga-Makeri, Konkoso, and Pissa. Continue reading...
+      - link "Open article" [ref=e207] [cursor=pointer]:
+        - /url: https://www.theguardian.com/world/2026/feb/14/assailants-kill-raids-northwest-nigeria-villages-residents-say
+    - article [ref=e208]:
+      - generic [ref=e209]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Russia killed opposition leader Alexei Navalny using dart frog toxin, UK says" [level=2] [ref=e210]:
+        - link "Russia killed opposition leader Alexei Navalny using dart frog toxin, UK says" [ref=e211] [cursor=pointer]:
+          - /url: /river/items/25e75b5e4d82401e9c56b90b87e64c78
+      - generic [ref=e212]: Sun, 15 Feb 2026 02:04:02 GMT
+      - paragraph [ref=e213]: There is no innocent explanation for the toxin being found in samples taken from Navalny's body, Foreign Office says.
+      - link "Open article" [ref=e214] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cwyk4lz4e3eo?at_medium=RSS&at_campaign=rss
+    - article [ref=e215]:
+      - generic [ref=e216]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "An abduction, a Bitcoin demand and a TV icon - why Nancy Guthrie's case has gripped the US" [level=2] [ref=e217]:
+        - link "An abduction, a Bitcoin demand and a TV icon - why Nancy Guthrie's case has gripped the US" [ref=e218] [cursor=pointer]:
+          - /url: /river/items/39842d8c648d4f06bea38686ad8c394b
+      - generic [ref=e219]: Sun, 15 Feb 2026 02:02:34 GMT
+      - paragraph [ref=e220]: Savannah Guthrie's fame has helped turn her mother's abduction into a national obsession.
+      - link "Open article" [ref=e221] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c5y48j0exlgo?at_medium=RSS&at_campaign=rss
+    - article [ref=e222]:
+      - generic [ref=e223]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Boys have adventure of a lifetime filming Lord of the Flies" [level=2] [ref=e224]:
+        - link "Boys have adventure of a lifetime filming Lord of the Flies" [ref=e225] [cursor=pointer]:
+          - /url: /river/items/e7a73bb698864b87b00c867ee025166d
+      - generic [ref=e226]: Sun, 15 Feb 2026 01:28:04 GMT
+      - paragraph [ref=e227]: The cast say they made friends for life during the filming of the new BBC One series.
+      - link "Open article" [ref=e228] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c1d65xqrgeyo?at_medium=RSS&at_campaign=rss
+    - article [ref=e229]:
+      - generic [ref=e230]: https://news.ycombinator.com/rss
+      - 'heading "NewPipe: YouTube client without vertical videos and algorithmic feed" [level=2] [ref=e231]':
+        - 'link "NewPipe: YouTube client without vertical videos and algorithmic feed" [ref=e232] [cursor=pointer]':
+          - /url: /river/items/237423a85a084d7ca9d35b74fc2a89e7
+      - generic [ref=e233]: Sun, 15 Feb 2026 01:24:16 GMT
+      - paragraph [ref=e234]: Comments
+      - link "Open article" [ref=e235] [cursor=pointer]:
+        - /url: https://newpipe.net/
+    - article [ref=e236]:
+      - generic [ref=e237]: https://news.ycombinator.com/rss
+      - heading "I love the work of the ArchWiki maintainers" [level=2] [ref=e238]:
+        - link "I love the work of the ArchWiki maintainers" [ref=e239] [cursor=pointer]:
+          - /url: /river/items/1b043f91339d4bb882bd415e3531cc54
+      - generic [ref=e240]: Sun, 15 Feb 2026 01:20:58 GMT
+      - paragraph [ref=e241]: Comments
+      - link "Open article" [ref=e242] [cursor=pointer]:
+        - /url: https://k7r.eu/i-love-the-work-of-the-archwiki-maintainers
+    - article [ref=e243]:
+      - generic [ref=e244]: https://feeds.bbci.co.uk/news/rss.xml
+      - 'heading "The Papers: ''Navalny killed by frog toxin'' and ''There must be probe into envoy Andrew''" [level=2] [ref=e245]':
+        - 'link "The Papers: ''Navalny killed by frog toxin'' and ''There must be probe into envoy Andrew''" [ref=e246] [cursor=pointer]':
+          - /url: /river/items/d7ed9439ffd34956ac9b69fe4fb01025
+      - generic [ref=e247]: Sun, 15 Feb 2026 00:53:21 GMT
+      - paragraph [ref=e248]: A number of papers lead with the revelation that the Russian opposition leader was killed by a dart frog toxin.
+      - link "Open article" [ref=e249] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c15xzgyly9ko?at_medium=RSS&at_campaign=rss
+    - article [ref=e250]:
+      - generic [ref=e251]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "What the Nigella Lawson effect will mean for the Great British Bake Off" [level=2] [ref=e252]:
+        - link "What the Nigella Lawson effect will mean for the Great British Bake Off" [ref=e253] [cursor=pointer]:
+          - /url: /river/items/e8827d4e25d946f6a9733ef9284d74b3
+      - generic [ref=e254]: Sun, 15 Feb 2026 00:33:19 GMT
+      - paragraph [ref=e255]: What joining Channel 4's famous tent could mean for the TV cook's career and the baking show.
+      - link "Open article" [ref=e256] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cgmlvl48202o?at_medium=RSS&at_campaign=rss
+    - article [ref=e257]:
+      - generic [ref=e258]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "How to get the best view of the Northern Lights in 2026" [level=2] [ref=e259]:
+        - link "How to get the best view of the Northern Lights in 2026" [ref=e260] [cursor=pointer]:
+          - /url: /river/items/25382da008e941659df9afb22787d47d
+      - generic [ref=e261]: Sun, 15 Feb 2026 00:22:38 GMT
+      - paragraph [ref=e262]: Experts say 2026 will be a peak year for aurora spotting as the Sun reaches the maximum of its cycle.
+      - link "Open article" [ref=e263] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/clyzw90xnjzo?at_medium=RSS&at_campaign=rss
+    - article [ref=e264]:
+      - generic [ref=e265]: https://feeds.bbci.co.uk/news/rss.xml
+      - 'heading "''Trump will be gone in three years'': Top US Democrats try to reassure Europe" [level=2] [ref=e266]':
+        - 'link "''Trump will be gone in three years'': Top US Democrats try to reassure Europe" [ref=e267] [cursor=pointer]':
+          - /url: /river/items/eccabb4e0e124bdc8784626a49689954
+      - generic [ref=e268]: Sun, 15 Feb 2026 00:16:47 GMT
+      - paragraph [ref=e269]: Opposition politicians flocked to a summit in Munich to offer an alternative to America First - and stake a claim as future party leaders.
+      - link "Open article" [ref=e270] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cjrq2r9y278o?at_medium=RSS&at_campaign=rss
+    - article [ref=e271]:
+      - generic [ref=e272]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "The saga of a £165m rail line that keeps causing travel chaos" [level=2] [ref=e273]:
+        - link "The saga of a £165m rail line that keeps causing travel chaos" [ref=e274] [cursor=pointer]:
+          - /url: /river/items/4094d5fe27294b239fbba445d28e593b
+      - generic [ref=e275]: Sun, 15 Feb 2026 00:13:56 GMT
+      - paragraph [ref=e276]: Taxpayer money has flowed into fixing the rail line connecting Cornwall with the rest of the UK - but the elements have other ideas.
+      - link "Open article" [ref=e277] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c0q4j9e78jzo?at_medium=RSS&at_campaign=rss
+    - article [ref=e278]:
+      - generic [ref=e279]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Death of the sex drive - and the great debate over whether testosterone can help get it back" [level=2] [ref=e280]:
+        - link "Death of the sex drive - and the great debate over whether testosterone can help get it back" [ref=e281] [cursor=pointer]:
+          - /url: /river/items/024ebdcbac04427e8c1eb88efd2a224b
+      - generic [ref=e282]: Sun, 15 Feb 2026 00:02:42 GMT
+      - paragraph [ref=e283]: Can boosting testosterone improve libido, or is much of the attention solely hype, profit, and placebo?
+      - link "Open article" [ref=e284] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/ckg8r28d3lgo?at_medium=RSS&at_campaign=rss
+    - article [ref=e285]:
+      - generic [ref=e286]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Could Manchester be a model for the UK to kickstart growth?" [level=2] [ref=e287]:
+        - link "Could Manchester be a model for the UK to kickstart growth?" [ref=e288] [cursor=pointer]:
+          - /url: /river/items/655b3bf424b24b1b85031910202772c7
+      - generic [ref=e289]: Sun, 15 Feb 2026 00:01:21 GMT
+      - paragraph [ref=e290]: With an annual growth rate of 3.1%, Manchester's economy has performed twice as well as that of the UK as a whole.
+      - link "Open article" [ref=e291] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c0ljgzjwjx3o?at_medium=RSS&at_campaign=rss
+    - article [ref=e292]:
+      - generic [ref=e293]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "The spectacular multimillion-euro heist nobody noticed" [level=2] [ref=e294]:
+        - link "The spectacular multimillion-euro heist nobody noticed" [ref=e295] [cursor=pointer]:
+          - /url: /river/items/d0fc7f6ec5764c0fb9132b23ee66f6d5
+      - generic [ref=e296]: Sun, 15 Feb 2026 00:01:17 GMT
+      - paragraph [ref=e297]: The theft has left Germans with a strong sense that trust in institutions and the system has been shaken.
+      - link "Open article" [ref=e298] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cm2y2538lz8o?at_medium=RSS&at_campaign=rss
+    - article [ref=e299]:
+      - generic [ref=e300]: https://www.theguardian.com/uk/rss
+      - heading "Unions and Labour MPs call on Starmer to end ‘narrow factional agenda’" [level=2] [ref=e301]:
+        - link "Unions and Labour MPs call on Starmer to end ‘narrow factional agenda’" [ref=e302] [cursor=pointer]:
+          - /url: /river/items/a3ff119c23cc48b0b38fd51460f94bc9
+      - generic [ref=e303]: Sat, 14 Feb 2026 23:50:37 GMT
+      - paragraph [ref=e304]: Letter signed by 25 rebel MPs claims approach from the top is ‘increasingly unpopular’ with public Union leaders and 25 Labour MPs have urged Keir Starmer to end a “narrow, factional agenda” within the Labour party. A letter signed by the MPs, by the leaders of several Labour-affiliated trade unions and by campaign groupings within the party, claimed the approach from the top was “increasingly unpopular with the public”. Continue reading...
+      - link "Open article" [ref=e305] [cursor=pointer]:
+        - /url: https://www.theguardian.com/politics/2026/feb/14/unions-and-labour-mps-call-on-starmer-to-end-narrow-factional-agenda
+    - article [ref=e306]:
+      - generic [ref=e307]: https://www.theguardian.com/uk/rss
+      - 'heading "‘We are Europeans’: Fans fly Greenland flag during Olympic US-Denmark ice hockey game" [level=2] [ref=e308]':
+        - 'link "‘We are Europeans’: Fans fly Greenland flag during Olympic US-Denmark ice hockey game" [ref=e309] [cursor=pointer]':
+          - /url: /river/items/1c0df54b68514173a484644d4d3160dd
+      - generic [ref=e310]: Sat, 14 Feb 2026 23:49:17 GMT
+      - paragraph [ref=e311]: Greenland flag raised in crowd after Danes’ opening goal Fans say gesture is sign of support amid Trump rhetoric Americans pull away after slow start for 6-3 win Two fans who raised a flag of Greenland as the United States played Denmark in men’s ice hockey at the Winter Olympics on Saturday say they did so as a gesture of European support for the island and for Denmark. Vita Kalniņa and her husband, Alexander Kalniņš, fans of the Latvian hockey team who live in Germany, held up a large Greenland flag during warmups and again when the Danish team scored the opening goal of the preliminary round game against the US at the Milano Santagiulia Ice Hockey Arena. Continue reading...
+      - link "Open article" [ref=e312] [cursor=pointer]:
+        - /url: https://www.theguardian.com/sport/2026/feb/14/greenland-flag-us-denmark-olympic-hockey
+    - article [ref=e313]:
+      - generic [ref=e314]: https://www.theguardian.com/uk/rss
+      - heading "Mohamed Salah recaptures scintillating form as Liverpool see off Brighton" [level=2] [ref=e315]:
+        - link "Mohamed Salah recaptures scintillating form as Liverpool see off Brighton" [ref=e316] [cursor=pointer]:
+          - /url: /river/items/ff1cae73a7694b0e9fb252ce7967731e
+      - generic [ref=e317]: Sat, 14 Feb 2026 23:35:19 GMT
+      - paragraph [ref=e318]: There was rancour and recrimination when Mohamed Salah last faced Brighton, at Anfield in December, along with doubt over whether he would be seen in a Liverpool shirt again. Fast forward two months and the Egyptian great is starting, scoring and shaping games for Arne Slot again. Appeasement between the pair is for the greater good. Salah produced a sublime assist, his fourth since returning from the Africa Cup of Nations, and scored from the penalty spot as Liverpool moved into round five with a commanding victory over Fabian Hürzeler’s struggling team. There was no evidence of Brighton not performing for their under-pressure manager but their lack of cutting edge was glaring, as was the case when visiting here in the Premier League. Continue reading...
+      - link "Open article" [ref=e319] [cursor=pointer]:
+        - /url: https://www.theguardian.com/football/2026/feb/14/liverpool-brighton-fa-cup-fourth-round-match-report
+    - article [ref=e320]:
+      - generic [ref=e321]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Is this a 'very Chinese time in your life'? The trend boosting China's soft power" [level=2] [ref=e322]:
+        - link "Is this a 'very Chinese time in your life'? The trend boosting China's soft power" [ref=e323] [cursor=pointer]:
+          - /url: /river/items/2a777423cb8a43918487c52aa85a890c
+      - generic [ref=e324]: Sat, 14 Feb 2026 23:11:56 GMT
+      - paragraph [ref=e325]: Chinamaxxing is adding more gloss to the recent flourish of Chinese soft power.
+      - link "Open article" [ref=e326] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cz6eljqvyp1o?at_medium=RSS&at_campaign=rss
+    - article [ref=e327]:
+      - generic [ref=e328]: https://news.ycombinator.com/rss
+      - 'heading "Show HN: Off Grid – Run AI text, image gen, vision offline on your phone" [level=2] [ref=e329]':
+        - 'link "Show HN: Off Grid – Run AI text, image gen, vision offline on your phone" [ref=e330] [cursor=pointer]':
+          - /url: /river/items/a42c8d6135944867901679c331bfeea3
+      - generic [ref=e331]: Sat, 14 Feb 2026 22:39:24 GMT
+      - paragraph [ref=e332]: Comments
+      - link "Open article" [ref=e333] [cursor=pointer]:
+        - /url: https://github.com/alichherawalla/off-grid-mobile
+    - article [ref=e334]:
+      - generic [ref=e335]: https://www.theguardian.com/uk/rss
+      - heading "More than 60 children infected in north London measles outbreak" [level=2] [ref=e336]:
+        - link "More than 60 children infected in north London measles outbreak" [ref=e337] [cursor=pointer]:
+          - /url: /river/items/5b63e07383344136bbed9e2ea61f8e29
+      - generic [ref=e338]: Sat, 14 Feb 2026 22:33:12 GMT
+      - paragraph [ref=e339]: Cases reported in seven schools and a nursery in Enfield amid concern over low levels of MMR vaccination in capital More than 60 children have been infected by a measles outbreak in north London, it has been reported. Seven schools and a nursery in Enfield reported the cases, with some children treated in hospital, according to the Sunday Times. Continue reading...
+      - link "Open article" [ref=e340] [cursor=pointer]:
+        - /url: https://www.theguardian.com/society/2026/feb/14/more-than-60-children-infected-in-north-london-measles-outbreak
+    - article [ref=e341]:
+      - generic [ref=e342]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "From pizza delivery man to Winter Olympics hopeful" [level=2] [ref=e343]:
+        - link "From pizza delivery man to Winter Olympics hopeful" [ref=e344] [cursor=pointer]:
+          - /url: /river/items/06e5e3b541a9484a9ba7644aba27f3d3
+      - generic [ref=e345]: Sat, 14 Feb 2026 22:31:30 GMT
+      - paragraph [ref=e346]: A medallist with Team GB in 2014, bobsleigher Joel Fearon is preparing for his third Winter Olympics after coming out of retirement to compete for Jamaica.
+      - link "Open article" [ref=e347] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/articles/ckgl52gej21o?at_medium=RSS&at_campaign=rss
+    - article [ref=e348]:
+      - generic [ref=e349]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Obama addresses racist video shared by Trump depicting him as an ape" [level=2] [ref=e350]:
+        - link "Obama addresses racist video shared by Trump depicting him as an ape" [ref=e351] [cursor=pointer]:
+          - /url: /river/items/e75da7a9e4fd4784b24d23d8052ef4dd
+      - generic [ref=e352]: Sat, 14 Feb 2026 22:24:14 GMT
+      - paragraph [ref=e353]: The former US president didn't name Trump, but lamented the lack of "shame" and "decorum" among public officials.
+      - link "Open article" [ref=e354] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c74754j7qwgo?at_medium=RSS&at_campaign=rss
+    - article [ref=e355]:
+      - generic [ref=e356]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Europe must be ready to fight, PM tells Munich Security Conference" [level=2] [ref=e357]:
+        - link "Europe must be ready to fight, PM tells Munich Security Conference" [ref=e358] [cursor=pointer]:
+          - /url: /river/items/a13903340b83483d9b5efc39ac2a90cf
+      - generic [ref=e359]: Sat, 14 Feb 2026 22:23:54 GMT
+      - paragraph [ref=e360]: The prime minister's speech comes after a tumultuous week in his political career back home.
+      - link "Open article" [ref=e361] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cp853p5g9meo?at_medium=RSS&at_campaign=rss
+    - article [ref=e362]:
+      - generic [ref=e363]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "GB target skeleton team medal - Sunday's guide" [level=2] [ref=e364]:
+        - link "GB target skeleton team medal - Sunday's guide" [ref=e365] [cursor=pointer]:
+          - /url: /river/items/c98f17a59b7e494487b241647965dba5
+      - generic [ref=e366]: Sat, 14 Feb 2026 22:11:17 GMT
+      - paragraph [ref=e367]: What's happening and who to look out for at the 2026 Winter Olympics in Milan-Cortina.
+      - link "Open article" [ref=e368] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/articles/c338y36kngzo?at_medium=RSS&at_campaign=rss
+    - article [ref=e369]:
+      - generic [ref=e370]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "GB women stun curling world champions Canada and Muir into big air final" [level=2] [ref=e371]:
+        - link "GB women stun curling world champions Canada and Muir into big air final" [ref=e372] [cursor=pointer]:
+          - /url: /river/items/fca6f66b6cbe402c8aa90d7fa01618a9
+      - generic [ref=e373]: Sat, 14 Feb 2026 22:09:32 GMT
+      - paragraph [ref=e374]: Great Britain's women curlers kickstart their campaign with a superb first victory of the 2026 Winter Olympics while GB's men also won but three British women missed out on skeleton medals.
+      - link "Open article" [ref=e375] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/articles/clyzgpw725qo?at_medium=RSS&at_campaign=rss
+    - article [ref=e376]:
+      - generic [ref=e377]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "GB women shock curling world champions Canada" [level=2] [ref=e378]:
+        - link "GB women shock curling world champions Canada" [ref=e379] [cursor=pointer]:
+          - /url: /river/items/5506429e5aba463487b557ce21c3c47a
+      - generic [ref=e380]: Sat, 14 Feb 2026 22:09:32 GMT
+      - paragraph [ref=e381]: Great Britain's women curlers kickstart their campaign with a superb first victory of the 2026 Winter Olympics while GB's men also won but three British women missed out on skeleton medals.
+      - link "Open article" [ref=e382] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/articles/clyzgpw725qo?at_medium=RSS&at_campaign=rss
+    - article [ref=e383]:
+      - generic [ref=e384]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Man claimed girlfriend was killed in car crash, but forensics revealed the truth" [level=2] [ref=e385]:
+        - link "Man claimed girlfriend was killed in car crash, but forensics revealed the truth" [ref=e386] [cursor=pointer]:
+          - /url: /river/items/19c39d3b9ec74b17b7da2e8412588a1b
+      - generic [ref=e387]: Sat, 14 Feb 2026 21:51:42 GMT
+      - paragraph [ref=e388]: Jenna Watkins was left on a remote mountain road by her boyfriend, who claimed she died in a crash.
+      - link "Open article" [ref=e389] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cr73r7mj730o?at_medium=RSS&at_campaign=rss
+    - article [ref=e390]:
+      - generic [ref=e391]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Bewildering, bewitching, brilliant - Scotland's perfect day" [level=2] [ref=e392]:
+        - link "Bewildering, bewitching, brilliant - Scotland's perfect day" [ref=e393] [cursor=pointer]:
+          - /url: /river/items/4e8f12e9dc62411e8e853a700534c745
+      - generic [ref=e394]: Sat, 14 Feb 2026 21:50:39 GMT
+      - paragraph [ref=e395]: Scotland were at their wildly entertaining best in the Calcutta Cup win over England. This was their perfect day, writes Tom English.
+      - link "Open article" [ref=e396] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/rugby-union/articles/cp8r21m7zlvo?at_medium=RSS&at_campaign=rss
+    - article [ref=e397]:
+      - generic [ref=e398]: https://feeds.bbci.co.uk/news/rss.xml
+      - 'heading "Red eyes and black beaches: How one of the worst environmental disasters left its mark" [level=2] [ref=e399]':
+        - 'link "Red eyes and black beaches: How one of the worst environmental disasters left its mark" [ref=e400] [cursor=pointer]':
+          - /url: /river/items/ffdadf0826f64daeae7f741e43d7280e
+      - generic [ref=e401]: Sat, 14 Feb 2026 21:49:18 GMT
+      - paragraph [ref=e402]: A major oil spill which killed thousands of birds is still being debated, three decades later.
+      - link "Open article" [ref=e403] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cn8z7exgg9vo?at_medium=RSS&at_campaign=rss
+    - article [ref=e404]:
+      - generic [ref=e405]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "'One of worst decisions I've ever seen' - Rooney on Digne handball" [level=2] [ref=e406]:
+        - link "'One of worst decisions I've ever seen' - Rooney on Digne handball" [ref=e407] [cursor=pointer]:
+          - /url: /river/items/1233ba909f324dd0a4e8c97b44c569c2
+      - generic [ref=e408]: Sat, 14 Feb 2026 21:27:05 GMT
+      - paragraph [ref=e409]: Wayne Rooney and Alan Shearer believe referees are "petrified" of making decisions without the "safety net of VAR", after the officials award a free-kick instead of a penalty despite Aston Villa's Lucas Digne handling the ball in the box.
+      - link "Open article" [ref=e410] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/football/videos/ce3gn1v4rk4o?at_medium=RSS&at_campaign=rss
+  - generic [ref=e411]:
+    - generic [ref=e412]: Loaded 50 items
+    - button "Load more" [ref=e413]

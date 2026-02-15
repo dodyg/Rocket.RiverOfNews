@@ -1,0 +1,514 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "River of News" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Unified newest-first feed stream
+    - button "Refresh now" [ref=e8]
+  - generic [ref=e9]:
+    - generic [ref=e10]: Add feed
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Feed URL
+        - textbox "Feed URL" [ref=e14]:
+          - /placeholder: https://example.com/feed.xml
+      - generic [ref=e15]:
+        - generic [ref=e16]: Title (optional)
+        - textbox "Title (optional)" [ref=e17]:
+          - /placeholder: My feed
+    - button "Add feed" [ref=e19]
+  - generic [ref=e20]:
+    - generic [ref=e21]: Filters
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: Start date (UTC)
+        - textbox "Start date (UTC)" [ref=e25]
+      - generic [ref=e26]:
+        - generic [ref=e27]: End date (UTC)
+        - textbox "End date (UTC)" [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e30]: Sources
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]:
+              - checkbox "http://scripting.com/rss.xml (healthy)" [ref=e34]
+              - generic [ref=e35]: http://scripting.com/rss.xml (healthy)
+            - button "Delete" [ref=e36]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - checkbox "https://feeds.bbci.co.uk/news/rss.xml (healthy)" [ref=e39]
+              - generic [ref=e40]: https://feeds.bbci.co.uk/news/rss.xml (healthy)
+            - button "Delete" [ref=e41]
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - checkbox "https://news.ycombinator.com/rss (healthy)" [checked] [ref=e44]
+              - generic [ref=e45]: https://news.ycombinator.com/rss (healthy)
+            - button "Delete" [ref=e46]
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - checkbox "https://test.example.com/feed.rss (healthy)" [ref=e49]
+              - generic [ref=e50]: https://test.example.com/feed.rss (healthy)
+            - button "Delete" [ref=e51]
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - checkbox "https://www.theguardian.com/uk/rss (healthy)" [ref=e54]
+              - generic [ref=e55]: https://www.theguardian.com/uk/rss (healthy)
+            - button "Delete" [ref=e56]
+        - paragraph
+    - generic [ref=e57]:
+      - button "Apply filters" [active] [ref=e58]
+      - button "Clear" [ref=e59]
+    - paragraph
+  - generic [ref=e60]:
+    - article [ref=e61]:
+      - generic [ref=e62]: https://www.theguardian.com/uk/rss
+      - 'heading "Winter Olympics 2026: women’s giant slalom, snowboarding, monobob and more – live" [level=2] [ref=e63]':
+        - 'link "Winter Olympics 2026: women’s giant slalom, snowboarding, monobob and more – live" [ref=e64] [cursor=pointer]':
+          - /url: /river/items/b71ba370da714ceba59b75080f326157
+      - generic [ref=e65]: Sun, 15 Feb 2026 10:48:53 GMT
+      - paragraph [ref=e66]: "Medal table | Live scores and schedule | Results | Briefing Follow us over on Bluesky | Get in touch: mail Daniel Brignone smashed her leg at the end of last season, fought her way back, and now look! Goodness me, she’s almost perfect as she nears the end, and 1:03.23 is her time! That puts her 0.74 up on Colturi, Hector and Stjernesund, plus a whole 1.02 on Shiffrin! Continue reading..."
+      - link "Open article" [ref=e67] [cursor=pointer]:
+        - /url: https://www.theguardian.com/sport/live/2026/feb/15/winter-olympics-2026-skiing-snowboarding-biathlon-ski-jumping-live
+    - article [ref=e68]:
+      - generic [ref=e69]: https://www.theguardian.com/uk/rss
+      - heading "Cooper defends Palestine Action ban despite court ruling it was unlawful – UK politics live" [level=2] [ref=e70]:
+        - link "Cooper defends Palestine Action ban despite court ruling it was unlawful – UK politics live" [ref=e71] [cursor=pointer]:
+          - /url: /river/items/6bb50fdf6e874d90b25d645ee779a88b
+      - generic [ref=e72]: Sun, 15 Feb 2026 10:47:44 GMT
+      - paragraph [ref=e73]: "High court said the then home secretary had not followed her own policies when bringing in the ban last summer Yvette Cooper was interviewed by the BBC’s Laura Kuenssberg on her Sunday politics progamme after the Sky interview. Kuenssberg underscored the chaos inside Downing Street by listing all of the departures from the prime minisiter’s team since Labour won a landslide general election in July 2024. These included: Four directors of communications Two chiefs of staff Two cabinet secretaries US ambassador Continue reading..."
+      - link "Open article" [ref=e74] [cursor=pointer]:
+        - /url: https://www.theguardian.com/politics/live/2026/feb/15/yvette-cooper-navalny-palestine-action-starmer-labour-uk-politics-live-news-updates
+    - article [ref=e75]:
+      - generic [ref=e76]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Eleven killed in Israeli strikes on Gaza, rescuers say" [level=2] [ref=e414]:
+        - link "Eleven killed in Israeli strikes on Gaza, rescuers say" [ref=e415] [cursor=pointer]:
+          - /url: /river/items/4c94ad9e79f048dc933529ce96a98892
+      - generic [ref=e79]: Sun, 15 Feb 2026 10:47:02 GMT
+      - paragraph [ref=e80]: The Palestinian Red Crescent say a strike on a tent encampment in northern Gaza killed at least six people.
+      - link "Open article" [ref=e81] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c8r15eyvk2do?at_medium=RSS&at_campaign=rss
+    - article [ref=e82]:
+      - generic [ref=e83]: https://www.theguardian.com/uk/rss
+      - heading "‘Woke Europe not facing civilisational erasure,’ says EU’s Kallas after Rubio’s Munich speech – Europe live" [level=2] [ref=e416]:
+        - link "‘Woke Europe not facing civilisational erasure,’ says EU’s Kallas after Rubio’s Munich speech – Europe live" [ref=e417] [cursor=pointer]:
+          - /url: /river/items/9145ac92c8fb4cd68e5571b8bea05f33
+      - generic [ref=e86]: Sun, 15 Feb 2026 10:43:47 GMT
+      - paragraph [ref=e87]: EU’s foreign policy chief says many countries still ‘want to join our club’ EU’s Kallas appears to be slightly sceptical about the idea of appointing an EU envoy for talks on ending the Russian invasion of Ukraine. She earlier said that “what matters more than having a seat at the table is knowing what to ask [for] when you are sitting there.” “That’s why I proposed to the member states [a] concrete mandate [of] the asks that we would have to Russia. So whoever goes to that table, whether it’s individually or bilaterally, they should ask [for] these things from the Russians. We have a saying in Estonian that if you demand a lot, you get little; if you demand little, you get nothing, and if you demand nothing, you pay on top.” Continue reading...
+      - link "Open article" [ref=e88] [cursor=pointer]:
+        - /url: https://www.theguardian.com/world/live/2026/feb/15/munich-security-conference-rubio-kallas-lagarde-europe-latest-news-updates
+    - article [ref=e89]:
+      - generic [ref=e90]: https://www.theguardian.com/uk/rss
+      - heading "Clough pulls off FA Cup shock, Birmingham v Leeds buildup, WSL and more – matchday live" [level=2] [ref=e418]:
+        - link "Clough pulls off FA Cup shock, Birmingham v Leeds buildup, WSL and more – matchday live" [ref=e419] [cursor=pointer]:
+          - /url: /river/items/9f27db21ceaf4bb4a7b7e7eb65b14e02
+      - generic [ref=e93]: Sun, 15 Feb 2026 10:41:08 GMT
+      - paragraph [ref=e94]: ⚽ Reaction to Saturday’s news and Sunday action buildup ⚽ Today’s games | Follow us on Bluesky | And mail Xaymaca Leeds are fresh off their 2-2 draw against Chelsea. Meanwhile, Birmingham are eight games unbeaten in all competitions. What’s your prediction for today’s game? If it’s anything like Leeds’ 5-4 victory over Birmingham in 2019, we’re in for a treat. Aston Villa v Tottenham Hotspur Chelsea v Liverpool Everton v West Ham United Manchester United v London City Lionesses Brighton & Hove Albion v Arsenal (2:30pm) Continue reading...
+      - link "Open article" [ref=e95] [cursor=pointer]:
+        - /url: https://www.theguardian.com/football/live/2026/feb/15/clough-pulls-off-fa-cup-shock-birmingham-v-leeds-buildup-wsl-and-more-matchday-live
+    - article [ref=e96]:
+      - generic [ref=e97]: https://www.theguardian.com/uk/rss
+      - heading "UK private jet deportation flight cancelled after man swallows vape battery" [level=2] [ref=e420]:
+        - link "UK private jet deportation flight cancelled after man swallows vape battery" [ref=e421] [cursor=pointer]:
+          - /url: /river/items/3b58a0317b804109b8a5034f98dddedb
+      - generic [ref=e100]: Sun, 15 Feb 2026 10:37:50 GMT
+      - paragraph [ref=e101]: Egyptian with history of disruptive behaviour was taken to hospital and then returned to detention A Home Office private deportation flight for one man had to be cancelled on Thursday morning after he was able to swallow a lithium vape battery shortly before being taken to the plane. Officials are now investigating the circumstances around the incident. The man, an Egyptian foreign national offender with a history of being disruptive during removal attempts, was due to take a flight from the UK via Albania to Egypt. Continue reading...
+      - link "Open article" [ref=e102] [cursor=pointer]:
+        - /url: https://www.theguardian.com/uk-news/2026/feb/15/uk-private-jet-deportation-flight-cancelled-after-man-swallows-vape-battery
+    - article [ref=e103]:
+      - generic [ref=e104]: https://feeds.bbci.co.uk/news/rss.xml
+      - 'heading "Watch: GB''s Muir qualifies for women''s big air final" [level=2] [ref=e422]':
+        - 'link "Watch: GB''s Muir qualifies for women''s big air final" [ref=e423] [cursor=pointer]':
+          - /url: /river/items/2552ee7bc88e4018bf84239455d99962
+      - generic [ref=e107]: Sun, 15 Feb 2026 10:35:38 GMT
+      - paragraph [ref=e108]: Watch as Great Britain's Kirsty Muir reaches the women's big air final with a "beautiful" run to finish fourth in qualifying at the 2026 Winter Olympics.
+      - link "Open article" [ref=e109] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/videos/c8egd62345po?at_medium=RSS&at_campaign=rss
+    - article [ref=e110]:
+      - generic [ref=e111]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Labour think tank commissioned firm that ended up investigating journalist" [level=2] [ref=e424]:
+        - link "Labour think tank commissioned firm that ended up investigating journalist" [ref=e425] [cursor=pointer]:
+          - /url: /river/items/385a0c01c3d5467a94e98a27f06cf507
+      - generic [ref=e114]: Sun, 15 Feb 2026 10:10:53 GMT
+      - paragraph [ref=e115]: Labour Together paid at least £30,000 to "investigate the sourcing, funding and origins" of a story about undeclared donations.
+      - link "Open article" [ref=e116] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c0ljzzk62kyo?at_medium=RSS&at_campaign=rss
+    - article [ref=e117]:
+      - generic [ref=e118]: https://www.theguardian.com/uk/rss
+      - heading "Love is in the big air for Ukrainian skier after reaching Winter Olympics final" [level=2] [ref=e426]:
+        - link "Love is in the big air for Ukrainian skier after reaching Winter Olympics final" [ref=e427] [cursor=pointer]:
+          - /url: /river/items/217e4ba2dcbd4d0b9a4f834bdbdd1724
+      - generic [ref=e121]: Sun, 15 Feb 2026 10:09:29 GMT
+      - paragraph [ref=e122]: Kateryna Kotsar gets engaged at end of qualifying run ‘It was so cute … it’s two really huge things for me’ For most athletes, qualifying for your first Olympic final would be more than enough excitement for one night. But Ukrainian freeskier Kateryna Kotsar’s evening was just getting started. Having made the big air final, Kotsar then wrote “freedom of memory” on her glove to protest against the ban of her compatriot Vladyslav Heraskevych for wearing images of slain athletes on his helmet. And a Valentine’s Day she will never forget took another surprise turn when her boyfriend, Bohdan Fashtryha, then dropped to one knee and proposed. Continue reading...
+      - link "Open article" [ref=e123] [cursor=pointer]:
+        - /url: https://www.theguardian.com/sport/2026/feb/15/ukrainian-skier-kateryna-kotsar-gets-engaged-winter-olympics-big-air-final
+    - article [ref=e124]:
+      - generic [ref=e125]: https://www.theguardian.com/uk/rss
+      - 'heading "‘From misfits to bullies’: how America’s Next Top Model became toxic" [level=2] [ref=e428]':
+        - 'link "‘From misfits to bullies’: how America’s Next Top Model became toxic" [ref=e429] [cursor=pointer]':
+          - /url: /river/items/ceb0b19ea5204386ae857c2bcd57358a
+      - generic [ref=e128]: Sun, 15 Feb 2026 10:02:18 GMT
+      - paragraph [ref=e430]: It was the reality show that aimed to disrupt the fashion industry but, as a shocking Netflix docuseries details, it also became part of the problem Even for those who didn’t watch the show religiously, there’s a scene in America’s Next Top Model that has broken through from reality TV infamy to hall-of-fame virality. It’s when Tyra Banks, model-turned-TV-mogul, loses her temper in spectacular fashion at contest Tiffany Richardson, after misunderstanding her post-elimination response as something to be read as ungrateful. “I have never in my life yelled at a girl like this!” she screams. “When my mother yells like this, it’s because she loves me. I was rooting for you, we were all rooting for you, how dare you!” Continue reading...
+      - link "Open article" [ref=e431] [cursor=pointer]:
+        - /url: https://www.theguardian.com/tv-and-radio/2026/feb/15/americas-next-top-model-antm-netflix-series
+    - article [ref=e131]:
+      - generic [ref=e132]: https://www.theguardian.com/uk/rss
+      - 'heading "Tinsel to tidewall: discarded Christmas trees reused to protect Lancashire coastline" [level=2] [ref=e432]':
+        - 'link "Tinsel to tidewall: discarded Christmas trees reused to protect Lancashire coastline" [ref=e433] [cursor=pointer]':
+          - /url: /river/items/666c4738baa04d8b8c49f0e9065830eb
+      - generic [ref=e135]: Sun, 15 Feb 2026 10:00:19 GMT
+      - paragraph [ref=e434]: The trees morph into sand dunes to protect homes on the seafront against rising sea levels and serve as habitat for rare species Britain’s fight against climate breakdown may usually look like windfarms or solar energy. But on miles of Lancashire coast the frontline is rather more festive. Tens of thousands of discarded Christmas trees have been partially buried on beaches south of Blackpool as a frontier against rising sea levels. Continue reading...
+      - link "Open article" [ref=e435] [cursor=pointer]:
+        - /url: https://www.theguardian.com/environment/2026/feb/15/tinsel-to-tidewall-discarded-christmas-trees-reused-to-protect-lancashire-coastline
+    - article [ref=e138]:
+      - generic [ref=e139]: https://www.theguardian.com/uk/rss
+      - 'heading "‘Every role I do, I’m going to be a Black man first’: David Jonsson on winning Baftas, rebooting Alien and leaving TV’s hottest show" [level=2] [ref=e436]':
+        - 'link "‘Every role I do, I’m going to be a Black man first’: David Jonsson on winning Baftas, rebooting Alien and leaving TV’s hottest show" [ref=e437] [cursor=pointer]':
+          - /url: /river/items/a17d482fdfd5403cabaa465242abf43c
+      - generic [ref=e142]: Sun, 15 Feb 2026 10:00:18 GMT
+      - paragraph [ref=e143]: "He went from being the east London boy who was expelled from school to becoming the Bafta award‑winning star of Alien: Romulus. Ahead of his prison drama Wasteman, David Jonsson discusses the pressures of being a leading Black British actor David Jonsson is the kind of actor who disappears so completely into his roles that it’s easy to forget you’re watching the same person each time. In Rye Lane, he’s a lovestruck south Londoner; in Industry, an Etonian banker with ice in his veins; in Alien: Romulus, a paranoid android. He’s now starring as heroin addict Taylor in the ultraviolent British prison drama Wasteman and, for the first time, the 32-year-old actor claims he is playing something close to himself. “This is the most personal role I’ve done,” he says. “It’s so messed up because it’s a dark story about rehabilitation and addiction, but I know these men really well. Especially when you’re growing up somewhere like where I did.” We meet on a Friday afternoon at a photo studio in Is..."
+      - link "Open article" [ref=e144] [cursor=pointer]:
+        - /url: https://www.theguardian.com/film/2026/feb/15/david-jonsson-actor-interview-wasteman-prison-drama-alien-romulus-industry-long-walk
+    - article [ref=e145]:
+      - generic [ref=e146]: https://news.ycombinator.com/rss
+      - heading "Two different tricks for fast LLM inference" [level=2] [ref=e438]:
+        - link "Two different tricks for fast LLM inference" [ref=e439] [cursor=pointer]:
+          - /url: /river/items/8a7793401aaa4fac8921bc889b6d95d8
+      - generic [ref=e149]: Sun, 15 Feb 2026 09:27:33 GMT
+      - paragraph [ref=e150]: Comments
+      - link "Open article" [ref=e151] [cursor=pointer]:
+        - /url: https://www.seangoedecke.com/fast-llm-inference
+    - article [ref=e152]:
+      - generic [ref=e153]: https://news.ycombinator.com/rss
+      - heading "Git is a file system. We need a database for the code" [level=2] [ref=e440]:
+        - link "Git is a file system. We need a database for the code" [ref=e441] [cursor=pointer]:
+          - /url: /river/items/5469a4f6f1e8477aa1f5f3429cf49a51
+      - generic [ref=e156]: Sun, 15 Feb 2026 09:09:31 GMT
+      - paragraph [ref=e157]: Comments
+      - link "Open article" [ref=e158] [cursor=pointer]:
+        - /url: https://gist.github.com/gritzko/6e81b5391eacb585ae207f5e634db07e
+    - article [ref=e159]:
+      - generic [ref=e160]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "'Fast-spreading' measles outbreak hits several schools in London" [level=2] [ref=e442]:
+        - link "'Fast-spreading' measles outbreak hits several schools in London" [ref=e443] [cursor=pointer]:
+          - /url: /river/items/7dec941693ce46cd98cdea054f3c5481
+      - generic [ref=e163]: Sun, 15 Feb 2026 09:03:01 GMT
+      - paragraph [ref=e444]: A number of children have been hospitalised as officials urge families to check they are up to date with their vaccines.
+      - link "Open article" [ref=e445] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cev7edxxzm7o?at_medium=RSS&at_campaign=rss
+    - article [ref=e166]:
+      - generic [ref=e167]: https://www.theguardian.com/uk/rss
+      - 'heading "‘Baby Shark isn’t something you should enjoy as an adult’: Steph McGovern’s honest playlist" [level=2] [ref=e446]':
+        - 'link "‘Baby Shark isn’t something you should enjoy as an adult’: Steph McGovern’s honest playlist" [ref=e447] [cursor=pointer]':
+          - /url: /river/items/99234d2fa33b46558f939e35c9942634
+      - generic [ref=e170]: Sun, 15 Feb 2026 09:00:17 GMT
+      - paragraph [ref=e171]: The journalist, presenter and author on catchy kids’ earworms, impromptu rap-off during BBC night shifts and the 90s pop banger that plays havoc with her ankles The first song I fell in love with I grew up in a house where music was played all the time. I watched Kylie on Neighbours, and so fell in love with I Should Be So Lucky. I love how you don’t need to know about her private life, you can still just love her. I went to see her recently and she was amazing. The first album I bought Hangin’ Tough by New Kids on the Block, on cassette, from Woolies in Middlesbrough, with some pick’n’mix. I don’t think you could ever go into Woolies and not come out with some pick’n’mix. I liked the underdog, so Donnie Wahlberg was my favourite member. Continue reading...
+      - link "Open article" [ref=e172] [cursor=pointer]:
+        - /url: https://www.theguardian.com/music/2026/feb/15/steph-mcgovern-honest-playlist-baby-shark-coolio-whitney-kylie-morrissey
+    - article [ref=e173]:
+      - generic [ref=e174]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Labour face tough fight in Gorton and Denton by-election" [level=2] [ref=e448]:
+        - link "Labour face tough fight in Gorton and Denton by-election" [ref=e449] [cursor=pointer]:
+          - /url: /river/items/90d11a192791455c9e36f0dbef8a8a80
+      - generic [ref=e177]: Sun, 15 Feb 2026 08:48:59 GMT
+      - paragraph [ref=e178]: Sir Keir Starmer's low personal poll ratings could prove a drag in the previously safe seat.
+      - link "Open article" [ref=e179] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/cd9gx0751kzo?at_medium=RSS&at_campaign=rss
+    - article [ref=e180]:
+      - generic [ref=e181]: https://news.ycombinator.com/rss
+      - heading "Seeing Theory" [level=2] [ref=e450]:
+        - link "Seeing Theory" [ref=e451] [cursor=pointer]:
+          - /url: /river/items/45e77ef4550b47418afeafe8d0242a16
+      - generic [ref=e184]: Sun, 15 Feb 2026 08:40:12 GMT
+      - paragraph [ref=e185]: Comments
+      - link "Open article" [ref=e186] [cursor=pointer]:
+        - /url: https://seeing-theory.brown.edu/
+    - article [ref=e187]:
+      - generic [ref=e188]: https://news.ycombinator.com/rss
+      - heading "No Coding Before 10am" [level=2] [ref=e452]:
+        - link "No Coding Before 10am" [ref=e453] [cursor=pointer]:
+          - /url: /river/items/19b58dced7a149b2a2e912904a778d92
+      - generic [ref=e191]: Sun, 15 Feb 2026 08:21:10 GMT
+      - paragraph [ref=e192]: Comments
+      - link "Open article" [ref=e193] [cursor=pointer]:
+        - /url: https://michaelxbloch.substack.com/p/no-coding-before-10am
+    - article [ref=e194]:
+      - generic [ref=e195]: https://news.ycombinator.com/rss
+      - heading "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library" [level=2] [ref=e454]:
+        - link "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library" [ref=e455] [cursor=pointer]:
+          - /url: /river/items/0a868d6e72aa455384db8b92107a0cd9
+      - generic [ref=e198]: Sun, 15 Feb 2026 08:17:05 GMT
+      - paragraph [ref=e199]: Comments
+      - link "Open article" [ref=e200] [cursor=pointer]:
+        - /url: https://oat.ink/
+    - article [ref=e201]:
+      - generic [ref=e202]: https://www.theguardian.com/uk/rss
+      - 'heading "Winter Olympics briefing: Pinheiro Braathen writes Brazilian fairytale" [level=2] [ref=e456]':
+        - 'link "Winter Olympics briefing: Pinheiro Braathen writes Brazilian fairytale" [ref=e457] [cursor=pointer]':
+          - /url: /river/items/0dcbc12fd36d4ce783fae8aa9a42d2ba
+      - generic [ref=e205]: Sun, 15 Feb 2026 08:00:18 GMT
+      - paragraph [ref=e206]: Brazil’s president hails ‘unprecedented result’ as 25-year-old wins first Winter Olympic medal for country and continent Hundreds of thousands of international tourists are expected to descend on Brazil over the next few days for carnival. But you didn’t need to go further than the Dolomites on Saturday to see somebody performing samba on a raised platform. Lucas Pinheiro Braathen entered Brazilian sporting folklore by snaring his country’s, and continent’s, first medal at a Winter Olympics – and a gold at that. The reigning champion, Marco Odermatt of Switzerland, who leaves these Games without a title after being fancied for multiple successes, was no match for Pinheiro Braathen in the men’s giant slalom in Bormio. Continue reading...
+      - link "Open article" [ref=e207] [cursor=pointer]:
+        - /url: https://www.theguardian.com/sport/2026/feb/14/winter-olympics-briefing-lucas-pinheiro-braathen-brazil-history-first-medal
+    - article [ref=e208]:
+      - generic [ref=e209]: https://www.theguardian.com/uk/rss
+      - heading "‘Ferryman’ Igor Tudor has the record to steer Tottenham to safety" [level=2] [ref=e458]:
+        - link "‘Ferryman’ Igor Tudor has the record to steer Tottenham to safety" [ref=e459] [cursor=pointer]:
+          - /url: /river/items/f4a456e5ae1c4238957af88f384c0e5f
+      - generic [ref=e212]: Sun, 15 Feb 2026 08:00:17 GMT
+      - paragraph [ref=e213]: Croat never stays long but is an expert at doing what is necessary and also comes with a reputation as a taskmaster In Italy, the interim manager of a football club is often referred to as “un traghettatore” – a ferryman. When waters are choppy, you do not need some ambitious captain with notions of heading out on an adventure. All you really want is someone who can get you safely to shore. Igor Tudor is not keen on the word. Hearing it applied to him when he arrived at Juventus last season, he observed that every manager, everywhere, is living from game to game. “You can have a contract for five years and get sent home after three matches,” he said. “You have to construct your tomorrow today.” Continue reading...
+      - link "Open article" [ref=e214] [cursor=pointer]:
+        - /url: https://www.theguardian.com/football/2026/feb/15/ferryman-igor-tudor-has-the-record-to-steer-tottenham-to-safety
+    - article [ref=e215]:
+      - generic [ref=e216]: https://www.theguardian.com/uk/rss
+      - 'heading "‘The perfect place for people like me’: how one couple started UK’s first women’s sports bar" [level=2] [ref=e460]':
+        - 'link "‘The perfect place for people like me’: how one couple started UK’s first women’s sports bar" [ref=e461] [cursor=pointer]':
+          - /url: /river/items/40ad4637abeb4cada1e2e217d2fae637
+      - generic [ref=e219]: Sun, 15 Feb 2026 08:00:17 GMT
+      - paragraph [ref=e220]: "Lucy and Pippa Tallant have opened the Crossbar, in Brighton, to create a place for women to feel comfortable watching all sport You can’t miss it, the giant “Crossbar” flanked by two stylised crosses in black on the whitewashed outside walls glares down the street, a stone’s throw from Brighton’s Churchill Square. Outside is the narrow shelf that the co-owner Lucy Tallant, the DIY enthusiast of the pair, attached to the wall for those wanting to hang around outside. As she worked on that shelf, two girls walked past and one proclaimed: “Yeah, they’re opening a lesbian club.” “A lesbian club?” replied the other, “Yeah, there’s one outside now.” Lucy was in stitches, and so was social media when she posted about what she had overheard. The shelf has become a thing, with lesbians posing for photographs and then sharing online with versions of “there’s one outside now” as the caption. Continue reading..."
+      - link "Open article" [ref=e221] [cursor=pointer]:
+        - /url: https://www.theguardian.com/football/2026/feb/15/the-perfect-place-for-people-like-me-how-one-couple-started-uks-first-womens-sports-bar
+    - article [ref=e222]:
+      - generic [ref=e223]: https://www.theguardian.com/uk/rss
+      - 'heading "Eden Hazard: ‘I’m more of a taxi driver than a football player now, but it’s OK’" [level=2] [ref=e462]':
+        - 'link "Eden Hazard: ‘I’m more of a taxi driver than a football player now, but it’s OK’" [ref=e463] [cursor=pointer]':
+          - /url: /river/items/f4a3550239af444f9b809136073bccd7
+      - generic [ref=e226]: Sun, 15 Feb 2026 08:00:16 GMT
+      - paragraph [ref=e227]: "Former Chelsea and Real Madrid idol wants merely to be remembered as ‘a good player and a funny guy’ after a career of multiple titles – and spats with Mourinho If Italy is a boot, Lecce sits right on the heel. It is here, deep in the countryside a few kilometres outside the baroque city, that the noise of the Bernabéu and the intensity of Stamford Bridge feel like a lifetime ago. The setting is rustic, quiet and slow-paced: a stark contrast to the frenetic energy that defined Eden Hazard’s career on the pitch. It has been almost three years since he stopped playing, and the silence since his retirement at 32 has been notable. After an injury-hit spell at Real Madrid brought a premature end to a dazzling career, Hazard did not seek the spotlight. Surrounded by vineyards rather than defenders, slumped in an armchair, he seems entirely at peace, remarkably comfortable with his life after football. Continue reading..."
+      - link "Open article" [ref=e228] [cursor=pointer]:
+        - /url: https://www.theguardian.com/football/2026/feb/15/eden-hazard-im-more-of-a-taxi-driver-than-a-football-player-now-but-its-ok
+    - article [ref=e229]:
+      - generic [ref=e230]: https://www.theguardian.com/uk/rss
+      - heading "Firm that went bust owing £650k to HMRC offers staff Las Vegas trip after being bought by ex-owner" [level=2] [ref=e464]:
+        - link "Firm that went bust owing £650k to HMRC offers staff Las Vegas trip after being bought by ex-owner" [ref=e465] [cursor=pointer]:
+          - /url: /river/items/99c209783e6d40cfb59a1d981b055bb2
+      - generic [ref=e233]: Sun, 15 Feb 2026 08:00:16 GMT
+      - paragraph [ref=e234]: Acquisition by Premier Group Recruitment boss Andrew Woosnam appears to be example of ‘phoenixism’ A recruitment business that went bust owing the tax authorities and other creditors almost £3m has promised to send its staff on an all-expenses paid trip to Las Vegas after being repurchased by its former owner for an initial £10,000. Premier Group Recruitment went into administration in September with debts of £2.9m – including £647,000 owed to HM Revenue and Customs (HMRC), which had commenced enforcement proceedings against the company. Continue reading...
+      - link "Open article" [ref=e235] [cursor=pointer]:
+        - /url: https://www.theguardian.com/business/2026/feb/15/bust-premier-group-recruitment-hmrc-las-vegas-staff-trip-andrew-woosnam
+    - article [ref=e236]:
+      - generic [ref=e237]: https://www.theguardian.com/uk/rss
+      - 'heading "Shattered dreams: Why the battle for Sunderland’s glass centre has turned into a political flashpoint" [level=2] [ref=e466]':
+        - 'link "Shattered dreams: Why the battle for Sunderland’s glass centre has turned into a political flashpoint" [ref=e467] [cursor=pointer]':
+          - /url: /river/items/0dc5ffeeb23d48aab1a4b281d07f5983
+      - generic [ref=e240]: Sun, 15 Feb 2026 07:28:56 GMT
+      - paragraph [ref=e241]: Custodian University of Sunderland says renovation costs of £45m are too high and building must be pulled down. Not without a fight, say locals, who believe they’re being taken for fools The “little pieces of Sunderland” produced by the city’s glassmaking factory for more than a century can be traced back to an even older story that began in the seventh century, when English glassmaking began at a monastery beside the River Wear, run by abbott and later saint Benedict Biscop. In 2007, the Pyrex factory that opened more than 100 years earlier and made glass that found its way into millions of homes closed down, with production moved to France. Continue reading...
+      - link "Open article" [ref=e242] [cursor=pointer]:
+        - /url: https://www.theguardian.com/uk-news/2026/feb/15/shattered-dreams-how-the-battle-for-sunderlands-glass-centre-turned-into-a-political-flashpoint
+    - article [ref=e243]:
+      - generic [ref=e244]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "'Older, more mature, better' - how Banton built breakthrough knock" [level=2] [ref=e468]:
+        - link "'Older, more mature, better' - how Banton built breakthrough knock" [ref=e469] [cursor=pointer]:
+          - /url: /river/items/0d138ea77fa648f88e10a17989ed58d3
+      - generic [ref=e247]: Sun, 15 Feb 2026 07:14:16 GMT
+      - paragraph [ref=e248]: Tom Banton's 63 not out against Scotland was his breakout innings for England and he says it was down to his increased maturity.
+      - link "Open article" [ref=e249] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/cricket/articles/crl43lxdkndo?at_medium=RSS&at_campaign=rss
+    - article [ref=e250]:
+      - generic [ref=e251]: https://www.theguardian.com/uk/rss
+      - heading "‘The most quietly romantic town we have ever visited’ – the enduring charm of Chiavenna, Italy" [level=2] [ref=e470]:
+        - link "‘The most quietly romantic town we have ever visited’ – the enduring charm of Chiavenna, Italy" [ref=e471] [cursor=pointer]:
+          - /url: /river/items/ba17118fc3494b1f94a25d3addc97499
+      - generic [ref=e254]: Sun, 15 Feb 2026 07:00:17 GMT
+      - paragraph [ref=e255]: Writers from George Eliot to Goethe put this Lombardy town on the map, then it fell out of fashion. Today it makes a picture-perfect alternative to the Italian lakes The ancient settlement of Chiavenna, in Lombardy, near Italy’s border with Switzerland, was once well known among travellers. “Lovely Chiavenna … mountain peaks, huge boulders, with rippling miniature torrents and lovely young flowers … and grassy heights with rich Spanish chestnuts,” wrote George Eliot in 1860. Eliot wasn’t the only writer to rhapsodise about this charming town. Edith Wharton described it as “fantastically picturesque … an exuberance of rococo”. For Mary Shelley it was “paradise … glowing in rich and sunny vegetation”, while Goethe described it as “like a dream”. Continue reading...
+      - link "Open article" [ref=e256] [cursor=pointer]:
+        - /url: https://www.theguardian.com/travel/2026/feb/15/chiavenna-italy-lombardy-holiday
+    - article [ref=e257]:
+      - generic [ref=e258]: https://www.theguardian.com/uk/rss
+      - 'heading "Brushing fraud: Britons told to beware of mystery parcels as new scam soars" [level=2] [ref=e472]':
+        - 'link "Brushing fraud: Britons told to beware of mystery parcels as new scam soars" [ref=e473] [cursor=pointer]':
+          - /url: /river/items/7b6ca584970946dcb52a1d53195fd578
+      - generic [ref=e261]: Sun, 15 Feb 2026 07:00:17 GMT
+      - paragraph [ref=e262]: Fraudsters use stolen personal details to send out products, then post a fake verified and positive online review A package arrives but you can’t remember ordering anything. When you open it, you find some cheap, flimsy jewellery. Continue reading...
+      - link "Open article" [ref=e263] [cursor=pointer]:
+        - /url: https://www.theguardian.com/money/2026/feb/15/brushing-fraud-britons-mystery-parcels-scam-review
+    - article [ref=e264]:
+      - generic [ref=e265]: https://www.theguardian.com/uk/rss
+      - 'heading "No swiping involved: the AI dating apps promising to find your soulmate" [level=2] [ref=e474]':
+        - 'link "No swiping involved: the AI dating apps promising to find your soulmate" [ref=e475] [cursor=pointer]':
+          - /url: /river/items/8ff06700a3fb40ec94e1abdc27c29b8b
+      - generic [ref=e268]: Sun, 15 Feb 2026 07:00:16 GMT
+      - paragraph [ref=e269]: "Agentic AI apps first interview you and then give you limited matches selected for ‘similarity and reciprocity of personality’ Dating apps exploit you, dating profiles lie to you, and sex is basically something old people used to do. You might as well consider it: can AI help you find love? For a handful of tech entrepreneurs and a few brave Londoners, the answer is “maybe”. Continue reading..."
+      - link "Open article" [ref=e270] [cursor=pointer]:
+        - /url: https://www.theguardian.com/technology/2026/feb/15/ai-dating-apps-personality-matchmaking
+    - article [ref=e271]:
+      - generic [ref=e272]: https://www.theguardian.com/uk/rss
+      - heading "A rare chronicle of war, survival and devastation in Darfur – in pictures" [level=2] [ref=e476]:
+        - link "A rare chronicle of war, survival and devastation in Darfur – in pictures" [ref=e477] [cursor=pointer]:
+          - /url: /river/items/f4ee22cf5cf9487eb5f616a15925512b
+      - generic [ref=e275]: Sun, 15 Feb 2026 07:00:16 GMT
+      - paragraph [ref=e276]: Few outsiders, if any, have ventured more widely into the centre of Sudan’s brutal civil war than Jérôme Tubiana. The French humanitarian has been granted unprecedented access to travel throughout the western region of Darfur to document the heart of a conflict that has created the world’s worst humanitarian catastrophe. His powerful images offer insights into a gruelling war that shows no sign of abating, but where hope endures that one day the killing might stop Continue reading...
+      - link "Open article" [ref=e277] [cursor=pointer]:
+        - /url: https://www.theguardian.com/global-development/gallery/2026/feb/15/darfur-sudan-war-in-pictures
+    - article [ref=e278]:
+      - generic [ref=e279]: https://www.theguardian.com/uk/rss
+      - 'heading "‘It makes no sense’: the battle over plans for a windfarm by the Yorkshire Dales" [level=2] [ref=e478]':
+        - 'link "‘It makes no sense’: the battle over plans for a windfarm by the Yorkshire Dales" [ref=e479] [cursor=pointer]':
+          - /url: /river/items/fef6922b6c3d4f48a87017eca06d71b9
+      - generic [ref=e282]: Sun, 15 Feb 2026 07:00:16 GMT
+      - paragraph [ref=e283]: The fight for Hope Moor is set to be repeated across the UK as the government aims to hit its renewable energy targets Instead of a slingshot, the Davids are brandishing a sculpture and a coffee table book. Their Goliaths are a Norwegian energy company and a UK energy secretary with renewable targets to meet. A fierce battle has begun over one of England’s tallest windfarms, proposed for deep peat moorland overlooking the Yorkshire Dales national park, in what residents say will mark the irrevocable industrialisation of their rural landscape. Continue reading...
+      - link "Open article" [ref=e284] [cursor=pointer]:
+        - /url: https://www.theguardian.com/environment/2026/feb/15/battle-plans-windfarm-yorkshire-dales
+    - article [ref=e285]:
+      - generic [ref=e286]: https://www.theguardian.com/uk/rss
+      - heading "Senior police praised undercover officer who lied to court about identity, papers at spycops inquiry show" [level=2] [ref=e480]:
+        - link "Senior police praised undercover officer who lied to court about identity, papers at spycops inquiry show" [ref=e481] [cursor=pointer]:
+          - /url: /river/items/14923897fab64f678e08428d054ffa40
+      - generic [ref=e289]: Sun, 15 Feb 2026 07:00:16 GMT
+      - paragraph [ref=e290]: Jim Boyling gave evidence under his fake identity during prosecution of activists he had infiltrated Senior police officers praised an undercover officer who had lied to a court about his real identity during a prosecution of environmental activists, secret documents aired at the spycops public inquiry have revealed. Jim Boyling, an undercover officer, gave evidence under his fake identity when he was prosecuted while masquerading as an activist. He was prosecuted alongside six campaigners for public order offences, but senior officers decided not to tell the court that he was actually a police spy. Continue reading...
+      - link "Open article" [ref=e291] [cursor=pointer]:
+        - /url: https://www.theguardian.com/uk-news/2026/feb/15/spycops-senior-police-praised-undercover-officer-lied-to-court
+    - article [ref=e292]:
+      - generic [ref=e293]: https://www.theguardian.com/uk/rss
+      - 'heading "A skincare splurge that’s (almost) worth the hype: Shark FacialPro Glow + DePuffi review" [level=2] [ref=e482]':
+        - 'link "A skincare splurge that’s (almost) worth the hype: Shark FacialPro Glow + DePuffi review" [ref=e483] [cursor=pointer]':
+          - /url: /river/items/3b6f21faa0cd44bd94a0beb8b8ece2c9
+      - generic [ref=e296]: Sun, 15 Feb 2026 07:00:15 GMT
+      - paragraph [ref=e297]: Shark’s latest gadget claims to tackle everything from pore size to puffiness, but can an at-home hydrofacial really replace a trip to the salon? • The best LED face masks, tested The beauty tech market has boomed in the past few years, with countless brands launching products that promise clinic-quality results from home. After its LED face mask, the Cryoglow, made every beauty lover’s 2025 wishlist, Shark’s latest beauty launch, the FacialPro Glow, promises access to the sort of hydrofacial tech previously reserved for professional facialists. If you’re familiar with hydrofacials (AKA hydradermabrasion), then you’ll be aware that they have impressive pore cleansing and hydrating powers when performed in a clinic by a trained facialist. However, I was intrigued to see whether a portable device could be powerful enough to rival a facial that costs more than £100 – and concerned it would be unwise to put such power in the hands of non-professionals. Continue reading...
+      - link "Open article" [ref=e298] [cursor=pointer]:
+        - /url: https://www.theguardian.com/thefilter/2026/feb/15/shark-facialpro-glow-depuffi-review
+    - article [ref=e299]:
+      - generic [ref=e300]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Is Zubimendi Arsenal's best player?" [level=2] [ref=e484]:
+        - link "Is Zubimendi Arsenal's best player?" [ref=e485] [cursor=pointer]:
+          - /url: /river/items/75051813b11a4be684ff6b2b993caad6
+      - generic [ref=e303]: Sun, 15 Feb 2026 06:52:01 GMT
+      - paragraph [ref=e486]: After an impressive start to his Arsenal career, BBC Sport looks at whether Martin Zubimendi is the Gunners' most important player.
+      - link "Open article" [ref=e487] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/football/articles/c2lr9rp9q12o?at_medium=RSS&at_campaign=rss
+    - article [ref=e306]:
+      - generic [ref=e307]: https://www.theguardian.com/uk/rss
+      - heading "New Zealand officials warn more flooding could hit north island as man killed after heavy rain" [level=2] [ref=e488]:
+        - link "New Zealand officials warn more flooding could hit north island as man killed after heavy rain" [ref=e489] [cursor=pointer]:
+          - /url: /river/items/cc143612887046bba27f21252aad0826
+      - generic [ref=e310]: Sun, 15 Feb 2026 06:42:05 GMT
+      - paragraph [ref=e311]: Worst weather forecast to hit late on Sunday, a day after floods caused power outages, road collapses and home evacuations New Zealand’s weather bureau has warned more flooding could hit the country’s North Island, a day after floods caused power outages, road collapses, home evacuations and caused the death of a man whose vehicle was submerged on a highway. There was “threat to life from dangerous river conditions, significant flooding and slips” as a deepening low-pressure system east of the North Island brought heavy rain and severe gales to several regions, the weather bureau said. Continue reading...
+      - link "Open article" [ref=e312] [cursor=pointer]:
+        - /url: https://www.theguardian.com/world/2026/feb/15/new-zealand-officials-warn-more-flooding-could-hit-north-island-as-man-killed-after-heavy-rain
+    - article [ref=e313]:
+      - generic [ref=e314]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Three years on, Deulofeu is still fighting for 'miracle' return" [level=2] [ref=e490]:
+        - link "Three years on, Deulofeu is still fighting for 'miracle' return" [ref=e491] [cursor=pointer]:
+          - /url: /river/items/cf2961bd47854872a0d4cf67127557a4
+      - generic [ref=e317]: Sun, 15 Feb 2026 06:19:28 GMT
+      - paragraph [ref=e318]: Gerard Deulofeu has not played for more than three years but believes he can make "history" by fighting for a "miracle" comeback.
+      - link "Open article" [ref=e319] [cursor=pointer]:
+        - /url: https://www.bbc.com/sport/football/articles/c89kxxpj1vko?at_medium=RSS&at_campaign=rss
+    - article [ref=e320]:
+      - generic [ref=e321]: https://www.theguardian.com/uk/rss
+      - 'heading "TV tonight: a remarkable interview with Gisèle Pelicot" [level=2] [ref=e492]':
+        - 'link "TV tonight: a remarkable interview with Gisèle Pelicot" [ref=e493] [cursor=pointer]':
+          - /url: /river/items/5103c4f542b6473fb75c0cd7628cb4e6
+      - generic [ref=e324]: Sun, 15 Feb 2026 06:15:14 GMT
+      - paragraph [ref=e325]: "Pelicot tells her story about finding justice in a Newsnight special. Plus: hit thriller Yellowjackets comes to ITV1. Here’s what to watch this evening 10pm, BBC Two Continue reading..."
+      - link "Open article" [ref=e326] [cursor=pointer]:
+        - /url: https://www.theguardian.com/tv-and-radio/2026/feb/15/tv-tonight-a-remarkable-interview-with-gisele-pelicot
+    - article [ref=e327]:
+      - generic [ref=e328]: https://www.theguardian.com/uk/rss
+      - heading "Alleged cat burglar arrested after priceless Egyptian artefacts taken in Queensland museum heist" [level=2] [ref=e494]:
+        - link "Alleged cat burglar arrested after priceless Egyptian artefacts taken in Queensland museum heist" [ref=e495] [cursor=pointer]:
+          - /url: /river/items/780e6f77c9824607a1568b4f8994878e
+      - generic [ref=e331]: Sun, 15 Feb 2026 06:12:42 GMT
+      - paragraph [ref=e332]: Man charged after 2,600-year-old cat sculpture, mummy mask and necklace stolen from Caboolture museum Get our breaking news email, free app or daily news podcast Queensland police have arrested a man accused of staging a brazen cat burglary of priceless Egyptian artefacts from a museum in Caboolture, north of Brisbane. The man, 52, of no fixed address, was arrested on Russell Island in Moreton Bay on Saturday evening, after police allegedly found most of the stolen artefacts in a camper van parked at a ferry terminal. Continue reading...
+      - link "Open article" [ref=e333] [cursor=pointer]:
+        - /url: https://www.theguardian.com/australia-news/2026/feb/15/alleged-cat-burglar-arrested-after-priceless-egyptian-artefacts-taken-in-queensland-museum-heist
+    - article [ref=e334]:
+      - generic [ref=e335]: https://news.ycombinator.com/rss
+      - heading "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm" [level=2] [ref=e496]:
+        - link "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm" [ref=e497] [cursor=pointer]:
+          - /url: /river/items/cc8d7af84c2e4a4088fe526ad2fa8db6
+      - generic [ref=e338]: Sun, 15 Feb 2026 06:00:42 GMT
+      - paragraph [ref=e339]: Comments
+      - link "Open article" [ref=e340] [cursor=pointer]:
+        - /url: https://kotaku.com/discord-palantir-peter-thiel-persona-age-verification-2000668951
+    - article [ref=e341]:
+      - generic [ref=e342]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Iran ready to discuss compromises to reach nuclear deal, minister tells BBC in Tehran" [level=2] [ref=e498]:
+        - link "Iran ready to discuss compromises to reach nuclear deal, minister tells BBC in Tehran" [ref=e499] [cursor=pointer]:
+          - /url: /river/items/fda0be24b63444b8843c9dedab6b93bc
+      - generic [ref=e345]: Sun, 15 Feb 2026 06:00:36 GMT
+      - paragraph [ref=e346]: Majid Takht-Ravanchi, Iran's deputy foreign minister, tells the BBC's Lyse Doucet that the ball was "in America's court to prove that they want to do a deal".
+      - link "Open article" [ref=e347] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/clyz4y3zwz5o?at_medium=RSS&at_campaign=rss
+    - article [ref=e348]:
+      - generic [ref=e349]: https://feeds.bbci.co.uk/news/rss.xml
+      - heading "Children 'weaponised' by both sides of trans debate, says author of report into gender identity services" [level=2] [ref=e500]:
+        - link "Children 'weaponised' by both sides of trans debate, says author of report into gender identity services" [ref=e501] [cursor=pointer]:
+          - /url: /river/items/d05a038e9ae047deaf2d9a827ee77eaf
+      - generic [ref=e352]: Sun, 15 Feb 2026 06:00:35 GMT
+      - paragraph [ref=e353]: Clinician Dr Hilary Cass says "people at the extremes" had caused a lot of distress for young people.
+      - link "Open article" [ref=e354] [cursor=pointer]:
+        - /url: https://www.bbc.com/news/articles/c0k1vkmxgd6o?at_medium=RSS&at_campaign=rss
+    - article [ref=e355]:
+      - generic [ref=e356]: https://www.theguardian.com/uk/rss
+      - heading "Nobody knows what would follow regime change in Iran – but what happened in 1979 offers some pointers | Jason Burke" [level=2] [ref=e502]:
+        - link "Nobody knows what would follow regime change in Iran – but what happened in 1979 offers some pointers | Jason Burke" [ref=e503] [cursor=pointer]:
+          - /url: /river/items/a7f6b818bbc64e0bafdc641b04f8a72f
+      - generic [ref=e359]: Sun, 15 Feb 2026 06:00:16 GMT
+      - paragraph [ref=e360]: The similarities between now and events preceding the shah’s exile are striking. The radical clerics benefited then, but who would prevail this time? A critical moment looms for Iran, and so for the Middle East. The global consequences of any upheaval in Tehran have been made amply clear since the revolution in 1979 that ushered in the rule of radical Islamist clerics. In Oman, the Iranian foreign minister Abbas Araghchi and his team have begun indirect talks with a high-powered US delegation. Many analysts believe the gap between the two sides is too wide to be bridged, and that a conflict is inevitable. Just this weekend, having already threatened military action, Donald Trump said regime change is the “the best thing that could happen” in Iran. The tension, and risks grow higher. The hold on Iran of those who came to power in the aftermath of the 1979 revolution is now at stake. The ultimate objective of the US appears to be regime change. This may, in fact, already be under way. In...
+      - link "Open article" [ref=e361] [cursor=pointer]:
+        - /url: https://www.theguardian.com/commentisfree/2026/feb/15/regime-change-iran-1979-pointers-shah-exile
+    - article [ref=e362]:
+      - generic [ref=e363]: https://www.theguardian.com/uk/rss
+      - heading "New photos give glimpse inside Iran’s bloody crackdown on anti-government protests" [level=2] [ref=e504]:
+        - link "New photos give glimpse inside Iran’s bloody crackdown on anti-government protests" [ref=e505] [cursor=pointer]:
+          - /url: /river/items/5f3192bc6cf1480babd3eadafca5c6a0
+      - generic [ref=e366]: Sun, 15 Feb 2026 06:00:15 GMT
+      - paragraph [ref=e506]: "Exclusive: images and testimony from the January uprising, when Iranian security forces are believed to have killed thousands of men, women and children who had flocked on to the streets After imposing a nationwide internet blackout, the Iranian regime appears to have largely obscured the mass killing of protesters. However, a photographer in Tehran has managed to share their documentation of what happened, along with the testimony of those who joined in and survived the protests. Continue reading..."
+      - link "Open article" [ref=e507] [cursor=pointer]:
+        - /url: https://www.theguardian.com/global-development/ng-interactive/2026/feb/15/new-photos-give-glimpse-inside-irans-bloody-crackdown-on-anti-government-protests
+    - article [ref=e369]:
+      - generic [ref=e370]: https://www.theguardian.com/uk/rss
+      - heading "No fuel, no tourists, no cash - this was the week the Cuban crisis got real" [level=2] [ref=e508]:
+        - link "No fuel, no tourists, no cash - this was the week the Cuban crisis got real" [ref=e509] [cursor=pointer]:
+          - /url: /river/items/0962d1be658f40478074640445d7719d
+      - generic [ref=e373]: Sun, 15 Feb 2026 06:00:15 GMT
+      - paragraph [ref=e374]: "Diplomats in Havana are preparing for an alternative Trump tactic: the country being starved until people take to the streets and the US can step in Among the verdant gardens of Havana’s diplomatic quarter, Siboney, ambassadors from countries traditionally allied to the United States are expressing increasing frustration with Washington’s attempt to unseat Cuba’s government, while simultaneously drawing up plans to draw down their missions. Cuba is in crisis. Already reeling from a four-year economic slump, worsened by hyper-inflation and the migration of nearly 20% of the population, the 67-year-old communist government is at its weakest. After Washington’s successful military operation against Cuba’s ally Venezuela at the beginning of January, the US administration is actively seeking regime change. Continue reading..."
+      - link "Open article" [ref=e375] [cursor=pointer]:
+        - /url: https://www.theguardian.com/news/ng-interactive/2026/feb/15/cuba-crisis-oil-shortage-venezuela-donald-trump-havana
+    - article [ref=e376]:
+      - generic [ref=e377]: https://www.theguardian.com/uk/rss
+      - 'heading "Koba, London W1: ‘I admire their chutzpah’ – restaurant review" [level=2] [ref=e510]':
+        - 'link "Koba, London W1: ‘I admire their chutzpah’ – restaurant review" [ref=e511] [cursor=pointer]':
+          - /url: /river/items/45d7b5450331439a983b931c8a563e19
+      - generic [ref=e380]: Sun, 15 Feb 2026 06:00:14 GMT
+      - paragraph [ref=e381]: "Ripping up your own rulebook after 20-odd years is brave, but Koba 2.0 is somehow still kicking it Sometimes, my memories of a restaurant begin at the end, and at Koba in Fitzrovia, central London, the enduring image is the warm, fresh, sugary, bean paste doughnut served with a pot of buckwheat tea. It was an utter delight, but then, Korean sweet bean paste, which is made with adzuki beans, is so very satisfying: pleasantly claggy, almost nutty, and a little decadent, while at the same time still convincing you that it might count as one of your five a day, were it not stuffed inside a hot fresh doughnut with a whopping great dollop of whipped cream. It was a cold winter’s day – the sort where, by lunchtime, my own umbrella had blown inside-out twice and everyone else’s seemed determined to poke my eye out. Against that backdrop, this doughnut was a moment of pure bliss. Koba, a Korean restaurant by Linda Lee, has been providing moments of such joy for 20 solid years, not least with it..."
+      - link "Open article" [ref=e382] [cursor=pointer]:
+        - /url: https://www.theguardian.com/food/2026/feb/15/koba-london-w1-grace-dent-restaurant-review
+    - article [ref=e383]:
+      - generic [ref=e384]: https://www.theguardian.com/uk/rss
+      - heading "Facing meltdown? Over 75% of people suffer from burnout - here’s what you need to know" [level=2] [ref=e512]:
+        - link "Facing meltdown? Over 75% of people suffer from burnout - here’s what you need to know" [ref=e513] [cursor=pointer]:
+          - /url: /river/items/be479e18ff1d4289b76f0de9373488f7
+      - generic [ref=e387]: Sun, 15 Feb 2026 06:00:14 GMT
+      - paragraph [ref=e514]: Does it only affect weak people? Is work always the cause? Burnout myths, busted by the experts Once, after surviving yet another round of redundancies in a former job, I did something very odd. I turned off the lights in my room and lay face-down on the bed, unable to move. Rather than feeling relief at having escaped the axe, I was exhausted and numb. I’m not the only one. Fatigue, apathy and hopelessness are all textbook signs of burnout, a bleak phenomenon that has come to define many of our working lives. In 2025, a report from Moodle found that 66% of US workers had experienced some kind of burnout, while a Mental Health UK survey found that one in three adults came under high levels of pressure or stress in the previous year. Despite the prevalence of burnout, plenty of misconceptions around it persist. “Everybody thinks it’s some sort of disease or medical condition,” says Christina Maslach, the psychology professor who was the first to study the syndrome in the 1970s. “But it’...
+      - link "Open article" [ref=e515] [cursor=pointer]:
+        - /url: https://www.theguardian.com/lifeandstyle/2026/feb/15/75-of-people-suffer-from-burnout-what-you-need-to-know
+    - article [ref=e390]:
+      - generic [ref=e391]: https://www.theguardian.com/uk/rss
+      - heading "My husband has started a friendship with a woman he used to work with. Am I right to be worried? | Ask Annalisa Barbieri" [level=2] [ref=e516]:
+        - link "My husband has started a friendship with a woman he used to work with. Am I right to be worried? | Ask Annalisa Barbieri" [ref=e517] [cursor=pointer]:
+          - /url: /river/items/186a5669deda4ef7a97a20b59edd688d
+      - generic [ref=e394]: Sun, 15 Feb 2026 06:00:13 GMT
+      - paragraph [ref=e395]: It’s possible this is a platonic relationship, but your concerns are valid and your husband isn’t providing any reassurance My husband and I are in our 60s. We have been married for 40 years, some of it happily, some not so much. Our children are grown up and gone, and we have recently retired. Some of our tensions over the years have been around my husband’s tendency to be undermining and belittling. He claims not to understand why I might find certain things upsetting, yet refuses to engage with couples counselling (apparently I would tell lies). We have muddled through and mostly get on well now, though he dislikes most of my friends and siblings, and won’t socialise with them. To be fair, he is self-contained and doesn’t seem to need friends in the way I do – he has one friend. A few months ago, an ex-colleague got in touch with my husband and asked to meet for coffee. They met, had a long lunch, and my husband mentioned a few weeks later that they were arranging to meet again as h...
+      - link "Open article" [ref=e396] [cursor=pointer]:
+        - /url: https://www.theguardian.com/lifeandstyle/2026/feb/15/my-husband-friendship-woman-he-used-to-work-with
+    - article [ref=e397]:
+      - generic [ref=e398]: https://news.ycombinator.com/rss
+      - heading "Flashpoint Archive – Over 200k web games and animations preserved" [level=2] [ref=e518]:
+        - link "Flashpoint Archive – Over 200k web games and animations preserved" [ref=e519] [cursor=pointer]:
+          - /url: /river/items/6936d97d410942f1805c04d3483f1cda
+      - generic [ref=e401]: Sun, 15 Feb 2026 05:43:59 GMT
+      - paragraph [ref=e402]: Comments
+      - link "Open article" [ref=e403] [cursor=pointer]:
+        - /url: https://flashpointarchive.org/
+    - article [ref=e404]:
+      - generic [ref=e405]: https://www.theguardian.com/uk/rss
+      - heading "Hungarians have had enough of Viktor Orbán. But Trump’s tailwind could save his skin" [level=2] [ref=e520]:
+        - link "Hungarians have had enough of Viktor Orbán. But Trump’s tailwind could save his skin" [ref=e521] [cursor=pointer]:
+          - /url: /river/items/a282893d09774712814959dacd2e5c5b
+      - generic [ref=e408]: Sun, 15 Feb 2026 05:00:13 GMT
+      - paragraph [ref=e522]: Opposition challenger Péter Magyar is ahead in the polls on a promise of hope. Orbán is betting on fear of war to stay in power After 16 years of uninterrupted power, Viktor Orbán is facing his biggest electoral challenge. For years Hungary’s prime minister has spun weak policy performance as success. The rise of a rival, Péter Magyar, and the opposition Tisza party has exposed the limits of that strategy. The economy is stagnating, despite repeated promises of a long-awaited takeoff. Over the past decade and a half, Hungary has slipped from being one of central and eastern Europe’s strongest performers to one of its weakest. Public services, from healthcare to transport, are widely seen as neglected, and Policy Solutions surveys show that voters have noticed. Hungary is not alone in facing a cost of living crisis, but comparisons offer little consolation to voters who were assured that Orbán’s model would deliver exceptional results. András Bíró-Nagy is a senior research fellow at the...
+      - link "Open article" [ref=e523] [cursor=pointer]:
+        - /url: https://www.theguardian.com/commentisfree/2026/feb/15/hungarians-have-had-enough-of-viktor-orban-but-trumps-tailwind-could-save-his-skin
+  - generic [ref=e411]:
+    - generic [ref=e412]: Loaded 50 items
+    - button "Load more" [ref=e413]

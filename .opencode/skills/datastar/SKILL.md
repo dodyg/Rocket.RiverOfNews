@@ -1,7 +1,7 @@
 ---
 name: datastar
 description: Hypermedia framework for building reactive web applications with backend-driven UI. Use this skill for Datastar development patterns, SSE streaming, signal management, DOM morphing, and the "Datastar way" philosophy. Covers data-* attributes, backend integration, and real-time collaborative app patterns.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Datastar
@@ -284,6 +284,22 @@ data: elements </div>
 </div>
 ```
 
+### Confirmation Before Action
+
+Use native JavaScript `confirm()` - NOT `@confirm` which doesn't exist:
+
+```html
+<!-- CORRECT: Use native JS confirm() -->
+<button data-on:click="confirm('Delete this item?') && @delete('/items/123')">
+  Delete
+</button>
+
+<!-- WRONG: @confirm is not a valid action -->
+<button data-on:click="@confirm('Delete?') && @delete('/items/123')">
+  Delete
+</button>
+```
+
 ## CQRS Pattern
 
 Segregate commands (writes) from queries (reads):
@@ -298,6 +314,35 @@ This enables real-time collaboration patterns.
 2. **Fat Morph**: Don't fear sending large HTML chunks - morphing is efficient
 3. **Debounce Input**: Use `data-on:input__debounce.500ms` for search fields
 
+## Reading Signals on the Backend
+
+**CRITICAL:** Datastar sends signals differently depending on the HTTP method:
+
+- **GET requests**: Signals are sent via the `datastar` query parameter as URL-encoded JSON
+- **POST/PUT/PATCH/DELETE requests**: Signals are sent in the request body as JSON
+
+```csharp
+public static async Task<Dictionary<string, JsonElement>> ReadSignalsAsync(this HttpRequest request)
+{
+    // GET requests send signals via query parameter
+    string? datastarParam = request.Query["datastar"];
+    if (!string.IsNullOrWhiteSpace(datastarParam))
+    {
+        return JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(datastarParam) ?? [];
+    }
+
+    // POST/PUT/PATCH/DELETE send signals in body
+    using StreamReader reader = new(request.Body, Encoding.UTF8);
+    string body = await reader.ReadToEndAsync();
+    return JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(body) ?? [];
+}
+```
+
+Example GET request URL:
+```
+GET /river/items?reset=true&datastar=%7B%22selectedFeedIds%22%3A%22abc123%22%7D
+```
+
 ## Common Mistakes to Avoid
 
 1. **Missing `$` prefix in expressions**: Always use `$signalName` in `data-text`, `data-show`, `data-attr`, etc.
@@ -306,6 +351,15 @@ This enables real-time collaboration patterns.
 4. **Underscore signals to backend**: Signals starting with `_` are NOT sent to the backend
 5. **SSE BOM**: Ensure SSE responses don't include UTF-8 BOM
 6. **Incomplete multiline data**: Each line in SSE must have the data key prefix
+7. **Using `@confirm` action**: `@confirm` is NOT a valid Datastar action. Use native JavaScript `confirm()` instead:
+   ```html
+   <!-- WRONG -->
+   <button data-on:click="@confirm('Delete?') && @delete('/item/1')">Delete</button>
+   
+   <!-- CORRECT -->
+   <button data-on:click="confirm('Delete?') && @delete('/item/1')">Delete</button>
+   ```
+8. **Reading signals from body on GET requests**: For GET requests, Datastar sends signals via the `datastar` query parameter, NOT the request body. Always check both locations.
 
 ## When to Use This Skill
 

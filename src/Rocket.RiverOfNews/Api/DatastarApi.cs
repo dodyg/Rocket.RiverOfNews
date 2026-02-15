@@ -140,7 +140,7 @@ public static class DatastarApi
 				html.AppendLine($"""    <input type="checkbox" id="{checkboxId}" value="{feed.Id}" data-on:change="@get('/river/toggle-feed/{feed.Id}')" class="accent-sky-500">""");
 				html.AppendLine($"""    <span>{feed.Title} <span class="text-slate-500">({feed.Status})</span></span>""");
 				html.AppendLine($"""  </label>""");
-				html.AppendLine($"""  <button data-on:click="@confirm('Delete feed?') && @delete('/river/feeds/{feed.Id}')" class="rounded border border-rose-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-950">Delete</button>""");
+				html.AppendLine($"""  <button data-on:click="confirm('Delete feed?') && @delete('/river/feeds/{feed.Id}')" class="rounded border border-rose-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-950">Delete</button>""");
 				html.AppendLine($"""</div>""");
 			}
 		}

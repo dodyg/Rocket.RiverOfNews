@@ -1,0 +1,42 @@
+Total messages: 3 (Errors: 3, Warnings: 0)
+
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5084/favicon.ico:0
+[ERROR] Error: UndefinedAction
+More info: https://data-star.dev/errors/undefined_action?metadata=%7B%22plugin%22%3A%7B%22type%22%3A%22action%22%2C%22name%22%3A%22confirm%22%7D%2C%22element%22%3A%7B%22id%22%3A%22%22%2C%22tag%22%3A%22BUTTON%22%7D%2C%22expression%22%3A%7B%22fnContent%22%3A%22__action%28%5C%22confirm%5C%22%2Cevt%2C%27Delete+feed%3F%27%29+%26%26+__action%28%5C%22delete%5C%22%2Cevt%2C%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%22%2C%22value%22%3A%22%40confirm%28%27Delete+feed%3F%27%29+%26%26+%40delete%28%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%22%7D%7D
+Context: {
+  "plugin": {
+    "type": "action",
+    "name": "confirm"
+  },
+  "element": {
+    "id": "",
+    "tag": "BUTTON"
+  },
+  "expression": {
+    "fnContent": "__action(\"confirm\",evt,'Delete feed?') && __action(\"delete\",evt,'/river/feeds/ec5e855fed41454c96c2ed58129041b2')",
+    "value": "@confirm('Delete feed?') && @delete('/river/feeds/ec5e855fed41454c96c2ed58129041b2')"
+  }
+}
+    at Number.he (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:2:5427)
+    at d (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:5:687)
+    at eval (eval at rn (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:5:428), <anonymous>:3:1)
+    at https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:5:720
+    at l.rx (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:2720)
+    at HTMLButtonElement.o (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:8:7953) @ https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4
+Error: ExecuteExpression
+More info: https://data-star.dev/errors/execute_expression?metadata=%7B%22element%22%3A%7B%22id%22%3A%22%22%2C%22tag%22%3A%22BUTTON%22%7D%2C%22expression%22%3A%7B%22fnContent%22%3A%22__action%28%5C%22confirm%5C%22%2Cevt%2C%27Delete+feed%3F%27%29+%26%26+__action%28%5C%22delete%5C%22%2Cevt%2C%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%22%2C%22value%22%3A%22%40confirm%28%27Delete+feed%3F%27%29+%26%26+%40delete%28%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%22%7D%2C%22error%22%3A%22UndefinedAction%5CnMore+info%3A+https%3A%2F%2Fdata-star.dev%2Ferrors%2Fundefined_action%3Fmetadata%3D%257B%2522plugin%2522%253A%257B%2522type%2522%253A%2522action%2522%252C%2522name%2522%253A%2522confirm%2522%257D%252C%2522element%2522%253A%257B%2522id%2522%253A%2522%2522%252C%2522tag%2522%253A%2522BUTTON%2522%257D%252C%2522expression%2522%253A%257B%2522fnContent%2522%253A%2522__action%2528%255C%2522confirm%255C%2522%252Cevt%252C%2527Delete%2Bfeed%253F%2527%2529%2B%2526%2526%2B__action%2528%255C%2522delete%255C%2522%252Cevt%252C%2527%252Friver%252Ffeeds%252Fec5e855fed41454c96c2ed58129041b2%2527%2529%2522%252C%2522value%2522%253A%2522%2540confirm%2528%2527Delete%2Bfeed%253F%2527%2529%2B%2526%2526%2B%2540delete%2528%2527%252Friver%252Ffeeds%252Fec5e855fed41454c96c2ed58129041b2%2527%2529%2522%257D%257D%5CnContext%3A+%7B%5Cn++%5C%22plugin%5C%22%3A+%7B%5Cn++++%5C%22type%5C%22%3A+%5C%22action%5C%22%2C%5Cn++++%5C%22name%5C%22%3A+%5C%22confirm%5C%22%5Cn++%7D%2C%5Cn++%5C%22element%5C%22%3A+%7B%5Cn++++%5C%22id%5C%22%3A+%5C%22%5C%22%2C%5Cn++++%5C%22tag%5C%22%3A+%5C%22BUTTON%5C%22%5Cn++%7D%2C%5Cn++%5C%22expression%5C%22%3A+%7B%5Cn++++%5C%22fnContent%5C%22%3A+%5C%22__action%28%5C%5C%5C%22confirm%5C%5C%5C%22%2Cevt%2C%27Delete+feed%3F%27%29+%26%26+__action%28%5C%5C%5C%22delete%5C%5C%5C%22%2Cevt%2C%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%5C%22%2C%5Cn++++%5C%22value%5C%22%3A+%5C%22%40confirm%28%27Delete+feed%3F%27%29+%26%26+%40delete%28%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%5C%22%5Cn++%7D%5Cn%7D%22%7D
+Context: {
+  "element": {
+    "id": "",
+    "tag": "BUTTON"
+  },
+  "expression": {
+    "fnContent": "__action(\"confirm\",evt,'Delete feed?') && __action(\"delete\",evt,'/river/feeds/ec5e855fed41454c96c2ed58129041b2')",
+    "value": "@confirm('Delete feed?') && @delete('/river/feeds/ec5e855fed41454c96c2ed58129041b2')"
+  },
+  "error": "UndefinedAction\nMore info: https://data-star.dev/errors/undefined_action?metadata=%7B%22plugin%22%3A%7B%22type%22%3A%22action%22%2C%22name%22%3A%22confirm%22%7D%2C%22element%22%3A%7B%22id%22%3A%22%22%2C%22tag%22%3A%22BUTTON%22%7D%2C%22expression%22%3A%7B%22fnContent%22%3A%22__action%28%5C%22confirm%5C%22%2Cevt%2C%27Delete+feed%3F%27%29+%26%26+__action%28%5C%22delete%5C%22%2Cevt%2C%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%22%2C%22value%22%3A%22%40confirm%28%27Delete+feed%3F%27%29+%26%26+%40delete%28%27%2Friver%2Ffeeds%2Fec5e855fed41454c96c2ed58129041b2%27%29%22%7D%7D\nContext: {\n  \"plugin\": {\n    \"type\": \"action\",\n    \"name\": \"confirm\"\n  },\n  \"element\": {\n    \"id\": \"\",\n    \"tag\": \"BUTTON\"\n  },\n  \"expression\": {\n    \"fnContent\": \"__action(\\\"confirm\\\",evt,'Delete feed?') && __action(\\\"delete\\\",evt,'/river/feeds/ec5e855fed41454c96c2ed58129041b2')\",\n    \"value\": \"@confirm('Delete feed?') && @delete('/river/feeds/ec5e855fed41454c96c2ed58129041b2')\"\n  }\n}"
+}
+    at he (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:2:5427)
+    at https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:5:773
+    at l.rx (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:4:2720)
+    at HTMLButtonElement.o (https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js:8:7953)

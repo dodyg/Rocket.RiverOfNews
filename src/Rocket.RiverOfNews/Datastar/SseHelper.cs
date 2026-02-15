@@ -61,6 +61,16 @@ public static class SseHelperExtensions
 
 	public static async Task<Dictionary<string, JsonElement>> ReadSignalsAsync(this HttpRequest request, CancellationToken cancellationToken = default)
 	{
+		string? datastarParam = request.Query["datastar"];
+		if (!string.IsNullOrWhiteSpace(datastarParam))
+		{
+			Dictionary<string, JsonElement>? signals = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(datastarParam, new JsonSerializerOptions
+			{
+				PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+			});
+			return signals ?? [];
+		}
+
 		using StreamReader reader = new(request.Body, Encoding.UTF8, leaveOpen: true);
 		string body = await reader.ReadToEndAsync(cancellationToken);
 
@@ -69,11 +79,11 @@ public static class SseHelperExtensions
 			return [];
 		}
 
-		Dictionary<string, JsonElement>? signals = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(body, new JsonSerializerOptions
+		Dictionary<string, JsonElement>? bodySignals = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(body, new JsonSerializerOptions
 		{
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 		});
 
-		return signals ?? [];
+		return bodySignals ?? [];
 	}
 }
