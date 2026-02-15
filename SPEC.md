@@ -58,6 +58,13 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - MVP is a single-user local app.
 - No authentication or account system is required.
 
+### 3.10 Item Management
+- Users can clear all feed items from the database.
+- The river page provides a "Danger Zone" section with a "Clear all items" button.
+- Clearing items requires confirmation via a browser dialog.
+- Clearing items removes all records from `items` and `item_sources` tables but preserves feed subscriptions.
+- The items list updates immediately after clearing without requiring a page refresh.
+
 ## 4) Non-Functional Requirements (MVP)
 - Platform target: desktop web browsers first.
 - Performance target: load the latest 200 river items in under 2 seconds on typical broadband.
@@ -193,6 +200,17 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Tests cover `POST /api/feeds` for success, duplicate URL conflict, and invalid URL validation.
   - Tests run through standard .NET test execution in local development.
 
+### Epic J: Item Management
+**Story J1: Clear all items**
+- As a user, I can clear all feed items to reset the river while keeping my feed subscriptions.
+- Acceptance criteria:
+  - River UI provides a "Danger Zone" section with a "Clear all items" button.
+  - Clicking the button shows a confirmation dialog.
+  - Confirming the action deletes all items from `items` and `item_sources` tables.
+  - Feed subscriptions are preserved after clearing.
+  - Items list updates immediately to show empty state.
+  - Status message confirms the operation completed successfully.
+
 ## 7) Pre-Implementation Decisions (Locked)
 
 ### 7.1 Deduplication Identity Rules
@@ -227,6 +245,7 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - `DELETE /api/feeds/{feed_id}` -> remove feed from polling; deletes orphaned items that only came from this feed.
 - `POST /api/refresh` -> trigger immediate refresh of all active feeds.
 - `GET /api/items` -> river query with optional `feed_ids`, `start_date`, `end_date`, `limit`, `cursor`; each item includes optional `image_url` when available.
+- `DELETE /api/items` -> clear all feed items; preserves feed subscriptions.
 
 ### 7.6 Data Model Contract (MVP)
 - `feeds`: `id`, `url`, `normalized_url` (unique), `title`, `status`, `consecutive_failures`, `last_error`, `last_polled_at`, `last_success_at`, timestamps.

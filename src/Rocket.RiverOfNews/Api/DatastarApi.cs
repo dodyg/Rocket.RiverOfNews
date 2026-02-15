@@ -33,7 +33,7 @@ public static class DatastarApi
 				{{DatastarScript}}
 			</head>
 			<body class="bg-slate-950 text-slate-100">
-				<main class="mx-auto max-w-6xl p-4 md:p-8" data-signals="{cursor:'',selectedFeedIds:'',startDate:'',endDate:'',addFeedUrl:'',addFeedTitle:'',_refreshStatus:'',_addFeedStatus:'',_filterError:'',_feedActionStatus:'',_itemsCount:0,_hasMore:false}">
+				<main class="mx-auto max-w-6xl p-4 md:p-8" data-signals="{cursor:'',selectedFeedIds:'',startDate:'',endDate:'',addFeedUrl:'',addFeedTitle:'',_refreshStatus:'',_addFeedStatus:'',_filterError:'',_feedActionStatus:'',_itemsCount:0,_hasMore:false,_clearStatus:''}">
 					<header class="mb-6 flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<h1 class="text-2xl font-semibold">River of News</h1>
@@ -85,6 +85,15 @@ public static class DatastarApi
 							<button data-on:click="@get('/river/clear-filters')" class="rounded border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800">Clear</button>
 						</div>
 						<p data-text="$_filterError" class="mt-2 text-sm text-rose-400"></p>
+					</section>
+
+					<section class="mb-6 rounded border border-rose-900 bg-slate-900 p-4">
+						<div class="mb-2 text-sm font-semibold text-rose-400">Danger Zone</div>
+						<div class="flex items-center gap-3">
+							<button data-on:click="confirm('Delete all feed items?') && @delete('/river/items')" class="rounded border border-rose-700 bg-rose-950 px-3 py-2 text-sm font-semibold text-rose-300 hover:bg-rose-900">Clear all items</button>
+							<span data-text="$_clearStatus" class="text-xs text-slate-400"></span>
+						</div>
+						<p class="mt-2 text-xs text-slate-500">This will remove all feed items but keep your feed subscriptions.</p>
 					</section>
 
 					<section id="items" class="space-y-3"></section>
@@ -396,6 +405,35 @@ public static class DatastarApi
 			cursor = itemsResult.NextCursor ?? "",
 			_itemsCount = itemsResult.Count,
 			_hasMore = itemsResult.HasMore
+		}, cancellationToken);
+	}
+
+	public static async Task ClearItemsAsync(
+		HttpResponse response,
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		const string deleteItemSourcesSql = "DELETE FROM item_sources;";
+		const string deleteItemsSql = "DELETE FROM items;";
+
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+		await connection.ExecuteAsync(new CommandDefinition(deleteItemSourcesSql, transaction: transaction, cancellationToken: cancellationToken));
+		await connection.ExecuteAsync(new CommandDefinition(deleteItemsSql, transaction: transaction, cancellationToken: cancellationToken));
+
+		await transaction.CommitAsync(cancellationToken);
+
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+
+		await sse.PatchElementsAsync("", "#items", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			cursor = "",
+			_itemsCount = 0,
+			_hasMore = false,
+			_clearStatus = "All items cleared."
 		}, cancellationToken);
 	}
 

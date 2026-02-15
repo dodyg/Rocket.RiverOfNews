@@ -563,6 +563,24 @@ public static class MvpApi
 		return Results.Ok(refreshResult);
 	}
 
+	public static async Task<IResult> ClearItemsAsync(
+		SqliteConnectionFactory connectionFactory,
+		CancellationToken cancellationToken)
+	{
+		const string deleteItemSourcesSql = "DELETE FROM item_sources;";
+		const string deleteItemsSql = "DELETE FROM items;";
+
+		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+		await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+		await connection.ExecuteAsync(new CommandDefinition(deleteItemSourcesSql, transaction: transaction, cancellationToken: cancellationToken));
+		await connection.ExecuteAsync(new CommandDefinition(deleteItemsSql, transaction: transaction, cancellationToken: cancellationToken));
+
+		await transaction.CommitAsync(cancellationToken);
+
+		return Results.NoContent();
+	}
+
 	public static async Task<IResult> GetItemsAsync(
 		HttpRequest request,
 		SqliteConnectionFactory connectionFactory,

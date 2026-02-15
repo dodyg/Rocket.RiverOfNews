@@ -40,6 +40,7 @@ app.MapGet("/river/clear-filters", DatastarApi.ClearFiltersAsync);
 app.MapPost("/river/feeds", DatastarApi.AddFeedAsync);
 app.MapDelete("/river/feeds/{feedId}", DatastarApi.DeleteFeedAsync);
 app.MapPost("/river/refresh", DatastarApi.RefreshAsync);
+app.MapDelete("/river/items", DatastarApi.ClearItemsAsync);
 app.MapGet("/river/items/{itemId}/detail", DatastarApi.GetItemDetailAsync);
 app.MapGet("/health", () => Results.Ok(new
 {
@@ -51,6 +52,7 @@ app.MapDelete("/api/feeds/{feedId}", MvpApi.DeleteFeedAsync);
 app.MapPost("/api/refresh", MvpApi.RefreshAsync);
 app.MapGet("/api/items", MvpApi.GetItemsAsync);
 app.MapGet("/api/items/{itemId}", MvpApi.GetItemByIdAsync);
+app.MapDelete("/api/items", MvpApi.ClearItemsAsync);
 app.MapGet("/api/perf/latest-200", MvpApi.GetLatest200PerformanceAsync);
 
 app.Run();
