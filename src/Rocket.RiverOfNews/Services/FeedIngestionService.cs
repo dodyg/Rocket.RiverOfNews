@@ -36,16 +36,23 @@ public sealed partial class FeedIngestionService
 
 	public async Task<RefreshResult> RefreshAllFeedsAsync(CancellationToken cancellationToken)
 	{
-		return await RefreshFeedsAsync(true, cancellationToken);
+		return await RefreshFeedsAsync(true, null, cancellationToken);
 	}
 
 	public async Task<RefreshResult> RefreshDueFeedsAsync(CancellationToken cancellationToken)
 	{
-		return await RefreshFeedsAsync(false, cancellationToken);
+		return await RefreshFeedsAsync(false, null, cancellationToken);
+	}
+
+	public async Task<RefreshResult> RefreshFeedAsync(string feedId, CancellationToken cancellationToken)
+	{
+		ArgumentException.ThrowIfNullOrWhiteSpace(feedId);
+		return await RefreshFeedsAsync(true, feedId, cancellationToken);
 	}
 
 	private async Task<RefreshResult> RefreshFeedsAsync(
 		bool forceAllFeeds,
+		string? specificFeedId,
 		CancellationToken cancellationToken)
 	{
 		const string selectFeedsSql = """
@@ -55,12 +62,13 @@ public sealed partial class FeedIngestionService
 				consecutive_failures AS ConsecutiveFailures,
 				last_polled_at AS LastPolledAt
 			FROM feeds
+			WHERE (@FeedId IS NULL OR id = @FeedId)
 			ORDER BY normalized_url COLLATE NOCASE;
 			""";
 
 		await using SqliteConnection connection = await ConnectionFactory.OpenConnectionAsync(cancellationToken);
 		IReadOnlyList<FeedRecord> feeds = (await connection.QueryAsync<FeedRecord>(
-			new CommandDefinition(selectFeedsSql, cancellationToken: cancellationToken))).AsList();
+			new CommandDefinition(selectFeedsSql, new { FeedId = specificFeedId }, cancellationToken: cancellationToken))).AsList();
 
 		int processedFeedCount = 0;
 		int successFeedCount = 0;

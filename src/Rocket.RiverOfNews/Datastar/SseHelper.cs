@@ -45,7 +45,8 @@ public sealed class SseHelper(HttpResponse response)
 
 	private static async Task WriteMultilineDataAsync(StreamWriter writer, string prefix, string content, CancellationToken cancellationToken)
 	{
-		string[] lines = content.Split('\n');
+		string normalizedContent = content.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
+		string[] lines = normalizedContent.Split('\n');
 		for (int i = 0; i < lines.Length; i++)
 		{
 			string line = lines[i];

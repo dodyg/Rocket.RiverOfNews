@@ -435,23 +435,7 @@ public static class MvpApi
 		SqliteConnectionFactory connectionFactory,
 		CancellationToken cancellationToken)
 	{
-		const string sql = """
-			SELECT
-				id AS Id,
-				url AS Url,
-				normalized_url AS NormalizedUrl,
-				title AS Title,
-				status AS Status,
-				consecutive_failures AS ConsecutiveFailures,
-				last_error AS LastError,
-				last_polled_at AS LastPolledAt,
-				last_success_at AS LastSuccessAt
-			FROM feeds
-			ORDER BY title COLLATE NOCASE, normalized_url COLLATE NOCASE;
-			""";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		IReadOnlyList<FeedResponse> feeds = (await connection.QueryAsync<FeedResponse>(new CommandDefinition(sql, cancellationToken: cancellationToken))).AsList();
+		IReadOnlyList<FeedResponse> feeds = await RiverDataAccess.GetFeedsAsync(connectionFactory, cancellationToken);
 		return Results.Ok(feeds);
 	}
 
@@ -463,62 +447,19 @@ public static class MvpApi
 		ArgumentNullException.ThrowIfNull(request);
 		ArgumentException.ThrowIfNullOrWhiteSpace(request.Url);
 
-		string normalizedUrl;
-		try
+		RiverDataAccess.AddFeedResult addFeedResult = await RiverDataAccess.AddFeedAsync(
+			connectionFactory,
+			request.Url,
+			request.Title,
+			cancellationToken);
+		if (addFeedResult.ErrorMessage is not null)
 		{
-			normalizedUrl = NormalizeUrl(request.Url);
-		}
-		catch (UriFormatException)
-		{
-			return Results.BadRequest(new ErrorResponse("Invalid feed URL."));
-		}
-
-		string feedId = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-
-		const string sql = """
-			INSERT INTO feeds (
-				id, url, normalized_url, title, status, consecutive_failures, created_at, updated_at
-			)
-			VALUES (
-				@Id, @Url, @NormalizedUrl, @Title, 'healthy', 0, @Now, @Now
-			);
-			""";
-
-		FeedResponse feed = new()
-		{
-			Id = feedId,
-			Url = request.Url,
-			NormalizedUrl = normalizedUrl,
-			Title = request.Title ?? normalizedUrl,
-			Status = "healthy",
-			ConsecutiveFailures = 0,
-			LastError = null,
-			LastPolledAt = null,
-			LastSuccessAt = null
-		};
-
-		try
-		{
-			await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-			await connection.ExecuteAsync(
-				new CommandDefinition(
-					sql,
-					new
-					{
-						Id = feed.Id,
-						Url = feed.Url,
-						NormalizedUrl = feed.NormalizedUrl,
-						Title = feed.Title,
-						Now = now
-					},
-					cancellationToken: cancellationToken));
-		}
-		catch (SqliteException exception) when (exception.SqliteErrorCode == 19)
-		{
-			return Results.Conflict(new ErrorResponse("Feed URL already exists."));
+			return string.Equals(addFeedResult.ErrorMessage, "Feed URL already exists.", StringComparison.Ordinal)
+				? Results.Conflict(new ErrorResponse(addFeedResult.ErrorMessage))
+				: Results.BadRequest(new ErrorResponse(addFeedResult.ErrorMessage));
 		}
 
+		FeedResponse feed = addFeedResult.Feed!;
 		return Results.Created($"/api/feeds/{feed.Id}", feed);
 	}
 
@@ -528,31 +469,8 @@ public static class MvpApi
 		CancellationToken cancellationToken)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(feedId);
-
-		const string deleteOrphanedItemsSql = """
-			DELETE FROM items 
-			WHERE id IN (
-				SELECT is1.item_id 
-				FROM item_sources is1 
-				WHERE is1.feed_id = @FeedId
-				AND NOT EXISTS (
-					SELECT 1 FROM item_sources is2 
-					WHERE is2.item_id = is1.item_id 
-					AND is2.feed_id != @FeedId
-				)
-			);
-			""";
-		const string deleteFeedSql = "DELETE FROM feeds WHERE id = @FeedId;";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-
-		await connection.ExecuteAsync(new CommandDefinition(deleteOrphanedItemsSql, new { FeedId = feedId }, transaction, cancellationToken: cancellationToken));
-		int rowsAffected = await connection.ExecuteAsync(new CommandDefinition(deleteFeedSql, new { FeedId = feedId }, transaction, cancellationToken: cancellationToken));
-
-		await transaction.CommitAsync(cancellationToken);
-
-		return rowsAffected > 0 ? Results.NoContent() : Results.NotFound(new ErrorResponse("Feed not found."));
+		bool deleted = await RiverDataAccess.DeleteFeedAsync(connectionFactory, feedId, cancellationToken);
+		return deleted ? Results.NoContent() : Results.NotFound(new ErrorResponse("Feed not found."));
 	}
 
 	public static async Task<IResult> RefreshAsync(
@@ -592,13 +510,13 @@ public static class MvpApi
 		string? cursorRaw = request.Query["cursor"];
 		string? limitRaw = request.Query["limit"];
 
-		string[] feedIds = ParseFeedIds(feedIdsRaw);
-		if (!TryParseIsoDate(startDateRaw, out DateTimeOffset? startDateUtc))
+		string[] feedIds = RiverDataAccess.ParseFeedIds(feedIdsRaw);
+		if (!RiverDataAccess.TryParseIsoDate(startDateRaw, out DateTimeOffset? startDateUtc))
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid start_date; expected ISO-8601 UTC."));
 		}
 
-		if (!TryParseIsoDate(endDateRaw, out DateTimeOffset? endDateUtc))
+		if (!RiverDataAccess.TryParseIsoDate(endDateRaw, out DateTimeOffset? endDateUtc))
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid end_date; expected ISO-8601 UTC."));
 		}
@@ -614,86 +532,20 @@ public static class MvpApi
 			return Results.BadRequest(new ErrorResponse("Invalid limit; expected integer in range 1..200."));
 		}
 
-		if (!TryParseCursor(cursorRaw, out CursorParts? cursor))
+		if (!RiverDataAccess.TryParseCursor(cursorRaw, out _))
 		{
 			return Results.BadRequest(new ErrorResponse("Invalid cursor."));
 		}
 
-		const string sql = """
-			SELECT
-				i.id AS Id,
-				i.title AS Title,
-				i.canonical_url AS CanonicalUrl,
-				i.image_url AS ImageUrl,
-				i.snippet AS Snippet,
-				i.published_at AS PublishedAt,
-				i.ingested_at AS IngestedAt,
-				(
-					SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
-					FROM item_sources s
-					INNER JOIN feeds f ON f.id = s.feed_id
-					WHERE s.item_id = i.id
-				) AS SourceNames
-			FROM items i
-			WHERE
-				(@StartDate IS NULL OR i.published_at >= @StartDate)
-				AND (@EndDate IS NULL OR i.published_at <= @EndDate)
-				AND (
-					@HasCursor = 0
-					OR i.published_at < @CursorPublishedAt
-					OR (i.published_at = @CursorPublishedAt AND i.ingested_at < @CursorIngestedAt)
-					OR (i.published_at = @CursorPublishedAt AND i.ingested_at = @CursorIngestedAt AND i.id < @CursorId)
-				)
-				AND (
-					@HasFeedFilter = 0
-					OR EXISTS (
-						SELECT 1
-						FROM item_sources s
-						WHERE s.item_id = i.id
-						AND s.feed_id IN @FeedIds
-					)
-				)
-			ORDER BY i.published_at DESC, i.ingested_at DESC, i.id DESC
-			LIMIT @FetchLimit;
-			""";
-
-		int fetchLimit = limit + 1;
-		string? startDate = startDateUtc?.ToString("O", CultureInfo.InvariantCulture);
-		string? endDate = endDateUtc?.ToString("O", CultureInfo.InvariantCulture);
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		IReadOnlyList<RiverItemResponse> queriedItems = (await connection.QueryAsync<RiverItemResponse>(
-			new CommandDefinition(
-				sql,
-				new
-				{
-					StartDate = startDate,
-					EndDate = endDate,
-					HasCursor = cursor is not null ? 1 : 0,
-					CursorPublishedAt = cursor?.PublishedAt,
-					CursorIngestedAt = cursor?.IngestedAt,
-					CursorId = cursor?.Id,
-					HasFeedFilter = feedIds.Length > 0 ? 1 : 0,
-					FeedIds = feedIds,
-					FetchLimit = fetchLimit
-				},
-				cancellationToken: cancellationToken))).AsList();
-
-		IReadOnlyList<RiverItemResponse> items = queriedItems.Count > limit
-			? queriedItems.Take(limit).ToList()
-			: queriedItems;
-
-		string? nextCursor = null;
-		if (queriedItems.Count > limit)
-		{
-			RiverItemResponse lastItem = items[^1];
-			nextCursor = EncodeCursor(lastItem.PublishedAt, lastItem.IngestedAt, lastItem.Id);
-		}
-
-		return Results.Ok(new RiverQueryResponse
-		{
-			Items = items,
-			NextCursor = nextCursor
-		});
+		RiverQueryResponse items = await RiverDataAccess.GetItemsAsync(
+			connectionFactory,
+			feedIds,
+			startDateUtc,
+			endDateUtc,
+			limit,
+			cursorRaw,
+			cancellationToken);
+		return Results.Ok(items);
 	}
 
 	public static async Task<IResult> GetItemByIdAsync(
@@ -702,31 +554,7 @@ public static class MvpApi
 		CancellationToken cancellationToken)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(itemId);
-
-		const string sql = """
-			SELECT
-				i.id AS Id,
-				i.title AS Title,
-				i.url AS Url,
-				i.canonical_url AS CanonicalUrl,
-				i.image_url AS ImageUrl,
-				i.snippet AS Snippet,
-				i.published_at AS PublishedAt,
-				i.ingested_at AS IngestedAt,
-				(
-					SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
-					FROM item_sources s
-					INNER JOIN feeds f ON f.id = s.feed_id
-					WHERE s.item_id = i.id
-				) AS SourceNames
-			FROM items i
-			WHERE i.id = @ItemId
-			LIMIT 1;
-			""";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		RiverItemDetailResponse? item = await connection.QuerySingleOrDefaultAsync<RiverItemDetailResponse>(
-			new CommandDefinition(sql, new { ItemId = itemId }, cancellationToken: cancellationToken));
+		RiverItemDetailResponse? item = await RiverDataAccess.GetItemByIdAsync(connectionFactory, itemId, cancellationToken);
 		return item is null
 			? Results.NotFound(new ErrorResponse("Item not found."))
 			: Results.Ok(item);
@@ -771,159 +599,4 @@ public static class MvpApi
 		});
 	}
 
-	private static string NormalizeUrl(string url)
-	{
-		Uri parsedUri = new(url, UriKind.Absolute);
-		if (!string.Equals(parsedUri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
-			&& !string.Equals(parsedUri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
-		{
-			throw new UriFormatException("Only HTTP and HTTPS URLs are supported.");
-		}
-
-		UriBuilder builder = new(parsedUri)
-		{
-			Fragment = string.Empty
-		};
-
-		string scheme = builder.Scheme.ToLowerInvariant();
-		string host = builder.Host.ToLowerInvariant();
-		string port = builder.Port > 0 && !builder.Uri.IsDefaultPort
-			? $":{builder.Port.ToString(CultureInfo.InvariantCulture)}"
-			: string.Empty;
-		string path = builder.Path.TrimEnd('/');
-		if (string.IsNullOrWhiteSpace(path))
-		{
-			path = "/";
-		}
-
-		string query = builder.Query;
-		return $"{scheme}://{host}{port}{path}{query}";
-	}
-
-	private static string[] ParseFeedIds(string? feedIdsRaw)
-	{
-		if (string.IsNullOrWhiteSpace(feedIdsRaw))
-		{
-			return [];
-		}
-
-		string[] feedIds = feedIdsRaw
-			.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-			.Distinct(StringComparer.Ordinal)
-			.ToArray();
-		return feedIds;
-	}
-
-	private static bool TryParseIsoDate(string? value, out DateTimeOffset? parsedValueUtc)
-	{
-		parsedValueUtc = null;
-		if (string.IsNullOrWhiteSpace(value))
-		{
-			return true;
-		}
-
-		if (!DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out DateTimeOffset parsedValue))
-		{
-			return false;
-		}
-
-		parsedValueUtc = parsedValue.ToUniversalTime();
-		return true;
-	}
-
-	private static string EncodeCursor(string publishedAt, string ingestedAt, string id)
-	{
-		string cursorText = $"{publishedAt}|{ingestedAt}|{id}";
-		byte[] cursorBytes = System.Text.Encoding.UTF8.GetBytes(cursorText);
-		return Convert.ToBase64String(cursorBytes);
-	}
-
-	private static bool TryParseCursor(string? cursorRaw, out CursorParts? cursor)
-	{
-		cursor = null;
-		if (string.IsNullOrWhiteSpace(cursorRaw))
-		{
-			return true;
-		}
-
-		try
-		{
-			byte[] cursorBytes = Convert.FromBase64String(cursorRaw);
-			string cursorText = System.Text.Encoding.UTF8.GetString(cursorBytes);
-			string[] parts = cursorText.Split('|', StringSplitOptions.None);
-			if (parts.Length != 3)
-			{
-				return false;
-			}
-
-			cursor = new CursorParts(parts[0], parts[1], parts[2]);
-			return true;
-		}
-		catch (FormatException)
-		{
-			return false;
-		}
-	}
-
-	public sealed record AddFeedRequest
-	{
-		public required string Url { get; init; }
-		public string? Title { get; init; }
-	}
-
-	public sealed record FeedResponse
-	{
-		public required string Id { get; init; }
-		public required string Url { get; init; }
-		public required string NormalizedUrl { get; init; }
-		public required string Title { get; init; }
-		public required string Status { get; init; }
-		public required int ConsecutiveFailures { get; init; }
-		public string? LastError { get; init; }
-		public string? LastPolledAt { get; init; }
-		public string? LastSuccessAt { get; init; }
-	}
-
-	public sealed record RiverItemResponse
-	{
-		public required string Id { get; init; }
-		public required string Title { get; init; }
-		public string? CanonicalUrl { get; init; }
-		public string? ImageUrl { get; init; }
-		public string? Snippet { get; init; }
-		public required string PublishedAt { get; init; }
-		public required string IngestedAt { get; init; }
-		public string? SourceNames { get; init; }
-	}
-
-	public sealed record RiverItemDetailResponse
-	{
-		public required string Id { get; init; }
-		public required string Title { get; init; }
-		public string? Url { get; init; }
-		public string? CanonicalUrl { get; init; }
-		public string? ImageUrl { get; init; }
-		public string? Snippet { get; init; }
-		public required string PublishedAt { get; init; }
-		public required string IngestedAt { get; init; }
-		public string? SourceNames { get; init; }
-	}
-
-	public sealed record RiverQueryResponse
-	{
-		public required IReadOnlyList<RiverItemResponse> Items { get; init; }
-		public string? NextCursor { get; init; }
-	}
-
-	public sealed record ErrorResponse(string Message);
-
-	private sealed record CursorParts(string PublishedAt, string IngestedAt, string Id);
-
-	public sealed record Latest200PerformanceResponse
-	{
-		public required int ItemCount { get; init; }
-		public required long DurationMilliseconds { get; init; }
-		public required int ThresholdMilliseconds { get; init; }
-		public required bool MeetsTarget { get; init; }
-	}
 }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Dapper;
 using Microsoft.AspNetCore.Http;
@@ -33,7 +34,7 @@ public static class DatastarApi
 				{{DatastarScript}}
 			</head>
 			<body class="bg-slate-950 text-slate-100">
-				<main class="mx-auto max-w-6xl p-4 md:p-8" data-signals="{cursor:'',selectedFeedIds:'',startDate:'',endDate:'',addFeedUrl:'',addFeedTitle:'',_refreshStatus:'',_addFeedStatus:'',_filterError:'',_feedActionStatus:'',_itemsCount:0,_hasMore:false,_clearStatus:''}">
+				<main class="mx-auto max-w-6xl p-4 md:p-8" data-signals="{cursor:'',selectedFeedIds:'',startDate:'',endDate:'',addFeedUrl:'',addFeedTitle:'',_refreshStatus:'',_addFeedStatus:'',_filterError:'',_feedActionStatus:'',itemsCount:0,hasMore:false,_clearStatus:''}">
 					<header class="mb-6 flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<h1 class="text-2xl font-semibold">River of News</h1>
@@ -67,11 +68,11 @@ public static class DatastarApi
 						<div class="mb-2 text-sm font-semibold">Filters</div>
 						<div class="grid gap-3 md:grid-cols-3">
 							<label class="text-sm">
-								<span class="mb-1 block text-slate-300">Start date (UTC)</span>
+								<span class="mb-1 block text-slate-300">Start date (local time)</span>
 								<input type="datetime-local" data-bind="startDate" class="w-full rounded border border-slate-700 bg-slate-950 px-2 py-2 text-slate-100">
 							</label>
 							<label class="text-sm">
-								<span class="mb-1 block text-slate-300">End date (UTC)</span>
+								<span class="mb-1 block text-slate-300">End date (local time)</span>
 								<input type="datetime-local" data-bind="endDate" class="w-full rounded border border-slate-700 bg-slate-950 px-2 py-2 text-slate-100">
 							</label>
 							<div class="text-sm">
@@ -98,8 +99,8 @@ public static class DatastarApi
 
 					<section id="items" class="space-y-3"></section>
 					<div class="mt-4 flex items-center justify-between">
-						<span data-text="`Loaded ${$_itemsCount} items`" class="text-sm text-slate-400"></span>
-						<button data-on:click="@get('/river/items')" data-show="$_hasMore" class="rounded border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800">Load more</button>
+						<span data-text="`Loaded ${$itemsCount} items`" class="text-sm text-slate-400"></span>
+						<button data-on:click="@get('/river/items')" data-show="$hasMore" class="rounded border border-slate-600 px-3 py-2 text-sm hover:bg-slate-800">Load more</button>
 					</div>
 				</main>
 
@@ -112,11 +113,14 @@ public static class DatastarApi
 	}
 
 	public static async Task GetFeedsAsync(
+		HttpRequest request,
 		HttpResponse response,
 		SqliteConnectionFactory connectionFactory,
 		CancellationToken cancellationToken)
 	{
-		string html = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
+		string[] selectedFeedIds = DatastarSignals.GetCsvValues(signals, "selectedFeedIds");
+		string html = await BuildFeedsHtmlAsync(connectionFactory, selectedFeedIds, cancellationToken);
 
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
@@ -130,11 +134,7 @@ public static class DatastarApi
 		CancellationToken cancellationToken)
 	{
 		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
-		string currentSelected = signals.TryGetValue("selectedFeedIds", out JsonElement selectedElement) && selectedElement.ValueKind == JsonValueKind.String
-			? selectedElement.GetString() ?? ""
-			: "";
-
-		HashSet<string> selectedSet = currentSelected.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+		HashSet<string> selectedSet = DatastarSignals.GetCsvValues(signals, "selectedFeedIds").ToHashSet(StringComparer.Ordinal);
 		if (selectedSet.Contains(feedId))
 		{
 			selectedSet.Remove(feedId);
@@ -144,7 +144,7 @@ public static class DatastarApi
 			selectedSet.Add(feedId);
 		}
 
-		string newSelected = string.Join(",", selectedSet);
+		string newSelected = DatastarSignals.ToCsv(selectedSet);
 
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
@@ -174,15 +174,13 @@ public static class DatastarApi
 		string mode = reset ? "inner" : "append";
 		await sseHelper.PatchElementsAsync(result.Html, "#items", mode, cancellationToken);
 
-		int currentCount = reset ? result.Count : (signals.TryGetValue("_itemsCount", out JsonElement countElement) && countElement.ValueKind == JsonValueKind.Number
-			? countElement.GetInt32() + result.Count
-			: result.Count);
+		int currentCount = reset ? result.Count : DatastarSignals.GetInt(signals, "itemsCount") + result.Count;
 
 		await sseHelper.PatchSignalsAsync(new
 		{
 			cursor = result.NextCursor ?? "",
-			_itemsCount = currentCount,
-			_hasMore = result.HasMore,
+			itemsCount = currentCount,
+			hasMore = result.HasMore,
 			_filterError = ""
 		}, cancellationToken);
 	}
@@ -200,10 +198,12 @@ public static class DatastarApi
 			startDate = "",
 			endDate = "",
 			cursor = "",
+			itemsCount = 0,
+			hasMore = false,
 			_filterError = ""
 		}, cancellationToken);
 
-		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, [], cancellationToken);
 		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
 
 		Dictionary<string, JsonElement> emptySignals = new();
@@ -212,8 +212,8 @@ public static class DatastarApi
 		await sse.PatchSignalsAsync(new
 		{
 			cursor = itemsResult.NextCursor ?? "",
-			_itemsCount = itemsResult.Count,
-			_hasMore = itemsResult.HasMore
+			itemsCount = itemsResult.Count,
+			hasMore = itemsResult.HasMore
 		}, cancellationToken);
 	}
 
@@ -221,17 +221,13 @@ public static class DatastarApi
 		HttpRequest request,
 		HttpResponse response,
 		SqliteConnectionFactory connectionFactory,
+		FeedIngestionService feedIngestionService,
 		CancellationToken cancellationToken)
 	{
 		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
 
-		string url = signals.TryGetValue("addFeedUrl", out JsonElement urlElement) && urlElement.ValueKind == JsonValueKind.String
-			? urlElement.GetString()?.Trim() ?? ""
-			: "";
-
-		string title = signals.TryGetValue("addFeedTitle", out JsonElement titleElement) && titleElement.ValueKind == JsonValueKind.String
-			? titleElement.GetString()?.Trim() ?? ""
-			: "";
+		string url = DatastarSignals.GetString(signals, "addFeedUrl").Trim();
+		string title = DatastarSignals.GetString(signals, "addFeedTitle").Trim();
 
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
@@ -242,59 +238,32 @@ public static class DatastarApi
 			return;
 		}
 
-		string normalizedUrl;
-		try
+		RiverDataAccess.AddFeedResult addFeedResult = await RiverDataAccess.AddFeedAsync(
+			connectionFactory,
+			url,
+			title,
+			cancellationToken);
+		if (addFeedResult.ErrorMessage is not null)
 		{
-			normalizedUrl = NormalizeUrl(url);
-		}
-		catch (UriFormatException)
-		{
-			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Invalid feed URL." }, cancellationToken);
+			await sse.PatchSignalsAsync(new { _addFeedStatus = $"Error: {addFeedResult.ErrorMessage}" }, cancellationToken);
 			return;
 		}
 
-		string feedId = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-		string now = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-
-		const string sql = """
-			INSERT INTO feeds (
-				id, url, normalized_url, title, status, consecutive_failures, created_at, updated_at
-			)
-			VALUES (
-				@Id, @Url, @NormalizedUrl, @Title, 'healthy', 0, @Now, @Now
-			);
-			""";
-
-		try
-		{
-			await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-			await connection.ExecuteAsync(
-				new CommandDefinition(
-					sql,
-					new
-					{
-						Id = feedId,
-						Url = url,
-						NormalizedUrl = normalizedUrl,
-						Title = title.Length > 0 ? title : normalizedUrl,
-						Now = now
-					},
-					cancellationToken: cancellationToken));
-		}
-		catch (SqliteException exception) when (exception.SqliteErrorCode == 19)
-		{
-			await sse.PatchSignalsAsync(new { _addFeedStatus = "Error: Feed URL already exists." }, cancellationToken);
-			return;
-		}
+		FeedResponse addedFeed = addFeedResult.Feed!;
+		RefreshResult refreshResult = await feedIngestionService.RefreshFeedAsync(addedFeed.Id, cancellationToken);
+		string addFeedStatus = refreshResult.FailedFeedCount > 0
+			? "Feed added, but the initial refresh failed."
+			: "Feed added and refreshed.";
 
 		await sse.PatchSignalsAsync(new
 		{
 			addFeedUrl = "",
 			addFeedTitle = "",
-			_addFeedStatus = "Feed added."
+			_addFeedStatus = addFeedStatus
 		}, cancellationToken);
 
-		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		string[] selectedFeedIds = DatastarSignals.GetCsvValues(signals, "selectedFeedIds");
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, selectedFeedIds, cancellationToken);
 		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
 
 		ItemsResult itemsResult = await BuildItemsHtmlAsync(signals, true, connectionFactory, cancellationToken);
@@ -302,8 +271,8 @@ public static class DatastarApi
 		await sse.PatchSignalsAsync(new
 		{
 			cursor = itemsResult.NextCursor ?? "",
-			_itemsCount = itemsResult.Count,
-			_hasMore = itemsResult.HasMore
+			itemsCount = itemsResult.Count,
+			hasMore = itemsResult.HasMore
 		}, cancellationToken);
 	}
 
@@ -315,46 +284,20 @@ public static class DatastarApi
 		CancellationToken cancellationToken)
 	{
 		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
-
-		const string deleteOrphanedItemsSql = """
-			DELETE FROM items 
-			WHERE id IN (
-				SELECT is1.item_id 
-				FROM item_sources is1 
-				WHERE is1.feed_id = @FeedId
-				AND NOT EXISTS (
-					SELECT 1 FROM item_sources is2 
-					WHERE is2.item_id = is1.item_id 
-					AND is2.feed_id != @FeedId
-				)
-			);
-			""";
-		const string deleteFeedSql = "DELETE FROM feeds WHERE id = @FeedId;";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-
-		await connection.ExecuteAsync(new CommandDefinition(deleteOrphanedItemsSql, new { FeedId = feedId }, transaction, cancellationToken: cancellationToken));
-		int rowsAffected = await connection.ExecuteAsync(new CommandDefinition(deleteFeedSql, new { FeedId = feedId }, transaction, cancellationToken: cancellationToken));
-
-		await transaction.CommitAsync(cancellationToken);
+		bool deleted = await RiverDataAccess.DeleteFeedAsync(connectionFactory, feedId, cancellationToken);
 
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
 
-		if (rowsAffected == 0)
+		if (!deleted)
 		{
 			await sse.PatchSignalsAsync(new { _feedActionStatus = "Error: Feed not found." }, cancellationToken);
 			return;
 		}
 
-		string currentSelected = signals.TryGetValue("selectedFeedIds", out JsonElement selectedElement) && selectedElement.ValueKind == JsonValueKind.String
-			? selectedElement.GetString() ?? ""
-			: "";
-
-		HashSet<string> selectedSet = currentSelected.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+		HashSet<string> selectedSet = DatastarSignals.GetCsvValues(signals, "selectedFeedIds").ToHashSet(StringComparer.Ordinal);
 		selectedSet.Remove(feedId);
-		string newSelected = string.Join(",", selectedSet);
+		string newSelected = DatastarSignals.ToCsv(selectedSet);
 
 		await sse.PatchSignalsAsync(new
 		{
@@ -362,29 +305,28 @@ public static class DatastarApi
 			_feedActionStatus = "Feed deleted."
 		}, cancellationToken);
 
-		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, selectedSet.ToArray(), cancellationToken);
 		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
 
-		Dictionary<string, JsonElement> updatedSignals = new(signals)
-		{
-			["selectedFeedIds"] = JsonDocument.Parse($"\"{newSelected}\"").RootElement.Clone()
-		};
+		Dictionary<string, JsonElement> updatedSignals = DatastarSignals.WithString(signals, "selectedFeedIds", newSelected);
 		ItemsResult itemsResult = await BuildItemsHtmlAsync(updatedSignals, true, connectionFactory, cancellationToken);
 		await sse.PatchElementsAsync(itemsResult.Html, "#items", "inner", cancellationToken);
 		await sse.PatchSignalsAsync(new
 		{
 			cursor = itemsResult.NextCursor ?? "",
-			_itemsCount = itemsResult.Count,
-			_hasMore = itemsResult.HasMore
+			itemsCount = itemsResult.Count,
+			hasMore = itemsResult.HasMore
 		}, cancellationToken);
 	}
 
 	public static async Task RefreshAsync(
+		HttpRequest request,
 		HttpResponse response,
 		FeedIngestionService feedIngestionService,
 		SqliteConnectionFactory connectionFactory,
 		CancellationToken cancellationToken)
 	{
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
 		RefreshResult refreshResult = await feedIngestionService.RefreshAllFeedsAsync(cancellationToken);
 
 		SseHelper sse = response.CreateSseHelper();
@@ -394,17 +336,17 @@ public static class DatastarApi
 			_refreshStatus = $"Done: {refreshResult.SuccessFeedCount} success, {refreshResult.FailedFeedCount} failed"
 		}, cancellationToken);
 
-		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, cancellationToken);
+		string[] selectedFeedIds = DatastarSignals.GetCsvValues(signals, "selectedFeedIds");
+		string feedsHtml = await BuildFeedsHtmlAsync(connectionFactory, selectedFeedIds, cancellationToken);
 		await sse.PatchElementsAsync(feedsHtml, "#source-filters", "inner", cancellationToken);
 
-		Dictionary<string, JsonElement> emptySignals = new();
-		ItemsResult itemsResult = await BuildItemsHtmlAsync(emptySignals, true, connectionFactory, cancellationToken);
+		ItemsResult itemsResult = await BuildItemsHtmlAsync(signals, true, connectionFactory, cancellationToken);
 		await sse.PatchElementsAsync(itemsResult.Html, "#items", "inner", cancellationToken);
 		await sse.PatchSignalsAsync(new
 		{
 			cursor = itemsResult.NextCursor ?? "",
-			_itemsCount = itemsResult.Count,
-			_hasMore = itemsResult.HasMore
+			itemsCount = itemsResult.Count,
+			hasMore = itemsResult.HasMore
 		}, cancellationToken);
 	}
 
@@ -431,8 +373,8 @@ public static class DatastarApi
 		await sse.PatchSignalsAsync(new
 		{
 			cursor = "",
-			_itemsCount = 0,
-			_hasMore = false,
+			itemsCount = 0,
+			hasMore = false,
 			_clearStatus = "All items cleared."
 		}, cancellationToken);
 	}
@@ -480,30 +422,7 @@ public static class DatastarApi
 		SqliteConnectionFactory connectionFactory,
 		CancellationToken cancellationToken)
 	{
-		const string sql = """
-			SELECT
-				i.id AS Id,
-				i.title AS Title,
-				i.url AS Url,
-				i.canonical_url AS CanonicalUrl,
-				i.image_url AS ImageUrl,
-				i.snippet AS Snippet,
-				i.published_at AS PublishedAt,
-				i.ingested_at AS IngestedAt,
-				(
-					SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
-					FROM item_sources s
-					INNER JOIN feeds f ON f.id = s.feed_id
-					WHERE s.item_id = i.id
-				) AS SourceNames
-			FROM items i
-			WHERE i.id = @ItemId
-			LIMIT 1;
-			""";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		RiverItemDetailResponse? item = await connection.QuerySingleOrDefaultAsync<RiverItemDetailResponse>(
-			new CommandDefinition(sql, new { ItemId = itemId }, cancellationToken: cancellationToken));
+		RiverItemDetailResponse? item = await RiverDataAccess.GetItemByIdAsync(connectionFactory, itemId, cancellationToken);
 
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
@@ -529,25 +448,10 @@ public static class DatastarApi
 
 	private static async Task<string> BuildFeedsHtmlAsync(
 		SqliteConnectionFactory connectionFactory,
+		IReadOnlyCollection<string> selectedFeedIds,
 		CancellationToken cancellationToken)
 	{
-		const string sql = """
-			SELECT
-				id AS Id,
-				url AS Url,
-				normalized_url AS NormalizedUrl,
-				title AS Title,
-				status AS Status,
-				consecutive_failures AS ConsecutiveFailures,
-				last_error AS LastError,
-				last_polled_at AS LastPolledAt,
-				last_success_at AS LastSuccessAt
-			FROM feeds
-			ORDER BY title COLLATE NOCASE, normalized_url COLLATE NOCASE;
-			""";
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		IReadOnlyList<FeedResponse> feeds = (await connection.QueryAsync<FeedResponse>(new CommandDefinition(sql, cancellationToken: cancellationToken))).AsList();
+		IReadOnlyList<FeedResponse> feeds = await RiverDataAccess.GetFeedsAsync(connectionFactory, cancellationToken);
 
 		StringBuilder html = new();
 		if (feeds.Count == 0)
@@ -558,13 +462,17 @@ public static class DatastarApi
 		{
 			foreach (FeedResponse feed in feeds)
 			{
-				string checkboxId = $"feed_{feed.Id}";
+				string encodedFeedId = HtmlEncoder.Default.Encode(feed.Id);
+				string encodedCheckboxId = HtmlEncoder.Default.Encode($"feed_{feed.Id}");
+				string encodedFeedTitle = HtmlEncoder.Default.Encode(feed.Title);
+				string encodedFeedStatus = HtmlEncoder.Default.Encode(feed.Status);
+				string checkedAttribute = selectedFeedIds.Contains(feed.Id) ? " checked" : string.Empty;
 				html.AppendLine($"""<div class="mb-1 flex items-center justify-between gap-2 text-xs">""");
 				html.AppendLine($"""  <label class="flex items-center gap-2">""");
-				html.AppendLine($"""    <input type="checkbox" id="{checkboxId}" value="{feed.Id}" data-on:change="@get('/river/toggle-feed/{feed.Id}')" class="accent-sky-500">""");
-				html.AppendLine($"""    <span>{feed.Title} <span class="text-slate-500">({feed.Status})</span></span>""");
+				html.AppendLine($"""    <input type="checkbox" id="{encodedCheckboxId}" value="{encodedFeedId}" data-on:change="@get('/river/toggle-feed/{encodedFeedId}')" class="accent-sky-500"{checkedAttribute}>""");
+				html.AppendLine($"""    <span>{encodedFeedTitle} <span class="text-slate-500">({encodedFeedStatus})</span></span>""");
 				html.AppendLine($"""  </label>""");
-				html.AppendLine($"""  <button data-on:click="confirm('Delete feed?') && @delete('/river/feeds/{feed.Id}')" class="rounded border border-rose-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-950">Delete</button>""");
+				html.AppendLine($"""  <button data-on:click="confirm('Delete feed?') && @delete('/river/feeds/{encodedFeedId}')" class="rounded border border-rose-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-rose-950">Delete</button>""");
 				html.AppendLine($"""</div>""");
 			}
 		}
@@ -578,175 +486,80 @@ public static class DatastarApi
 		SqliteConnectionFactory connectionFactory,
 		CancellationToken cancellationToken)
 	{
-		string currentCursor = reset ? "" : (signals.TryGetValue("cursor", out JsonElement cursorElement) && cursorElement.ValueKind == JsonValueKind.String
-			? cursorElement.GetString() ?? ""
-			: "");
+		string currentCursor = reset ? string.Empty : DatastarSignals.GetString(signals, "cursor");
+		string startDateRaw = DatastarSignals.GetString(signals, "startDate");
+		string endDateRaw = DatastarSignals.GetString(signals, "endDate");
+		string[] feedIds = DatastarSignals.GetCsvValues(signals, "selectedFeedIds");
 
-		string selectedFeedIds = signals.TryGetValue("selectedFeedIds", out JsonElement feedIdsElement) && feedIdsElement.ValueKind == JsonValueKind.String
-			? feedIdsElement.GetString() ?? ""
-			: "";
+		if (!TryParseDateTimeLocal(startDateRaw, out DateTimeOffset? startDate))
+		{
+			return new ItemsResult(string.Empty, null, false, 0, "Invalid start date.");
+		}
 
-		string startDateStr = signals.TryGetValue("startDate", out JsonElement startDateElement) && startDateElement.ValueKind == JsonValueKind.String
-			? startDateElement.GetString() ?? ""
-			: "";
-
-		string endDateStr = signals.TryGetValue("endDate", out JsonElement endDateElement) && endDateElement.ValueKind == JsonValueKind.String
-			? endDateElement.GetString() ?? ""
-			: "";
-
-		string[] feedIds = selectedFeedIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-		DateTimeOffset? startDate = ParseDateTimeLocal(startDateStr);
-		DateTimeOffset? endDate = ParseDateTimeLocal(endDateStr);
+		if (!TryParseDateTimeLocal(endDateRaw, out DateTimeOffset? endDate))
+		{
+			return new ItemsResult(string.Empty, null, false, 0, "Invalid end date.");
+		}
 
 		if (startDate.HasValue && endDate.HasValue && endDate.Value < startDate.Value)
 		{
 			return new ItemsResult("", null, false, 0, "Invalid date range. End date must be on or after start date.");
 		}
 
-		const string sql = """
-			SELECT
-				i.id AS Id,
-				i.title AS Title,
-				i.canonical_url AS CanonicalUrl,
-				i.image_url AS ImageUrl,
-				i.snippet AS Snippet,
-				i.published_at AS PublishedAt,
-				i.ingested_at AS IngestedAt,
-				(
-					SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
-					FROM item_sources s
-					INNER JOIN feeds f ON f.id = s.feed_id
-					WHERE s.item_id = i.id
-				) AS SourceNames
-			FROM items i
-			WHERE
-				(@StartDate IS NULL OR i.published_at >= @StartDate)
-				AND (@EndDate IS NULL OR i.published_at <= @EndDate)
-				AND (
-					@HasCursor = 0
-					OR i.published_at < @CursorPublishedAt
-					OR (i.published_at = @CursorPublishedAt AND i.ingested_at < @CursorIngestedAt)
-					OR (i.published_at = @CursorPublishedAt AND i.ingested_at = @CursorIngestedAt AND i.id < @CursorId)
-				)
-				AND (
-					@HasFeedFilter = 0
-					OR EXISTS (
-						SELECT 1
-						FROM item_sources s
-						WHERE s.item_id = i.id
-						AND s.feed_id IN @FeedIds
-					)
-				)
-			ORDER BY i.published_at DESC, i.ingested_at DESC, i.id DESC
-			LIMIT @FetchLimit;
-			""";
-
-		int limit = 50;
-		int fetchLimit = limit + 1;
-		CursorParts? cursor = ParseCursor(currentCursor);
-
-		await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-		IReadOnlyList<RiverItemResponse> queriedItems = (await connection.QueryAsync<RiverItemResponse>(
-			new CommandDefinition(
-				sql,
-				new
-				{
-					StartDate = startDate?.ToString("O", CultureInfo.InvariantCulture),
-					EndDate = endDate?.ToString("O", CultureInfo.InvariantCulture),
-					HasCursor = cursor is not null ? 1 : 0,
-					CursorPublishedAt = cursor?.PublishedAt,
-					CursorIngestedAt = cursor?.IngestedAt,
-					CursorId = cursor?.Id,
-					HasFeedFilter = feedIds.Length > 0 ? 1 : 0,
-					FeedIds = feedIds,
-					FetchLimit = fetchLimit
-				},
-				cancellationToken: cancellationToken))).AsList();
-
-		IReadOnlyList<RiverItemResponse> items = queriedItems.Count > limit
-			? queriedItems.Take(limit).ToList()
-			: queriedItems;
-
-		string? nextCursor = null;
-		bool hasMore = false;
-		if (queriedItems.Count > limit)
+		if (!RiverDataAccess.TryParseCursor(currentCursor, out _))
 		{
-			RiverItemResponse lastItem = items[^1];
-			nextCursor = EncodeCursor(lastItem.PublishedAt, lastItem.IngestedAt, lastItem.Id);
-			hasMore = true;
+			return new ItemsResult(string.Empty, null, false, 0, "Invalid cursor.");
 		}
+
+		const int limit = 50;
+		RiverQueryResponse query = await RiverDataAccess.GetItemsAsync(
+			connectionFactory,
+			feedIds,
+			startDate,
+			endDate,
+			limit,
+			currentCursor,
+			cancellationToken);
+		IReadOnlyList<RiverItemResponse> items = query.Items;
+		bool hasMore = !string.IsNullOrWhiteSpace(query.NextCursor);
 
 		StringBuilder html = new();
 		foreach (RiverItemResponse item in items)
 		{
-			string sourceText = item.SourceNames ?? "Unknown source";
+			string sourceText = HtmlEncoder.Default.Encode(item.SourceNames ?? "Unknown source");
 			string detailsLink = $"/river/items/{Uri.EscapeDataString(item.Id)}";
-			string link = item.CanonicalUrl ?? "#";
+			string encodedDetailsLink = HtmlEncoder.Default.Encode(detailsLink);
+			string encodedTitle = HtmlEncoder.Default.Encode(item.Title);
+			string snippet = HtmlEncoder.Default.Encode(item.Snippet ?? string.Empty);
 			string imageBlock = item.ImageUrl is not null
-				? $"""<img class="mb-3 h-auto w-auto max-w-full rounded" src="{item.ImageUrl}" alt="">"""
+				? $"""<img class="mb-3 h-auto w-auto max-w-full rounded" src="{HtmlEncoder.Default.Encode(item.ImageUrl)}" alt="">"""
 				: "";
+			string? articleLink = item.CanonicalUrl ?? item.Url;
 
 			html.AppendLine($"""<article class="rounded border border-slate-800 bg-slate-900 p-4">""");
 			html.AppendLine($"""  <div class="mb-1 text-xs text-slate-400">{sourceText}</div>""");
-			html.AppendLine($"""  <h2 class="mb-2 text-lg font-semibold"><a class="text-slate-100 hover:text-sky-300" href="{detailsLink}">{EscapeHtml(item.Title)}</a></h2>""");
+			html.AppendLine($"""  <h2 class="mb-2 text-lg font-semibold"><a class="text-slate-100 hover:text-sky-300" href="{encodedDetailsLink}">{encodedTitle}</a></h2>""");
 			html.AppendLine($"""  <div class="mb-2 text-xs text-slate-400">{FormatDate(item.PublishedAt)}</div>""");
 			if (!string.IsNullOrEmpty(imageBlock))
 			{
 				html.AppendLine($"""  {imageBlock}""");
 			}
-			html.AppendLine($"""  <p class="mb-3 text-sm text-slate-300">{EscapeHtml(item.Snippet ?? "")}</p>""");
-			html.AppendLine($"""  <a class="text-sm text-sky-400 hover:text-sky-300" href="{link}" target="_blank" rel="noreferrer">Open article</a>""");
+			html.AppendLine($"""  <p class="mb-3 text-sm text-slate-300">{snippet}</p>""");
+			if (string.IsNullOrWhiteSpace(articleLink))
+			{
+				html.AppendLine($"""  <p class="text-sm text-slate-500">No article URL available for this item.</p>""");
+			}
+			else
+			{
+				html.AppendLine($"""  <a class="text-sm text-sky-400 hover:text-sky-300" href="{HtmlEncoder.Default.Encode(articleLink)}" target="_blank" rel="noreferrer">Open article</a>""");
+			}
 			html.AppendLine($"""</article>""");
 		}
 
-		return new ItemsResult(html.ToString(), nextCursor, hasMore, items.Count, null);
+		return new ItemsResult(html.ToString(), query.NextCursor, hasMore, items.Count, null);
 	}
 
 	private sealed record ItemsResult(string Html, string? NextCursor, bool HasMore, int Count, string? FilterError);
-
-	private static string NormalizeUrl(string url)
-	{
-		Uri parsedUri = new(url, UriKind.Absolute);
-		if (!string.Equals(parsedUri.Scheme, "http", StringComparison.OrdinalIgnoreCase)
-			&& !string.Equals(parsedUri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
-		{
-			throw new UriFormatException("Only HTTP and HTTPS URLs are supported.");
-		}
-
-		UriBuilder builder = new(parsedUri)
-		{
-			Fragment = string.Empty
-		};
-
-		string scheme = builder.Scheme.ToLowerInvariant();
-		string host = builder.Host.ToLowerInvariant();
-		string port = builder.Port > 0 && !builder.Uri.IsDefaultPort
-			? $":{builder.Port.ToString(CultureInfo.InvariantCulture)}"
-			: string.Empty;
-		string path = builder.Path.TrimEnd('/');
-		if (string.IsNullOrWhiteSpace(path))
-		{
-			path = "/";
-		}
-
-		string query = builder.Query;
-		return $"{scheme}://{host}{port}{path}{query}";
-	}
-
-	private static DateTimeOffset? ParseDateTimeLocal(string value)
-	{
-		if (string.IsNullOrWhiteSpace(value))
-		{
-			return null;
-		}
-
-		if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out DateTimeOffset parsedValue))
-		{
-			return parsedValue.ToUniversalTime();
-		}
-
-		return null;
-	}
 
 	private static string FormatDate(string isoDate)
 	{
@@ -763,85 +576,30 @@ public static class DatastarApi
 		return isoDate;
 	}
 
-	private static string EscapeHtml(string text)
+	private static bool TryParseDateTimeLocal(string value, out DateTimeOffset? parsedValueUtc)
 	{
-		return text
-			.Replace("&", "&amp;")
-			.Replace("<", "&lt;")
-			.Replace(">", "&gt;")
-			.Replace("\"", "&quot;")
-			.Replace("'", "&#39;");
-	}
-
-	private static string EncodeCursor(string publishedAt, string ingestedAt, string id)
-	{
-		string cursorText = $"{publishedAt}|{ingestedAt}|{id}";
-		byte[] cursorBytes = Encoding.UTF8.GetBytes(cursorText);
-		return Convert.ToBase64String(cursorBytes);
-	}
-
-	private static CursorParts? ParseCursor(string? cursorRaw)
-	{
-		if (string.IsNullOrWhiteSpace(cursorRaw))
+		parsedValueUtc = null;
+		if (string.IsNullOrWhiteSpace(value))
 		{
-			return null;
+			return true;
 		}
 
-		try
+		if (!DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out DateTime parsedLocal))
 		{
-			byte[] cursorBytes = Convert.FromBase64String(cursorRaw);
-			string cursorText = Encoding.UTF8.GetString(cursorBytes);
-			string[] parts = cursorText.Split('|', StringSplitOptions.None);
-			if (parts.Length != 3)
-			{
-				return null;
-			}
-
-			return new CursorParts(parts[0], parts[1], parts[2]);
+			return false;
 		}
-		catch (FormatException)
+
+		if (parsedLocal.Kind == DateTimeKind.Utc)
 		{
-			return null;
+			parsedValueUtc = new DateTimeOffset(parsedLocal, TimeSpan.Zero);
+			return true;
 		}
-	}
 
-	private sealed record CursorParts(string PublishedAt, string IngestedAt, string Id);
+		DateTime localTime = parsedLocal.Kind == DateTimeKind.Unspecified
+			? DateTime.SpecifyKind(parsedLocal, DateTimeKind.Local)
+			: parsedLocal.ToLocalTime();
 
-	public sealed record FeedResponse
-	{
-		public required string Id { get; init; }
-		public required string Url { get; init; }
-		public required string NormalizedUrl { get; init; }
-		public required string Title { get; init; }
-		public required string Status { get; init; }
-		public required int ConsecutiveFailures { get; init; }
-		public string? LastError { get; init; }
-		public string? LastPolledAt { get; init; }
-		public string? LastSuccessAt { get; init; }
-	}
-
-	public sealed record RiverItemResponse
-	{
-		public required string Id { get; init; }
-		public required string Title { get; init; }
-		public string? CanonicalUrl { get; init; }
-		public string? ImageUrl { get; init; }
-		public string? Snippet { get; init; }
-		public required string PublishedAt { get; init; }
-		public required string IngestedAt { get; init; }
-		public string? SourceNames { get; init; }
-	}
-
-	public sealed record RiverItemDetailResponse
-	{
-		public required string Id { get; init; }
-		public required string Title { get; init; }
-		public string? Url { get; init; }
-		public string? CanonicalUrl { get; init; }
-		public string? ImageUrl { get; init; }
-		public string? Snippet { get; init; }
-		public required string PublishedAt { get; init; }
-		public required string IngestedAt { get; init; }
-		public string? SourceNames { get; init; }
+		parsedValueUtc = new DateTimeOffset(localTime).ToUniversalTime();
+		return true;
 	}
 }

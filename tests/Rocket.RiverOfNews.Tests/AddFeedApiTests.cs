@@ -14,7 +14,7 @@ public class AddFeedApiTests
 	public async Task AddFeedAsync_WithValidUrl_ReturnsCreatedAndPersistsFeed()
 	{
 		await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
-		MvpApi.AddFeedRequest request = new()
+		AddFeedRequest request = new()
 		{
 			Url = "https://example.com/feed.xml",
 			Title = "Example Feed"
@@ -34,7 +34,7 @@ public class AddFeedApiTests
 	{
 		await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
 		await MvpApi.AddFeedAsync(
-			new MvpApi.AddFeedRequest
+			new AddFeedRequest
 			{
 				Url = "https://example.com/feed.xml"
 			},
@@ -42,7 +42,7 @@ public class AddFeedApiTests
 			CancellationToken.None);
 
 		IResult duplicateResult = await MvpApi.AddFeedAsync(
-			new MvpApi.AddFeedRequest
+			new AddFeedRequest
 			{
 				Url = "https://example.com/feed.xml#fragment"
 			},
@@ -59,7 +59,7 @@ public class AddFeedApiTests
 	{
 		await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
 		IResult result = await MvpApi.AddFeedAsync(
-			new MvpApi.AddFeedRequest
+			new AddFeedRequest
 			{
 				Url = "not-a-valid-url"
 			},
