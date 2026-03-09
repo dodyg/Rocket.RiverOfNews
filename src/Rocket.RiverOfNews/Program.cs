@@ -22,6 +22,10 @@ builder.Services.AddSyndicationClient(options =>
 	options.Timeout = TimeSpan.FromSeconds(settings.Feed.RequestTimeoutSeconds);
 	options.EnableCaching = false;
 });
+builder.Services.AddHttpClient<OpmlImportService>(client =>
+{
+	client.Timeout = TimeSpan.FromSeconds(settings.Feed.RequestTimeoutSeconds);
+});
 builder.Services.AddScoped<FeedIngestionService>();
 builder.Services.AddScoped<TopicCustomizationService>();
 builder.Services.AddHostedService<FeedPollingBackgroundService>();
@@ -34,12 +38,17 @@ app.UseHttpsRedirection();
 app.MapGet("/", () => Results.Redirect("/river"));
 app.MapGet("/river", DatastarApi.GetRiverPage);
 app.MapGet("/river/customize", DatastarApi.GetCustomizePage);
+app.MapGet("/river/opml", DatastarApi.GetOpmlPage);
 app.MapGet("/river/items/{itemId}", DatastarApi.GetRiverItemPage);
 app.MapGet("/river/feeds", DatastarApi.GetFeedsAsync);
 app.MapGet("/river/toggle-feed/{feedId}", DatastarApi.ToggleFeedAsync);
+app.MapPost("/river/opml/toggle-feed/{feedId}", DatastarApi.ToggleOpmlFeedAsync);
 app.MapGet("/river/items", DatastarApi.GetItemsAsync);
 app.MapGet("/river/clear-filters", DatastarApi.ClearFiltersAsync);
 app.MapPost("/river/feeds", DatastarApi.AddFeedAsync);
+app.MapPost("/river/opml/fetch", DatastarApi.FetchOpmlAsync);
+app.MapPost("/river/opml/check", DatastarApi.CheckOpmlFeedsAsync);
+app.MapPost("/river/opml/subscribe", DatastarApi.SubscribeOpmlFeedsAsync);
 app.MapDelete("/river/feeds/{feedId}", DatastarApi.DeleteFeedAsync);
 app.MapPost("/river/refresh", DatastarApi.RefreshAsync);
 app.MapDelete("/river/items", DatastarApi.ClearItemsAsync);

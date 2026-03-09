@@ -17,6 +17,16 @@ public class RiverPageHtmlTests
 	}
 
 	[Test]
+	public async Task GetRiverPage_IncludesOpmlImportLink()
+	{
+		IResult result = DatastarApi.GetRiverPage();
+		string body = await ExecuteResultAsync(result);
+
+		await Assert.That(body.Contains("Import OPML")).IsTrue();
+		await Assert.That(body.Contains("href=\"/river/opml\"")).IsTrue();
+	}
+
+	[Test]
 	public async Task GetRiverItemPage_IncludesImageElementWithBinding()
 	{
 		IResult result = DatastarApi.GetRiverItemPage("item-1");
@@ -24,6 +34,18 @@ public class RiverPageHtmlTests
 
 		await Assert.That(body.Contains("data-show=\"$imageUrl\"")).IsTrue();
 		await Assert.That(body.Contains("data-attr:src=\"$imageUrl\"")).IsTrue();
+	}
+
+	[Test]
+	public async Task GetOpmlPage_RendersFetchAndSubscribeControls()
+	{
+		IResult result = DatastarApi.GetOpmlPage();
+		string body = await ExecuteResultAsync(result);
+
+		await Assert.That(body.Contains("Import feeds from OPML")).IsTrue();
+		await Assert.That(body.Contains("@post('/river/opml/fetch')")).IsTrue();
+		await Assert.That(body.Contains("@post('/river/opml/check')")).IsTrue();
+		await Assert.That(body.Contains("@post('/river/opml/subscribe')")).IsTrue();
 	}
 
 	private static async Task<string> ExecuteResultAsync(IResult result)

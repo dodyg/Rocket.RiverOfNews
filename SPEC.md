@@ -71,6 +71,15 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - Selecting a topic shows the feed items whose titles and snippets most strongly match that topic context.
 - Topic analysis runs locally with .NET libraries and does not rely on external AI or web services.
 
+### 3.12 OPML Feed Import Page
+- Users can open a dedicated OPML import page separate from the main river page.
+- The OPML import page accepts a remote OPML URL and fetches the document over HTTP/HTTPS.
+- The OPML import page lists discovered feed outlines with a checkbox for each feed.
+- Each imported feed row shows feed identity details and whether that feed is already subscribed in the river.
+- Users can run a health check for selected imported feeds before subscribing.
+- Health check results include whether the selected URL parsed as a valid feed, the most recent feed update time when available, and a visible status/message for failures.
+- Users can subscribe selected imported feeds as news sources without leaving the OPML import page.
+
 ## 4) Non-Functional Requirements (MVP)
 - Platform target: desktop web browsers first.
 - Performance target: load the latest 200 river items in under 2 seconds on typical broadband.
@@ -80,7 +89,7 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - Topic suggestion and topic-match analysis must execute locally against persisted feed items without external service dependencies.
 
 ## 5) Out of Scope (MVP)
-- OPML import/export.
+- OPML export.
 - Feed auto-discovery from arbitrary site URLs.
 - User accounts, roles, or OAuth.
 - Advanced read-state synchronization.
@@ -229,6 +238,19 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Topic/item matching uses local .NET-based text analysis over titles and snippets.
   - The feature works without calling external AI services.
 
+### Epic L: OPML Import Workflow
+**Story L1: Import feeds from a remote OPML file**
+- As a user, I can open a separate OPML page, fetch an OPML document, inspect imported feeds, and subscribe selected feeds.
+- Acceptance criteria:
+  - The river UI provides navigation to a dedicated OPML import page.
+  - The OPML import page accepts a remote OPML URL and fetches/parses the document inline.
+  - Parsed feed entries are listed with an individual checkbox per feed.
+  - Imported feeds indicate whether they are already subscribed in the local feed list.
+  - Users can run a health check for one or more selected feeds.
+  - Health check output surfaces feed parse validity, last updated timestamp when available, and an explicit status/error message.
+  - Users can subscribe selected feeds from the OPML page.
+  - Newly subscribed feeds are persisted as normal river sources and receive an initial refresh attempt.
+
 ## 7) Pre-Implementation Decisions (Locked)
 
 ### 7.1 Deduplication Identity Rules
@@ -305,3 +327,7 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 7. Topic customization
    - Derive suggested topics from the current retained item corpus using local .NET text analysis.
    - Add a customize page that lets users pick a topic and browse the highest-confidence matching items.
+8. OPML import workflow
+   - Add a dedicated OPML page that fetches remote OPML documents and lists feed entries with selection controls.
+   - Support selected-feed health checks showing parse validity and last updated metadata before subscription.
+   - Subscribe selected imported feeds into the normal river source list and attempt an initial refresh.

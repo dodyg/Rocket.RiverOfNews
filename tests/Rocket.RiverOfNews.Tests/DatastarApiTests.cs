@@ -1,5 +1,9 @@
 using System.Globalization;
+using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Rocket.RiverOfNews.Api;
@@ -103,6 +107,133 @@ await Assert.That(body.Contains("Feed added and refreshed.")).IsTrue();
 await Assert.That(await CountItemsAsync(database.ConnectionFactory)).IsEqualTo(1);
 }
 
+[Test]
+public async Task FetchOpmlAsync_LoadsRemoteOpmlCandidates()
+{
+await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
+OpmlImportService service = CreateOpmlImportService(
+	database.ConnectionFactory,
+	new StubHttpMessageHandler(CreateStringResponse(SampleOpml, "text/xml")),
+	new StubSyndicationClient(new Dictionary<string, Feed>()));
+DefaultHttpContext httpContext = CreateHttpContext();
+SetJsonBody(httpContext, "{\"opmlUrl\":\"https://example.com/feeds.opml\"}");
+
+await DatastarApi.FetchOpmlAsync(httpContext.Request, httpContext.Response, service, CancellationToken.None);
+string body = await ReadResponseAsync(httpContext.Response);
+
+await Assert.That(body.Contains("Loaded 2 feed(s) from OPML.")).IsTrue();
+await Assert.That(body.Contains("BBC World")).IsTrue();
+await Assert.That(body.Contains("Tech Feed")).IsTrue();
+await Assert.That(body.Contains("@post('/river/opml/toggle-feed/")).IsTrue();
+}
+
+[Test]
+public async Task CheckOpmlFeedsAsync_ReportsHealthySelectedFeed()
+{
+await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
+OpmlImportService service = CreateOpmlImportService(
+	database.ConnectionFactory,
+	new StubHttpMessageHandler(CreateStringResponse(string.Empty, "text/plain")),
+	new StubSyndicationClient(new Dictionary<string, Feed>
+	{
+		["https://example.com/bbc.xml"] = new Feed
+		{
+			Title = "BBC World",
+			Type = FeedType.Rss,
+			LastUpdated = DateTimeOffset.UtcNow,
+			Items =
+			[
+				new FeedItem
+				{
+					Id = "item-1",
+					Title = "Headline",
+					PublishedDate = DateTimeOffset.UtcNow
+				}
+			]
+		}
+	}));
+DefaultHttpContext httpContext = CreateHttpContext();
+string selectedId = CreateImportedFeedId("https://example.com/bbc.xml");
+SetJsonBody(
+	httpContext,
+	JsonSerializer.Serialize(new
+	{
+		opmlFeedPayload = JsonSerializer.Serialize(new[]
+		{
+			CreateImportedFeedCandidate("BBC World", "https://example.com/bbc.xml")
+		}),
+		selectedOpmlFeedIds = selectedId
+	}));
+
+await DatastarApi.CheckOpmlFeedsAsync(httpContext.Request, httpContext.Response, service, CancellationToken.None);
+string body = await ReadResponseAsync(httpContext.Response);
+
+await Assert.That(body.Contains("Health check complete: 1 healthy, 0 unhealthy, 0 invalid.")).IsTrue();
+await Assert.That(body.Contains("Healthy")).IsTrue();
+await Assert.That(body.Contains("Feed parsed as Rss with 1 item(s).")).IsTrue();
+}
+
+[Test]
+public async Task SubscribeOpmlFeedsAsync_AddsSelectedFeedsAndRefreshesThem()
+{
+await using TestDatabaseContext database = await TestDatabaseContext.CreateAsync();
+FeedIngestionService feedIngestionService = new(
+	database.ConnectionFactory,
+	new StubSyndicationClient(new Dictionary<string, Feed>
+	{
+		["https://example.com/bbc.xml"] = new Feed
+		{
+			Title = "BBC World",
+			Type = FeedType.Rss,
+			Items =
+			[
+				new FeedItem
+				{
+					Id = "item-1",
+					Title = "Fresh OPML Item",
+					Link = new Uri("https://example.com/articles/fresh-opml"),
+					PublishedDate = DateTimeOffset.UtcNow,
+					Content = new FeedContent
+					{
+						PlainText = "Fresh content"
+					}
+				}
+			]
+		}
+	}),
+	new RiverOfNewsSettings());
+OpmlImportService opmlImportService = CreateOpmlImportService(
+	database.ConnectionFactory,
+	new StubHttpMessageHandler(CreateStringResponse(string.Empty, "text/plain")),
+	new StubSyndicationClient(new Dictionary<string, Feed>()));
+DefaultHttpContext httpContext = CreateHttpContext();
+string selectedId = CreateImportedFeedId("https://example.com/bbc.xml");
+SetJsonBody(
+	httpContext,
+	JsonSerializer.Serialize(new
+	{
+		opmlFeedPayload = JsonSerializer.Serialize(new[]
+		{
+			CreateImportedFeedCandidate("BBC World", "https://example.com/bbc.xml")
+		}),
+		selectedOpmlFeedIds = selectedId
+	}));
+
+await DatastarApi.SubscribeOpmlFeedsAsync(
+	httpContext.Request,
+	httpContext.Response,
+	database.ConnectionFactory,
+	feedIngestionService,
+	opmlImportService,
+	CancellationToken.None);
+string body = await ReadResponseAsync(httpContext.Response);
+
+await Assert.That(body.Contains("Subscribed 1 feed(s); 0 already subscribed; 0 failed.")).IsTrue();
+await Assert.That(body.Contains("Subscribed and refreshed.")).IsTrue();
+await Assert.That(await CountFeedsAsync(database.ConnectionFactory)).IsEqualTo(1);
+await Assert.That(await CountItemsAsync(database.ConnectionFactory)).IsEqualTo(1);
+}
+
 private static DefaultHttpContext CreateHttpContext()
 {
 DefaultHttpContext httpContext = new();
@@ -183,6 +314,69 @@ await using SqliteCommand command = connection.CreateCommand();
 command.CommandText = "SELECT COUNT(*) FROM items;";
 object? scalar = await command.ExecuteScalarAsync(CancellationToken.None);
 return Convert.ToInt32(scalar, CultureInfo.InvariantCulture);
+}
+
+private static async Task<int> CountFeedsAsync(SqliteConnectionFactory connectionFactory)
+{
+await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(CancellationToken.None);
+await using SqliteCommand command = connection.CreateCommand();
+command.CommandText = "SELECT COUNT(*) FROM feeds;";
+object? scalar = await command.ExecuteScalarAsync(CancellationToken.None);
+return Convert.ToInt32(scalar, CultureInfo.InvariantCulture);
+}
+
+private static OpmlImportService CreateOpmlImportService(
+SqliteConnectionFactory connectionFactory,
+HttpMessageHandler handler,
+ISyndicationClient syndicationClient)
+{
+HttpClient httpClient = new(handler)
+{
+BaseAddress = new Uri("https://example.com/")
+};
+return new OpmlImportService(httpClient, connectionFactory, syndicationClient);
+}
+
+private static HttpResponseMessage CreateStringResponse(string content, string mediaType)
+{
+return new HttpResponseMessage(HttpStatusCode.OK)
+{
+Content = new StringContent(content, Encoding.UTF8, mediaType)
+};
+}
+
+private static OpmlImportedFeedCandidate CreateImportedFeedCandidate(string title, string url)
+{
+return new OpmlImportedFeedCandidate
+{
+Id = CreateImportedFeedId(url),
+Title = title,
+Url = url,
+NormalizedUrl = url,
+SiteUrl = null,
+CategoryPath = "News",
+HealthStatus = "unchecked",
+ProperFormat = null,
+LastUpdatedAt = null,
+Message = null,
+AlreadySubscribed = false
+};
+}
+
+private static string CreateImportedFeedId(string normalizedUrl)
+{
+byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalizedUrl));
+return Convert.ToHexString(hash)[..16].ToLowerInvariant();
+}
+
+private sealed class StubHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
+{
+private readonly HttpResponseMessage Response = response;
+
+protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+{
+return Task.FromResult(Response);
+}
 }
 
 private sealed class StubSyndicationClient(IDictionary<string, Feed> feedsByUrl) : ISyndicationClient
@@ -269,4 +463,19 @@ current = current.Parent;
 
 throw new DirectoryNotFoundException("Could not find Rocket.RiverOfNews.slnx from test base directory.");
 }
+
+private const string SampleOpml = """
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+	<head>
+		<title>Example feed bundle</title>
+	</head>
+	<body>
+		<outline text="News">
+			<outline text="BBC World" title="BBC World" type="rss" xmlUrl="https://example.com/bbc.xml" htmlUrl="https://example.com/bbc" />
+			<outline text="Tech Feed" title="Tech Feed" type="rss" xmlUrl="https://example.com/tech.xml" />
+		</outline>
+	</body>
+</opml>
+""";
 }

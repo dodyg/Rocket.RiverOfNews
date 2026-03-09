@@ -41,6 +41,7 @@ public static class DatastarApi
 							<p class="text-sm text-slate-400">Unified newest-first feed stream</p>
 						</div>
 						<div class="flex items-center gap-2">
+							<a href="/river/opml" class="rounded border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-800">Import OPML</a>
 							<a href="/river/customize" class="rounded border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-800">Customize</a>
 							<button data-on:click="@post('/river/refresh')" class="rounded bg-sky-600 px-4 py-2 text-sm font-semibold hover:bg-sky-500">Refresh now</button>
 							<span data-text="$_refreshStatus" class="text-xs text-slate-400"></span>
@@ -186,6 +187,69 @@ public static class DatastarApi
 		return Results.Content(html, "text/html; charset=utf-8");
 	}
 
+	public static IResult GetOpmlPage()
+	{
+		string html = $$"""
+			<!doctype html>
+			<html lang="en">
+			<head>
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
+				<title>Import feeds from OPML</title>
+				{{TailwindScript}}
+				{{DatastarScript}}
+			</head>
+			<body class="bg-slate-950 text-slate-100">
+				<main class="mx-auto max-w-6xl p-4 md:p-8" data-signals="{opmlUrl:'',opmlFeedPayload:'[]',selectedOpmlFeedIds:'',_opmlStatus:'',_opmlDiagnostics:'',_documentTitle:'',_healthStatus:'',_subscribeStatus:''}">
+					<header class="mb-6 flex flex-wrap items-center justify-between gap-3">
+						<div>
+							<h1 class="text-2xl font-semibold">Import feeds from OPML</h1>
+							<p class="text-sm text-slate-400">Fetch a remote OPML document, inspect feed health, and subscribe selected sources.</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<a href="/river" class="rounded border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-800">Back to river</a>
+						</div>
+					</header>
+
+					<section class="mb-6 rounded border border-slate-800 bg-slate-900 p-4">
+						<div class="mb-2 text-sm font-semibold">Fetch OPML source</div>
+						<label class="text-sm">
+							<span class="mb-1 block text-slate-300">OPML URL</span>
+							<input type="url" data-bind="opmlUrl" placeholder="http://news.bbc.co.uk/rss/newsonline_world_edition/feeds.opml" class="w-full rounded border border-slate-700 bg-slate-950 px-2 py-2 text-slate-100">
+						</label>
+						<div class="mt-3 flex flex-wrap items-center gap-3">
+							<button data-on:click="@post('/river/opml/fetch')" class="rounded bg-sky-600 px-3 py-2 text-sm font-semibold hover:bg-sky-500">Fetch OPML</button>
+							<span data-text="$_opmlStatus" class="text-sm text-slate-300"></span>
+						</div>
+						<p data-show="$_documentTitle" data-text="`Document: ${$_documentTitle}`" class="mt-2 text-xs text-slate-400"></p>
+						<p data-text="$_opmlDiagnostics" class="mt-2 text-xs text-amber-300"></p>
+					</section>
+
+					<section class="rounded border border-slate-800 bg-slate-900 p-4">
+						<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+							<div>
+								<h2 class="text-lg font-semibold">Imported feeds</h2>
+								<p class="text-sm text-slate-400">Check the feeds you want to inspect or subscribe.</p>
+							</div>
+							<div class="flex flex-wrap items-center gap-2">
+								<button data-on:click="@post('/river/opml/check')" class="rounded border border-slate-600 px-3 py-2 text-sm font-semibold hover:bg-slate-800">Check selected feeds</button>
+								<button data-on:click="@post('/river/opml/subscribe')" class="rounded bg-emerald-600 px-3 py-2 text-sm font-semibold hover:bg-emerald-500">Subscribe selected</button>
+							</div>
+						</div>
+						<p data-text="$_healthStatus" class="mb-2 text-sm text-slate-300"></p>
+						<p data-text="$_subscribeStatus" class="mb-4 text-sm text-slate-300"></p>
+						<div id="opml-import-results" class="overflow-x-auto">
+							<div class="rounded border border-dashed border-slate-700 bg-slate-950 p-4 text-sm text-slate-400">Fetch an OPML document to list available feeds.</div>
+						</div>
+					</section>
+				</main>
+			</body>
+			</html>
+			""";
+
+		return Results.Content(html, "text/html; charset=utf-8");
+	}
+
 	public static async Task GetFeedsAsync(
 		HttpRequest request,
 		HttpResponse response,
@@ -199,6 +263,72 @@ public static class DatastarApi
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
 		await sse.PatchElementsAsync(html, "#source-filters", "inner", cancellationToken);
+	}
+
+	public static async Task FetchOpmlAsync(
+		HttpRequest request,
+		HttpResponse response,
+		OpmlImportService opmlImportService,
+		CancellationToken cancellationToken)
+	{
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
+		string opmlUrl = DatastarSignals.GetString(signals, "opmlUrl").Trim();
+
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+
+		if (string.IsNullOrWhiteSpace(opmlUrl))
+		{
+			await sse.PatchSignalsAsync(new { _opmlStatus = "Error: OPML URL is required." }, cancellationToken);
+			return;
+		}
+
+		OpmlImportResponse importResponse;
+		try
+		{
+			importResponse = await opmlImportService.FetchFeedsAsync(opmlUrl, cancellationToken);
+		}
+		catch (UriFormatException)
+		{
+			await sse.PatchSignalsAsync(new { _opmlStatus = "Error: Invalid OPML URL." }, cancellationToken);
+			return;
+		}
+		catch (InvalidOperationException exception)
+		{
+			await sse.PatchSignalsAsync(new { _opmlStatus = $"Error: {exception.Message}" }, cancellationToken);
+			return;
+		}
+		catch (HttpRequestException exception)
+		{
+			await sse.PatchSignalsAsync(new { _opmlStatus = $"Error: {exception.Message}" }, cancellationToken);
+			return;
+		}
+		catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+		{
+			await sse.PatchSignalsAsync(new { _opmlStatus = "Error: OPML fetch timed out." }, cancellationToken);
+			return;
+		}
+
+		string importedFeedsHtml = BuildImportedFeedsHtml(importResponse.Feeds, []);
+		string statusMessage = importResponse.Feeds.Count == 0
+			? "OPML loaded, but no feed URLs were found."
+			: $"Loaded {importResponse.Feeds.Count.ToString(CultureInfo.InvariantCulture)} feed(s) from OPML.";
+		string diagnostics = importResponse.Diagnostics.Count == 0
+			? string.Empty
+			: string.Join(" | ", importResponse.Diagnostics);
+		string payload = SerializeImportedFeeds(importResponse.Feeds);
+
+		await sse.PatchElementsAsync(importedFeedsHtml, "#opml-import-results", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			opmlFeedPayload = payload,
+			selectedOpmlFeedIds = "",
+			_opmlStatus = statusMessage,
+			_opmlDiagnostics = diagnostics,
+			_documentTitle = importResponse.DocumentTitle ?? "",
+			_healthStatus = "",
+			_subscribeStatus = ""
+		}, cancellationToken);
 	}
 
 	public static async Task ToggleFeedAsync(
@@ -223,6 +353,161 @@ public static class DatastarApi
 		SseHelper sse = response.CreateSseHelper();
 		await sse.StartAsync(cancellationToken);
 		await sse.PatchSignalsAsync(new { selectedFeedIds = newSelected }, cancellationToken);
+	}
+
+	public static async Task ToggleOpmlFeedAsync(
+		string feedId,
+		HttpRequest request,
+		HttpResponse response,
+		CancellationToken cancellationToken)
+	{
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
+		HashSet<string> selectedSet = DatastarSignals.GetCsvValues(signals, "selectedOpmlFeedIds").ToHashSet(StringComparer.Ordinal);
+		if (selectedSet.Contains(feedId))
+		{
+			selectedSet.Remove(feedId);
+		}
+		else
+		{
+			selectedSet.Add(feedId);
+		}
+
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			selectedOpmlFeedIds = DatastarSignals.ToCsv(selectedSet)
+		}, cancellationToken);
+	}
+
+	public static async Task CheckOpmlFeedsAsync(
+		HttpRequest request,
+		HttpResponse response,
+		OpmlImportService opmlImportService,
+		CancellationToken cancellationToken)
+	{
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+
+		if (!TryGetImportedFeeds(signals, out IReadOnlyList<OpmlImportedFeedCandidate>? importedFeeds, out string? errorMessage))
+		{
+			await sse.PatchSignalsAsync(new { _healthStatus = $"Error: {errorMessage}" }, cancellationToken);
+			return;
+		}
+
+		string[] selectedFeedIds = DatastarSignals.GetCsvValues(signals, "selectedOpmlFeedIds");
+		if (selectedFeedIds.Length == 0)
+		{
+			await sse.PatchSignalsAsync(new { _healthStatus = "Error: Select at least one imported feed." }, cancellationToken);
+			return;
+		}
+
+		IReadOnlyList<OpmlImportedFeedCandidate> checkedFeeds = await opmlImportService.CheckFeedsAsync(importedFeeds!, selectedFeedIds, cancellationToken);
+		string importedFeedsHtml = BuildImportedFeedsHtml(checkedFeeds, selectedFeedIds);
+		string payload = SerializeImportedFeeds(checkedFeeds);
+		int healthyCount = checkedFeeds.Count(feed => selectedFeedIds.Contains(feed.Id, StringComparer.Ordinal) && feed.HealthStatus == "healthy");
+		int invalidCount = checkedFeeds.Count(feed => selectedFeedIds.Contains(feed.Id, StringComparer.Ordinal) && feed.HealthStatus == "invalid");
+		int unhealthyCount = selectedFeedIds.Length - healthyCount - invalidCount;
+
+		await sse.PatchElementsAsync(importedFeedsHtml, "#opml-import-results", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			opmlFeedPayload = payload,
+			_healthStatus = $"Health check complete: {healthyCount.ToString(CultureInfo.InvariantCulture)} healthy, {unhealthyCount.ToString(CultureInfo.InvariantCulture)} unhealthy, {invalidCount.ToString(CultureInfo.InvariantCulture)} invalid."
+		}, cancellationToken);
+	}
+
+	public static async Task SubscribeOpmlFeedsAsync(
+		HttpRequest request,
+		HttpResponse response,
+		SqliteConnectionFactory connectionFactory,
+		FeedIngestionService feedIngestionService,
+		OpmlImportService opmlImportService,
+		CancellationToken cancellationToken)
+	{
+		Dictionary<string, JsonElement> signals = await request.ReadSignalsAsync(cancellationToken);
+		SseHelper sse = response.CreateSseHelper();
+		await sse.StartAsync(cancellationToken);
+
+		if (!TryGetImportedFeeds(signals, out IReadOnlyList<OpmlImportedFeedCandidate>? importedFeeds, out string? errorMessage))
+		{
+			await sse.PatchSignalsAsync(new { _subscribeStatus = $"Error: {errorMessage}" }, cancellationToken);
+			return;
+		}
+
+		string[] selectedFeedIds = DatastarSignals.GetCsvValues(signals, "selectedOpmlFeedIds");
+		if (selectedFeedIds.Length == 0)
+		{
+			await sse.PatchSignalsAsync(new { _subscribeStatus = "Error: Select at least one imported feed." }, cancellationToken);
+			return;
+		}
+
+		HashSet<string> selectedSet = selectedFeedIds.ToHashSet(StringComparer.Ordinal);
+		List<OpmlImportedFeedCandidate> updatedFeeds = new(importedFeeds!.Count);
+		int addedCount = 0;
+		int alreadySubscribedCount = 0;
+		int failedCount = 0;
+		foreach (OpmlImportedFeedCandidate importedFeed in importedFeeds)
+		{
+			if (!selectedSet.Contains(importedFeed.Id))
+			{
+				updatedFeeds.Add(importedFeed);
+				continue;
+			}
+
+			RiverDataAccess.AddFeedResult addFeedResult = await RiverDataAccess.AddFeedAsync(
+				connectionFactory,
+				importedFeed.Url,
+				importedFeed.Title,
+				cancellationToken);
+			if (addFeedResult.ErrorMessage is not null)
+			{
+				if (string.Equals(addFeedResult.ErrorMessage, "Feed URL already exists.", StringComparison.Ordinal))
+				{
+					alreadySubscribedCount++;
+					updatedFeeds.Add(importedFeed with
+					{
+						AlreadySubscribed = true,
+						Message = "Already subscribed."
+					});
+				}
+				else
+				{
+					failedCount++;
+					updatedFeeds.Add(importedFeed with
+					{
+						Message = addFeedResult.ErrorMessage
+					});
+				}
+
+				continue;
+			}
+
+			addedCount++;
+			FeedResponse addedFeed = addFeedResult.Feed!;
+			RefreshResult refreshResult = await feedIngestionService.RefreshFeedAsync(addedFeed.Id, cancellationToken);
+			string subscriptionMessage = refreshResult.FailedFeedCount > 0
+				? "Subscribed, but the initial refresh failed."
+				: "Subscribed and refreshed.";
+			updatedFeeds.Add(importedFeed with
+			{
+				AlreadySubscribed = true,
+				Message = subscriptionMessage
+			});
+		}
+
+		IReadOnlyList<OpmlImportedFeedCandidate> refreshedFeeds = await opmlImportService.RefreshSubscriptionStateAsync(updatedFeeds, cancellationToken);
+		string importedFeedsHtml = BuildImportedFeedsHtml(refreshedFeeds, selectedFeedIds);
+		string payload = SerializeImportedFeeds(refreshedFeeds);
+		string summary = $"Subscribed {addedCount.ToString(CultureInfo.InvariantCulture)} feed(s); {alreadySubscribedCount.ToString(CultureInfo.InvariantCulture)} already subscribed; {failedCount.ToString(CultureInfo.InvariantCulture)} failed.";
+
+		await sse.PatchElementsAsync(importedFeedsHtml, "#opml-import-results", "inner", cancellationToken);
+		await sse.PatchSignalsAsync(new
+		{
+			opmlFeedPayload = payload,
+			_subscribeStatus = summary
+		}, cancellationToken);
 	}
 
 	public static async Task GetItemsAsync(
@@ -619,6 +904,74 @@ public static class DatastarApi
 		return html.ToString();
 	}
 
+	private static string BuildImportedFeedsHtml(
+		IReadOnlyList<OpmlImportedFeedCandidate> feeds,
+		IReadOnlyCollection<string> selectedFeedIds)
+	{
+		if (feeds.Count == 0)
+		{
+			return """<div class="rounded border border-dashed border-slate-700 bg-slate-950 p-4 text-sm text-slate-400">No feeds were found in this OPML document.</div>""";
+		}
+
+		StringBuilder html = new();
+		html.AppendLine("""<table class="min-w-full divide-y divide-slate-800 text-sm">""");
+		html.AppendLine("""  <thead class="bg-slate-950 text-left text-xs uppercase tracking-wide text-slate-400">""");
+		html.AppendLine("""    <tr>""");
+		html.AppendLine("""      <th class="px-3 py-2">Select</th>""");
+		html.AppendLine("""      <th class="px-3 py-2">Feed</th>""");
+		html.AppendLine("""      <th class="px-3 py-2">Source</th>""");
+		html.AppendLine("""      <th class="px-3 py-2">Subscription</th>""");
+		html.AppendLine("""      <th class="px-3 py-2">Health</th>""");
+		html.AppendLine("""      <th class="px-3 py-2">Format</th>""");
+		html.AppendLine("""      <th class="px-3 py-2">Last updated</th>""");
+		html.AppendLine("""      <th class="px-3 py-2">Notes</th>""");
+		html.AppendLine("""    </tr>""");
+		html.AppendLine("""  </thead>""");
+		html.AppendLine("""  <tbody class="divide-y divide-slate-800">""");
+		foreach (OpmlImportedFeedCandidate feed in feeds)
+		{
+			string encodedFeedId = HtmlEncoder.Default.Encode(feed.Id);
+			string encodedTitle = HtmlEncoder.Default.Encode(feed.Title);
+			string encodedUrl = HtmlEncoder.Default.Encode(feed.Url);
+			string categoryPath = HtmlEncoder.Default.Encode(feed.CategoryPath ?? "Root");
+			string note = HtmlEncoder.Default.Encode(feed.Message ?? string.Empty);
+			string lastUpdated = string.IsNullOrWhiteSpace(feed.LastUpdatedAt)
+				? "—"
+				: HtmlEncoder.Default.Encode(FormatDate(feed.LastUpdatedAt));
+			string properFormat = feed.ProperFormat switch
+			{
+				true => "Yes",
+				false => "No",
+				_ => "Unknown"
+			};
+			string checkedAttribute = selectedFeedIds.Contains(feed.Id) ? " checked" : string.Empty;
+			string subscriptionText = feed.AlreadySubscribed ? "Already subscribed" : "Not subscribed";
+			string subscriptionClass = feed.AlreadySubscribed ? "text-emerald-300" : "text-slate-400";
+			html.AppendLine("""    <tr class="align-top">""");
+			html.AppendLine($"""      <td class="px-3 py-3"><input type="checkbox" value="{encodedFeedId}" data-on:change="@post('/river/opml/toggle-feed/{encodedFeedId}')" class="accent-sky-500"{checkedAttribute}></td>""");
+			html.AppendLine("""      <td class="px-3 py-3">""");
+			html.AppendLine($"""        <div class="font-semibold text-slate-100">{encodedTitle}</div>""");
+			html.AppendLine($"""        <div class="mt-1 break-all text-xs text-slate-400">{encodedUrl}</div>""");
+			if (!string.IsNullOrWhiteSpace(feed.SiteUrl))
+			{
+				html.AppendLine($"""        <a href="{HtmlEncoder.Default.Encode(feed.SiteUrl)}" target="_blank" rel="noreferrer" class="mt-1 inline-block text-xs text-sky-400 hover:text-sky-300">Open site</a>""");
+			}
+
+			html.AppendLine("""      </td>""");
+			html.AppendLine($"""      <td class="px-3 py-3 text-xs text-slate-400">{categoryPath}</td>""");
+			html.AppendLine($"""      <td class="px-3 py-3 text-xs {subscriptionClass}">{subscriptionText}</td>""");
+			html.AppendLine($"""      <td class="px-3 py-3 text-xs">{BuildHealthBadgeHtml(feed.HealthStatus)}</td>""");
+			html.AppendLine($"""      <td class="px-3 py-3 text-xs text-slate-300">{properFormat}</td>""");
+			html.AppendLine($"""      <td class="px-3 py-3 text-xs text-slate-300">{lastUpdated}</td>""");
+			html.AppendLine($"""      <td class="px-3 py-3 text-xs text-slate-400">{note}</td>""");
+			html.AppendLine("""    </tr>""");
+		}
+
+		html.AppendLine("""  </tbody>""");
+		html.AppendLine("""</table>""");
+		return html.ToString();
+	}
+
 	private static string BuildItemCardsHtml(IReadOnlyList<RiverItemResponse> items)
 	{
 		StringBuilder html = new();
@@ -657,6 +1010,66 @@ public static class DatastarApi
 		}
 
 		return html.ToString();
+	}
+
+	private static string BuildHealthBadgeHtml(string healthStatus)
+	{
+		string normalizedStatus = string.IsNullOrWhiteSpace(healthStatus)
+			? "unchecked"
+			: healthStatus.Trim().ToLowerInvariant();
+		string badgeClasses = normalizedStatus switch
+		{
+			"healthy" => "border-emerald-700 bg-emerald-950 text-emerald-300",
+			"unhealthy" => "border-rose-700 bg-rose-950 text-rose-300",
+			"invalid" => "border-amber-700 bg-amber-950 text-amber-300",
+			_ => "border-slate-700 bg-slate-950 text-slate-300"
+		};
+		string label = normalizedStatus switch
+		{
+			"healthy" => "Healthy",
+			"unhealthy" => "Unhealthy",
+			"invalid" => "Invalid URL",
+			_ => "Unchecked"
+		};
+		return $"""<span class="inline-flex rounded border px-2 py-1 {badgeClasses}">{HtmlEncoder.Default.Encode(label)}</span>""";
+	}
+
+	private static bool TryGetImportedFeeds(
+		IReadOnlyDictionary<string, JsonElement> signals,
+		out IReadOnlyList<OpmlImportedFeedCandidate>? importedFeeds,
+		out string? errorMessage)
+	{
+		importedFeeds = null;
+		errorMessage = null;
+		string payload = DatastarSignals.GetString(signals, "opmlFeedPayload");
+		if (string.IsNullOrWhiteSpace(payload))
+		{
+			errorMessage = "Fetch an OPML document first.";
+			return false;
+		}
+
+		try
+		{
+			importedFeeds = JsonSerializer.Deserialize<List<OpmlImportedFeedCandidate>>(payload);
+		}
+		catch (JsonException)
+		{
+			errorMessage = "Imported feed state is invalid.";
+			return false;
+		}
+
+		if (importedFeeds is null)
+		{
+			errorMessage = "Imported feed state is missing.";
+			return false;
+		}
+
+		return true;
+	}
+
+	private static string SerializeImportedFeeds(IReadOnlyList<OpmlImportedFeedCandidate> feeds)
+	{
+		return JsonSerializer.Serialize(feeds);
 	}
 
 	private sealed record ItemsResult(string Html, string? NextCursor, bool HasMore, int Count, string? FilterError);

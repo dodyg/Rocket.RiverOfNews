@@ -55,8 +55,31 @@ public sealed record ErrorResponse(string Message);
 
 public sealed record Latest200PerformanceResponse
 {
-public required int ItemCount { get; init; }
-public required long DurationMilliseconds { get; init; }
-public required int ThresholdMilliseconds { get; init; }
-public required bool MeetsTarget { get; init; }
+	public required int ItemCount { get; init; }
+	public required long DurationMilliseconds { get; init; }
+	public required int ThresholdMilliseconds { get; init; }
+	public required bool MeetsTarget { get; init; }
+}
+
+public sealed record OpmlImportedFeedCandidate
+{
+	public required string Id { get; init; }
+	public required string Title { get; init; }
+	public required string Url { get; init; }
+	public string? NormalizedUrl { get; init; }
+	public string? SiteUrl { get; init; }
+	public string? CategoryPath { get; init; }
+	public required string HealthStatus { get; init; }
+	public bool? ProperFormat { get; init; }
+	public string? LastUpdatedAt { get; init; }
+	public string? Message { get; init; }
+	public required bool AlreadySubscribed { get; init; }
+}
+
+public sealed record OpmlImportResponse
+{
+	public required string SourceUrl { get; init; }
+	public string? DocumentTitle { get; init; }
+	public required IReadOnlyList<OpmlImportedFeedCandidate> Feeds { get; init; }
+	public required IReadOnlyList<string> Diagnostics { get; init; }
 }
