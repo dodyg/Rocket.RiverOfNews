@@ -41,6 +41,7 @@ public static class DatastarApi
 							<p class="text-sm text-slate-400">Unified newest-first feed stream</p>
 						</div>
 						<div class="flex items-center gap-2">
+							<a href="/river/customize" class="rounded border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-800">Customize</a>
 							<button data-on:click="@post('/river/refresh')" class="rounded bg-sky-600 px-4 py-2 text-sm font-semibold hover:bg-sky-500">Refresh now</button>
 							<span data-text="$_refreshStatus" class="text-xs text-slate-400"></span>
 						</div>
@@ -105,6 +106,79 @@ public static class DatastarApi
 				</main>
 
 				<div data-init="@get('/river/items?reset=true')"></div>
+			</body>
+			</html>
+			""";
+
+		return Results.Content(html, "text/html; charset=utf-8");
+	}
+
+	public static async Task<IResult> GetCustomizePage(
+		HttpRequest request,
+		TopicCustomizationService topicCustomizationService,
+		CancellationToken cancellationToken)
+	{
+		string selectedTopic = request.Query["topic"].ToString();
+		CustomizePageModel model = await topicCustomizationService.BuildPageModelAsync(selectedTopic, cancellationToken);
+		string topicListHtml = BuildTopicListHtml(model.Topics, model.SelectedTopic);
+		string selectedTopicHeading = model.SelectedTopic is null
+			? "Pick a topic"
+			: HtmlEncoder.Default.Encode(model.SelectedTopic);
+		string selectedTopicActions = model.SelectedTopic is null
+			? string.Empty
+			: """<a href="/river/customize" class="rounded border border-slate-700 px-3 py-2 text-sm font-semibold hover:bg-slate-800">Clear topic</a>""";
+		string itemsHtml = model.MatchingItems.Count == 0
+			? """<div class="rounded border border-dashed border-slate-700 bg-slate-900 p-6 text-sm text-slate-400">No feed items matched this topic yet.</div>"""
+			: BuildItemCardsHtml(model.MatchingItems);
+		string emptyTopicsHtml = """<div class="rounded border border-dashed border-slate-700 bg-slate-950 p-4 text-sm text-slate-400">Add feeds and ingest items to generate topic suggestions.</div>""";
+		string html = $$"""
+			<!doctype html>
+			<html lang="en">
+			<head>
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
+				<title>Customize your river</title>
+				{{TailwindScript}}
+				{{DatastarScript}}
+			</head>
+			<body class="bg-slate-950 text-slate-100">
+				<main class="mx-auto max-w-6xl p-4 md:p-8">
+					<header class="mb-6 flex flex-wrap items-center justify-between gap-3">
+						<div>
+							<h1 class="text-2xl font-semibold">Customize your river</h1>
+							<p class="text-sm text-slate-400">Derived from {{model.SourceItemCount}} stored feed items with local .NET topic analysis.</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<a href="/river" class="rounded border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-800">Back to river</a>
+							<a href="/river/customize" class="rounded bg-sky-600 px-4 py-2 text-sm font-semibold hover:bg-sky-500">Refresh topics</a>
+						</div>
+					</header>
+
+					<div class="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
+						<aside class="rounded border border-slate-800 bg-slate-900 p-4">
+							<h2 class="text-lg font-semibold">Suggested topics</h2>
+							<p class="mt-2 text-sm text-slate-400">Pick a topic to surface feed items with the strongest title and snippet context match.</p>
+							<div class="mt-4 space-y-2">
+								{{(model.Topics.Count == 0 ? emptyTopicsHtml : topicListHtml)}}
+							</div>
+						</aside>
+
+						<section class="space-y-4">
+							<div class="rounded border border-slate-800 bg-slate-900 p-4">
+								<div class="flex flex-wrap items-center justify-between gap-3">
+									<div>
+										<h2 class="text-lg font-semibold">{{selectedTopicHeading}}</h2>
+										<p class="mt-1 text-sm text-slate-400">The customize page scores items against the selected topic using weighted phrase and token overlap.</p>
+									</div>
+									{{selectedTopicActions}}
+								</div>
+							</div>
+							<div class="space-y-3">
+								{{itemsHtml}}
+							</div>
+						</section>
+					</div>
+				</main>
 			</body>
 			</html>
 			""";
@@ -523,6 +597,30 @@ public static class DatastarApi
 		IReadOnlyList<RiverItemResponse> items = query.Items;
 		bool hasMore = !string.IsNullOrWhiteSpace(query.NextCursor);
 
+		return new ItemsResult(BuildItemCardsHtml(items), query.NextCursor, hasMore, items.Count, null);
+	}
+
+	private static string BuildTopicListHtml(IReadOnlyList<TopicSuggestion> topics, string? selectedTopic)
+	{
+		StringBuilder html = new();
+		foreach (TopicSuggestion topic in topics)
+		{
+			bool isSelected = string.Equals(topic.Name, selectedTopic, StringComparison.Ordinal);
+			string containerClasses = isSelected
+				? "border-sky-500 bg-sky-950 text-sky-100"
+				: "border-slate-700 bg-slate-950 text-slate-100 hover:border-sky-600 hover:text-sky-200";
+			string topicHref = $"/river/customize?topic={Uri.EscapeDataString(topic.Name)}";
+			html.AppendLine($"""<a href="{HtmlEncoder.Default.Encode(topicHref)}" class="flex items-center justify-between rounded border px-3 py-2 text-sm {containerClasses}">""");
+			html.AppendLine($"""  <span>{HtmlEncoder.Default.Encode(topic.Name)}</span>""");
+			html.AppendLine($"""  <span class="text-xs text-slate-400">{topic.ItemCount.ToString(CultureInfo.InvariantCulture)} item(s)</span>""");
+			html.AppendLine($"""</a>""");
+		}
+
+		return html.ToString();
+	}
+
+	private static string BuildItemCardsHtml(IReadOnlyList<RiverItemResponse> items)
+	{
 		StringBuilder html = new();
 		foreach (RiverItemResponse item in items)
 		{
@@ -544,6 +642,7 @@ public static class DatastarApi
 			{
 				html.AppendLine($"""  {imageBlock}""");
 			}
+
 			html.AppendLine($"""  <p class="mb-3 text-sm text-slate-300">{snippet}</p>""");
 			if (string.IsNullOrWhiteSpace(articleLink))
 			{
@@ -553,10 +652,11 @@ public static class DatastarApi
 			{
 				html.AppendLine($"""  <a class="text-sm text-sky-400 hover:text-sky-300" href="{HtmlEncoder.Default.Encode(articleLink)}" target="_blank" rel="noreferrer">Open article</a>""");
 			}
+
 			html.AppendLine($"""</article>""");
 		}
 
-		return new ItemsResult(html.ToString(), query.NextCursor, hasMore, items.Count, null);
+		return html.ToString();
 	}
 
 	private sealed record ItemsResult(string Html, string? NextCursor, bool HasMore, int Count, string? FilterError);

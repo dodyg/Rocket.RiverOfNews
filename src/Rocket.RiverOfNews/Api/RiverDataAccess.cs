@@ -217,9 +217,9 @@ NextCursor = nextCursor
 }
 
 public static async Task<RiverItemDetailResponse?> GetItemByIdAsync(
-SqliteConnectionFactory connectionFactory,
-string itemId,
-CancellationToken cancellationToken)
+	SqliteConnectionFactory connectionFactory,
+	string itemId,
+	CancellationToken cancellationToken)
 {
 const string sql = """
 SELECT
@@ -243,8 +243,37 @@ LIMIT 1;
 """;
 
 await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
-return await connection.QuerySingleOrDefaultAsync<RiverItemDetailResponse>(
-new CommandDefinition(sql, new { ItemId = itemId }, cancellationToken: cancellationToken));
+	return await connection.QuerySingleOrDefaultAsync<RiverItemDetailResponse>(
+	new CommandDefinition(sql, new { ItemId = itemId }, cancellationToken: cancellationToken));
+}
+
+public static async Task<IReadOnlyList<RiverItemResponse>> GetAllItemsForCustomizationAsync(
+	SqliteConnectionFactory connectionFactory,
+	CancellationToken cancellationToken)
+{
+	const string sql = """
+	SELECT
+	i.id AS Id,
+	i.title AS Title,
+	i.url AS Url,
+	i.canonical_url AS CanonicalUrl,
+	i.image_url AS ImageUrl,
+	i.snippet AS Snippet,
+	i.published_at AS PublishedAt,
+	i.ingested_at AS IngestedAt,
+	(
+	SELECT group_concat(DISTINCT COALESCE(f.title, f.normalized_url))
+	FROM item_sources s
+	INNER JOIN feeds f ON f.id = s.feed_id
+	WHERE s.item_id = i.id
+	) AS SourceNames
+	FROM items i
+	ORDER BY i.published_at DESC, i.ingested_at DESC, i.id DESC;
+	""";
+
+	await using SqliteConnection connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+	return (await connection.QueryAsync<RiverItemResponse>(
+		new CommandDefinition(sql, cancellationToken: cancellationToken))).AsList();
 }
 
 public static string NormalizeUrl(string url)

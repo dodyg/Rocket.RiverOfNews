@@ -23,6 +23,7 @@ builder.Services.AddSyndicationClient(options =>
 	options.EnableCaching = false;
 });
 builder.Services.AddScoped<FeedIngestionService>();
+builder.Services.AddScoped<TopicCustomizationService>();
 builder.Services.AddHostedService<FeedPollingBackgroundService>();
 builder.Services.AddHostedService<RetentionCleanupBackgroundService>();
 
@@ -32,6 +33,7 @@ app.UseHttpsRedirection();
 
 app.MapGet("/", () => Results.Redirect("/river"));
 app.MapGet("/river", DatastarApi.GetRiverPage);
+app.MapGet("/river/customize", DatastarApi.GetCustomizePage);
 app.MapGet("/river/items/{itemId}", DatastarApi.GetRiverItemPage);
 app.MapGet("/river/feeds", DatastarApi.GetFeedsAsync);
 app.MapGet("/river/toggle-feed/{feedId}", DatastarApi.ToggleFeedAsync);

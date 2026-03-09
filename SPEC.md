@@ -65,12 +65,19 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 - Clearing items removes all records from `items` and `item_sources` tables but preserves feed subscriptions.
 - The items list updates immediately after clearing without requiring a page refresh.
 
+### 3.11 Topic-Based Customization
+- Users can open a customize page that derives suggested topics from all feed items currently stored in the database.
+- The customize page shows a topic list with estimated matching item counts.
+- Selecting a topic shows the feed items whose titles and snippets most strongly match that topic context.
+- Topic analysis runs locally with .NET libraries and does not rely on external AI or web services.
+
 ## 4) Non-Functional Requirements (MVP)
 - Platform target: desktop web browsers first.
 - Performance target: load the latest 200 river items in under 2 seconds on typical broadband.
 - HTTPS is enabled by default with automatic HTTP-to-HTTPS redirection.
 - Automated API regression tests must be implemented with TUnit using a version range `>= 1.0`.
 - Feed-add API coverage must include: successful add, duplicate normalized URL conflict, and invalid URL rejection.
+- Topic suggestion and topic-match analysis must execute locally against persisted feed items without external service dependencies.
 
 ## 5) Out of Scope (MVP)
 - OPML import/export.
@@ -211,6 +218,17 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
   - Items list updates immediately to show empty state.
   - Status message confirms the operation completed successfully.
 
+### Epic K: Topic Customization
+**Story K1: Browse topics from stored items**
+- As a user, I can open a customize page and explore topics inferred from the articles already stored in my river.
+- Acceptance criteria:
+  - The UI provides a customize page reachable from the river.
+  - The customize page derives suggested topics from all retained feed items in the database.
+  - Each topic shows an estimated count of related items.
+  - Choosing a topic displays the most relevant feed items for that topic.
+  - Topic/item matching uses local .NET-based text analysis over titles and snippets.
+  - The feature works without calling external AI services.
+
 ## 7) Pre-Implementation Decisions (Locked)
 
 ### 7.1 Deduplication Identity Rules
@@ -284,3 +302,6 @@ The MVP includes feed ingestion, aggregation, deduplication, filtering, and a pe
 6. Retention and performance validation
    - Add retention cleanup job (30-day boundary by `published_at`) with cascading source cleanup.
    - Validate latest 200 load target (<2s) and document repeatable measurement steps.
+7. Topic customization
+   - Derive suggested topics from the current retained item corpus using local .NET text analysis.
+   - Add a customize page that lets users pick a topic and browse the highest-confidence matching items.
